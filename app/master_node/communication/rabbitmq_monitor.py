@@ -2,12 +2,14 @@ from aiohttp import BasicAuth, ClientSession
 from dataclasses import dataclass
 from app.common.rabbit_connection_params import RabbitConnectionParams
 from app.common.socketCommunication import *
-
+import json
 @dataclass
 class QueueStatus:
 	queue_name: str
 	consumer_count: int
 	message_count: int
+
+
 
 class RabbitMQMonitor(object):
 
@@ -27,6 +29,7 @@ class RabbitMQMonitor(object):
 			async with session.get(url) as resp:
 				print(resp.status)
 				body = await resp.json()
+				print(json.dumps(body, indent=4))
 				consumer_count = body['consumers']
 				message_count = body['messages']
 				queue_name = body['name']

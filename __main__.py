@@ -9,3 +9,4 @@ if __name__ == '__main__':
 		InitNodes().slave()
 	else:
 		print("Write a valid number")
+

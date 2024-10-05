@@ -57,7 +57,7 @@ class ImageClassificationBenchmarkDataset(Dataset):
 
 	def load(self):
 		try:
-			train_split_float = np.float(1.0 - self.validation_split_float)
+			train_split_float = float(1.0 - self.validation_split_float)
 			val_split_percent = int(self.validation_split_float * 100)
 			train_split_percent = int(train_split_float * 100)
 			#Tensorflow dataset load
@@ -143,7 +143,7 @@ class RegressionBenchmarkDataset(Dataset):
 		self.feature_size = feature_size
 
 	def load(self):
-		train_split_float = np.float(1.0 - self.validation_split_float)
+		train_split_float = float(1.0 - self.validation_split_float)
 		val_split_percent = int(self.validation_split_float * 100)
 		train_split_percent = int(train_split_float * 100)
 		try:
@@ -223,7 +223,7 @@ class TimeSeriesBenchmarkDataset(Dataset):
 		self.data_size = data_size
 
 	def load(self):
-		train_split_float = np.float(1.0 - self.validation_split_float)
+		train_split_float = float(1.0 - self.validation_split_float)
 		val_split_percent = int(self.validation_split_float * 100)
 		train_split_percent = int(train_split_float * 100)
 		try:

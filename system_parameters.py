@@ -13,14 +13,41 @@ class SystemParameters:
         INSTANCE_MODEL_PERFORMANCE_QUEUE, INSTANCE_HOST_URL,
         INSTANCE_USER, INSTANCE_PASSWORD, INSTANCE_VIRTUAL_HOST
     ]
+    
+    DATASET_NAME: str = 'mnist'  # Example dataset
+    #DATASET_NAME: str = 'cifar10'  # Example dataset
+
+    # Define specific dataset configurations
+    dataset_config = {
+        'cifar10': {
+            'shape': (32, 32, 3),
+            'classes': 10
+        },
+        'mnist': {
+            'shape': (28, 28, 1),
+            'classes': 10
+        },
+        'fashion_mnist': {
+            'shape': (28, 28, 1),
+            'classes': 10
+        },
+        'cifar100': {
+            'shape': (32, 32, 3),
+            'classes': 100
+        }
+    }
+    DATASET_SHAPE: tuple = (32, 32, 3)  # Adjust based on dataset shape
+    
+    DATASET_CLASSES: int = 10
+
+    DATASET_SHAPE = dataset_config[DATASET_NAME]['shape']
+    DATASET_CLASSES = dataset_config[DATASET_NAME]['classes']
+
 
     # Dataset parameters
-    DATASET_NAME: str = 'cifar10'  # Example dataset
     DATASET_TYPE: int = 1  # Image classification
     DATASET_BATCH_SIZE: int = 32
     DATASET_VALIDATION_SPLIT: float = 0.2
-    DATASET_SHAPE: tuple = (32, 32, 3)  # Adjust based on dataset shape
-    DATASET_CLASSES: int = 10
     DATASET_FEATURES: int = 32  # Update for regression datasets
     DATASET_LABELS: int = 10
     DATASET_WINDOW_SIZE: int = 100

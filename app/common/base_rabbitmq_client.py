@@ -26,7 +26,7 @@ class BaseRabbitMQClient:
 		self.loop = loop
 
 	#Async function that prepares the queue connection
-	async def prepare_queues(self):
+	async def prepare_queues(self):	
 		connection: aio_pika.RobustConnection = await self._create_connection()
 		async with connection:
 			channel = await connection.channel()

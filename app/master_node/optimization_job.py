@@ -54,6 +54,7 @@ class OptimizationJob:
 		SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': cad})
 		action: Action = self.optimization_strategy.report_model_response(model_training_response)
 		SocketCommunication.decide_print_form(MSGType.FINISHED_MODEL, {'node': 1, 'msg': 'Finished a model', 'total': self.optimization_strategy.get_training_total()})
+		print('Action:', action)
 		if action == Action.GENERATE_MODEL:
 			await self.generate_model()
 		elif action == Action.WAIT:
@@ -88,6 +89,8 @@ class OptimizationJob:
 
 	async def _log_results(self, best_model):
 		filename = best_model.model_training_request.experiment_id
+		#specifpath 
+		filename = "/home/p0wden/Documents/IA/MLOptimizer/results/" + filename
 		f = open(filename, "a")
 		model_info_json = json.dumps(asdict(best_model))
 		f.write(model_info_json)

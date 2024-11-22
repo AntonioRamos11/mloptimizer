@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, regularizers
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
+from tensorflow.keras import mixed_precision
 from app.common.inception_module import InceptionV1ModuleBN
 from app.common.search_space import *
 from app.common.dataset import Dataset
@@ -61,7 +61,7 @@ class Model:
 			if epoch < 10:
 				return 0.001
 			else:
-				return 0.001 * tf.math.exp(0.01 * (10 - epoch))
+				return float(0.001 * tf.math.exp(0.01 * (10 - epoch)).numpy())
 		scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 		early_stopping: keras.callbacks.EarlyStopping = None
 		if self.search_space_type == SearchSpaceType.IMAGE:
@@ -82,7 +82,7 @@ class Model:
 		log_dir = "logs/{}/{}-{}".format(self.experiment_id, model_stage, str(self.id))
 		tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 		callbacks = [early_stopping, tensorboard, scheduler_callback]
-		total_weights = np.sum([np.prod(v.get_shape().as_list()) for v in model.variables])
+		total_weights = np.sum([np.prod(v.shape.as_list()) for v in model.variables])
 		cad = 'Total weights ' + str(total_weights)
 		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
 		history = model.fit(
@@ -183,10 +183,9 @@ class Model:
 
 	def build_image_model(self, model_parameters: ImageModelArchitectureParameters, input_shape: tuple, class_count: int) -> keras.Sequential:
 		start_time = int(round(time.time() * 1000))
-		policy = mixed_precision.Policy('mixed_float16')
-		mixed_precision.set_policy(policy)
-		print('Compute dtype: %s' % policy.compute_dtype)
-		print('Variable dtype: %s' % policy.variable_dtype)
+		mixed_precision.Policy("mixed_float16")
+		"""print('Compute dtype: %s' % policy.compute_dtype)
+		print('Variable dtype: %s' % policy.variable_dtype)"""
 		model = keras.Sequential()
 		model.add(keras.layers.Input(input_shape))
 		if model_parameters.base_architecture == 'cnn':
@@ -211,8 +210,6 @@ class Model:
 
 	def build_regression_model(self, model_parameters: RegressionModelArchitectureParameters, input_shape: tuple, class_count: int) -> keras.Sequential:
 		start_time = int(round(time.time() * 1000))
-		policy = mixed_precision.Policy('mixed_float16')
-		mixed_precision.set_policy(policy)
 		model = keras.Sequential()
 		model.add(keras.layers.Input(input_shape))
 		if model_parameters.base_architecture == 'mlp':
@@ -227,8 +224,7 @@ class Model:
 
 	def build_time_series_model(self, model_parameters: TimeSeriesModelArchitectureParameters, input_shape: tuple, class_count: int) -> keras.Sequential:
 		start_time = int(round(time.time() * 1000))
-		policy = mixed_precision.Policy('mixed_float16')
-		mixed_precision.set_policy(policy)
+		mixed_precision.set_policy("mixed_float16")
 		model = keras.Sequential()
 		model.add(keras.layers.Input(input_shape))
 		if model_parameters.base_architecture == 'lstm':

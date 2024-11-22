@@ -69,6 +69,10 @@ class OptimizationJob:
 			await self._log_results(best_model)
 			model = Model(best_model.model_training_request, self.dataset)
 			model.is_model_valid()
+			# Save the model weights
+			model_path = f"saved_models/{best_model.model_training_request.experiment_id}_best_model.h5"
+			model.model.save_weights(model_path)
+			SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': f'Saved best model weights to {model_path}'})
 			self.loop.stop()
 
 	async def generate_model(self):

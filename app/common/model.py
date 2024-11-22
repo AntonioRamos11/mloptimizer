@@ -57,11 +57,13 @@ class Model:
 		validation = self.dataset.get_validation_data()
 		validation_steps = self.dataset.get_validation_steps()
 		test = self.dataset.get_test_data()
+
 		def scheduler(epoch):
 			if epoch < 10:
 				return 0.001
 			else:
 				return float(0.001 * tf.math.exp(0.01 * (10 - epoch)).numpy())
+
 		scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 		early_stopping: keras.callbacks.EarlyStopping = None
 		if self.search_space_type == SearchSpaceType.IMAGE:
@@ -79,12 +81,9 @@ class Model:
 		else:
 			early_stopping = keras.callbacks.EarlyStopping(monitor=monitor_full_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
 		model_stage = "exp" if self.is_partial_training else "hof"
-		log_dir = "logs/{}/{}-{}".format(self.experiment_id, model_stage, str(self.id))
+		log_dir = f"logs/{self.experiment_id}/{model_stage}-{self.id}"
 		tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 		callbacks = [early_stopping, tensorboard, scheduler_callback]
-		total_weights = np.sum([np.prod(v.shape.as_list()) for v in model.variables])
-		cad = 'Total weights ' + str(total_weights)
-		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
 		history = model.fit(
 			train,
 			epochs=self.epochs,
@@ -96,11 +95,8 @@ class Model:
 		did_finish_epochs = self._did_finish_epochs(history, self.epochs)
 		if self.search_space_type == SearchSpaceType.IMAGE:
 			loss, training_val = model.evaluate(test, verbose=0)
-			cad = 'Model accuracy ' + str(training_val)
 		else:
 			training_val = model.evaluate(test, verbose=0)
-			cad = 'Model accuracy ' + str(training_val)
-		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
 		tf.keras.backend.clear_session()
 		return training_val, did_finish_epochs
 

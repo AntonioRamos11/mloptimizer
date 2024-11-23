@@ -206,14 +206,34 @@ class OptimizationStrategy(object):
 	def _report_model_response_exploration_classification(self, model_training_response: ModelTrainingResponse):
 		# TODO: Assert that trial_id exists in Study
 		performance = model_training_response.performance
-		if model_training_response.finished_epochs is True:
-			performance = performance * 1.03
-		self.storage.set_trial_value(model_training_response.id, model_training_response.performance)
+
+		# Adjust performance if finished all epochs
+		if model_training_response.finished_epochs:
+			performance *= 1.03
+
+		# Get the current trial state
+		trial = self.storage.get_trial(model_training_response.id)
+
+		if trial.state.is_finished():
+			print(f"Trial {model_training_response.id} is already finished; skipping update.")
+			return
+
+		# Update trial values and state
+		self.storage.set_trial_value(model_training_response.id, performance)
 		self.storage.set_trial_state(model_training_response.id, TrialState.COMPLETE)
+
+		# Register the completed model
 		self._register_completed_model(model_training_response)
+
+		# Get the best exploration trial and print status
 		best_trial = self.get_best_exploration_classification_model()
-		cad = 'Best exploration trial so far is # ' + str(best_trial.model_training_request.id) + ' with a score of ' + str(best_trial.performance)
+		cad = (
+			f"Best exploration trial so far is # {best_trial.model_training_request.id} "
+			f"with a score of {best_trial.performance:.3f}"
+		)
 		SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': cad})
+
+		# Determine the next action
 		if self.should_generate():
 			return Action.GENERATE_MODEL
 		elif self.should_wait():
@@ -222,6 +242,7 @@ class OptimizationStrategy(object):
 			self._build_hall_of_fame_classification()
 			self.phase = Phase.DEEP_TRAINING
 			return Action.START_NEW_PHASE
+
 
 	def _report_model_response_hof_classification(self, model_training_response: ModelTrainingResponse):
 		SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Received HoF model response'})

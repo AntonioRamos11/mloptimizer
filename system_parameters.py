@@ -15,9 +15,9 @@ class SystemParameters:
     ]
     
     #DATASET_NAME: str = 'mnist' 
-    DATASET_NAME: str = 'cifar10'  # Example dataset
-
-    # Define specific dataset configurations
+    #DATASET_NAME: str = 'cifar10'  # Example dataset
+    DATASET_NAME: str = 'fashion_mnist'  # Example dataset
+    # Define specific dataset configurations    
     dataset_config = {
         'cifar10': {
             'shape': (32, 32, 3),

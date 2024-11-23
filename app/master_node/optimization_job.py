@@ -46,6 +46,29 @@ class OptimizationJob:
 	async def _run_optimization_loop(self, trials: int) -> aio_pika.Connection:
 		connection = await self.rabbitmq_client.listen_for_model_results(self.on_model_results)
 		return connection
+    
+
+
+	def delete_models_except_best(directory: str, model_names: list, best_model_name: str):
+		"""
+		Elimina todos los modelos en la lista `model_names` excepto el `best_model`.
+
+		Args:
+			directory (str): Directorio donde se encuentran los modelos.
+			model_names (list): Lista de nombres de modelos a eliminar.
+			best_model_name (str): Nombre del mejor modelo que no debe ser eliminado.
+		"""
+		try:
+			for model_name in model_names:
+				if model_name != best_model_name:  # Si no es el modelo mejor, eliminarlo
+					model_path = os.path.join(directory, model_name)
+					if os.path.exists(model_path):
+						os.remove(model_path)
+						print(f"Eliminado: {model_name}")
+					else:
+						print(f"El archivo {model_name} no existe en el directorio.")
+		except Exception as e:
+			print(f"Error al eliminar modelos: {e}")
 
 	async def on_model_results(self, response: dict):
 		model_training_response = ModelTrainingResponse.from_dict(response)
@@ -68,11 +91,10 @@ class OptimizationJob:
 			best_model = self.optimization_strategy.get_best_model()
 			await self._log_results(best_model)
 			model = Model(best_model.model_training_request, self.dataset)
+			directory = "best_weights/" 	
+			self.delete_models_except_best(directory, Model.model_names, best_model.model_training_request) 
 			model.is_model_valid()
-			# Save the model weights
-			model_path = f"saved_models/{best_model.model_training_request.experiment_id}_best_model.h5"
-			model.model.save_weights(model_path)
-			SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': f'Saved best model weights to {model_path}'})
+			
 			self.loop.stop()
 
 	async def generate_model(self):

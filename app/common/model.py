@@ -15,6 +15,7 @@ from system_parameters import SystemParameters as SP
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 class Model:
+	model_names = []
 	def __init__(self, model_training_request: ModelTrainingRequest, dataset: Dataset):
 		self.id = model_training_request.id
 		self.experiment_id = model_training_request.experiment_id
@@ -49,6 +50,7 @@ class Model:
 			use_augmentation = not self.is_partial_training
 		else:
 			use_augmentation = False
+
 		input_shape = self.dataset.get_input_shape()
 		class_count = self.dataset.get_classes_count()
 		model = self.build_model(input_shape, class_count)
@@ -58,6 +60,7 @@ class Model:
 		validation_steps = self.dataset.get_validation_steps()
 		test = self.dataset.get_test_data()
 
+		# Learning rate scheduler
 		def scheduler(epoch):
 			if epoch < 10:
 				return 0.001
@@ -65,40 +68,77 @@ class Model:
 				return float(0.001 * tf.math.exp(0.01 * (10 - epoch)).numpy())
 
 		scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
-		early_stopping: keras.callbacks.EarlyStopping = None
+
+		# Configurar el monitor según el tipo de entrenamiento
 		if self.search_space_type == SearchSpaceType.IMAGE:
 			monitor_exploration_training = 'val_loss'
 			monitor_full_training = 'val_accuracy'
 		elif self.search_space_type == SearchSpaceType.TIME_SERIES:
 			monitor_exploration_training = 'loss'
 			monitor_full_training = 'loss'
-		else: 
+		else:
 			monitor_exploration_training = 'val_loss'
 			monitor_full_training = 'val_loss'
 
+		# Early stopping configuration
 		if self.is_partial_training:
-			early_stopping = keras.callbacks.EarlyStopping(monitor=monitor_exploration_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=False)
+			early_stopping = keras.callbacks.EarlyStopping(
+				monitor=monitor_exploration_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
 		else:
-			early_stopping = keras.callbacks.EarlyStopping(monitor=monitor_full_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
+			early_stopping = keras.callbacks.EarlyStopping(
+				monitor=monitor_full_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
+
+		# Logging y checkpoints
 		model_stage = "exp" if self.is_partial_training else "hof"
 		log_dir = f"logs/{self.experiment_id}/{model_stage}-{self.id}"
 		tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
-		callbacks = [early_stopping, tensorboard, scheduler_callback]
+		checkpoint_path = f"checkpoints/best_model_{self.id}.h5"
+		model_checkpoint = keras.callbacks.ModelCheckpoint(
+			filepath=checkpoint_path,
+			monitor=monitor_full_training,
+			save_best_only=True,
+			verbose=1
+		)
+
+		callbacks = [early_stopping, tensorboard, scheduler_callback, model_checkpoint]
+
+		# Entrenamiento del modelo
 		history = model.fit(
 			train,
 			epochs=self.epochs,
 			steps_per_epoch=training_steps,
 			callbacks=callbacks,
-			validation_data = validation,
+			validation_data=validation,
 			validation_steps=validation_steps,
 		)
+
+		# Guardar los pesos del mejor modelo
+		if early_stopping.restore_best_weights:
+			best_weights_path = f"best_weights/{self.experiment_id}_{model_stage}_{self.id}.weights.h5"
+			model.save_weights(best_weights_path)
+			print(f"Best weights saved at {best_weights_path}")
+		else:
+			# Guardar los pesos finales si no hubo early stopping
+			final_weights_path = f"final_weights/{self.experiment_id}_{model_stage}_{self.id}.weights.h5"
+			model.save_weights(final_weights_path)
+			print(f"Final weights saved at {final_weights_path}")
+
+		# Guardar información adicional del modelo
+		model_name = f"{self.experiment_id}_{model_stage}_{self.id}.weights.h5"
+		Model.model_names.append(model_name)
+		print(f"Model '{model_name}' added to list of model names.")
+
 		did_finish_epochs = self._did_finish_epochs(history, self.epochs)
+
+		# Evaluar el modelo
 		if self.search_space_type == SearchSpaceType.IMAGE:
 			loss, training_val = model.evaluate(test, verbose=0)
 		else:
 			training_val = model.evaluate(test, verbose=0)
+
 		tf.keras.backend.clear_session()
 		return training_val, did_finish_epochs
+
 
 	def is_model_valid(self) -> bool:
 		is_valid = True

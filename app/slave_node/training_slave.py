@@ -17,7 +17,7 @@ class TrainingSlave:
 	def __init__(self, dataset: Dataset, model_architecture_factory: ModelArchitectureFactory):
 		#asyncio.set_event_loop(asyncio.new_event_loop())
 		#self.loop = asyncio.get_event_loop()
-		self.loop = asyncio.loop.run_until_complete(self.loop)
+		self.loop = asyncio.get_event_loop()
 		self.dataset = dataset
 		rabbit_connection_params = RabbitConnectionParams.new()
 		self.rabbitmq_client = SlaveRabbitMQClient(rabbit_connection_params, self.loop)

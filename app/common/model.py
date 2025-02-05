@@ -69,7 +69,7 @@ class Model:
 			monitor_full_training = 'val_accuracy'
 		elif self.search_space_type == SearchSpaceType.TIME_SERIES:
 			monitor_exploration_training = 'loss'
-			monitor_full_training = 'loss'
+			monitor_full_training = 'loss'	
 		else: 
 			monitor_exploration_training = 'val_loss'
 			monitor_full_training = 'val_loss'

@@ -75,9 +75,9 @@ class Model:
 			monitor_full_training = 'val_loss'
 
 		if self.is_partial_training:
-			early_stopping = keras.callbacks.EarlyStopping(monitor=monitor_exploration_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=False)
+			early_stopping = tf.keras.callbacks.EarlyStopping(monitor=monitor_exploration_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
 		else:
-			early_stopping = keras.callbacks.EarlyStopping(monitor=monitor_full_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
+			early_stopping = tf.keras.callbacks.EarlyStopping(monitor=monitor_full_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
 		model_stage = "exp" if self.is_partial_training else "hof"
 		log_dir = "logs/{}/{}-{}".format(self.experiment_id, model_stage, str(self.id))
 		tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)

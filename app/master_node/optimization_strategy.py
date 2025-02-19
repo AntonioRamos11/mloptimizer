@@ -11,14 +11,15 @@ from app.common.dataset import Dataset
 from system_parameters import SystemParameters as SP
 from app.common.socketCommunication import *
 
+from optuna.pruners import HyperbandPruner
 class OptimizationStrategy(object):
 
 	def __init__(self, model_architecture_factory: ModelArchitectureFactory, dataset: Dataset, exploration_trials: int, hall_of_fame_size: int):
 		self.model_architecture_factory:ModelArchitectureFactory = model_architecture_factory
 		self.dataset: Dataset = dataset
 		self.storage = optuna.storages.InMemoryStorage()
-		self.main_study: optuna.Study = optuna.create_study(study_name=dataset.get_tag(), storage=self.storage, load_if_exists=True, pruner=RepeatPruner(),
-														direction='maximize', sampler=TPESampler(n_ei_candidates=5000, n_startup_trials=30))
+		self.main_study: optuna.Study = optuna.create_study(study_name=dataset.get_tag(), storage=self.storage, load_if_exists=True, pruner=HyperbandPruner(),
+														direction='maximize', sampler=TPESampler(n_ei_candidates=5000, n_startup_trials=30,))
 		self.study_id = 0
 		self.experiment_id = dataset.get_tag() + '-' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 		#Local class in the file

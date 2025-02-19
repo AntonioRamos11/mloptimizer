@@ -14,14 +14,14 @@ class SystemParameters:
         INSTANCE_USER, INSTANCE_PASSWORD, INSTANCE_VIRTUAL_HOST
     ]
     
-    DATASET_NAME: str = 'mnist' 
+    DATASET_NAME: str = 'mnist'  # Example datasetr
     #DATASET_NAME: str = 'cifar10'  # Example dataset
 
     # Define specific dataset configurations
     dataset_config = {
         'cifar10': {
             'shape': (32, 32, 3),
-            'classes': 10
+            'classes': 10   
         },
         'mnist': {
             'shape': (28, 28, 1),

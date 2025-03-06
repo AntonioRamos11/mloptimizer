@@ -18,7 +18,9 @@ class OptimizationStrategy(object):
 		self.model_architecture_factory:ModelArchitectureFactory = model_architecture_factory
 		self.dataset: Dataset = dataset
 		self.storage = optuna.storages.InMemoryStorage()
-		self.main_study: optuna.Study = optuna.create_study(study_name=dataset.get_tag(), storage=self.storage, load_if_exists=True, pruner=HyperbandPruner(),
+
+		#RepeatPruner
+		self.main_study: optuna.Study = optuna.create_study(study_name=dataset.get_tag(), storage=self.storage, load_if_exists=True, pruner=RepeatPruner(),
 														direction='maximize', sampler=TPESampler(n_ei_candidates=5000, n_startup_trials=30,))
 		self.study_id = 0
 		self.experiment_id = dataset.get_tag() + '-' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")

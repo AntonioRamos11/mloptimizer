@@ -1,5 +1,5 @@
 #!/bin/bash
-# test.sh - Final corrected version
+# test.sh - With Docker installation
 
 # 1. Repository Setup
 REPO_DIR="mloptimizer"
@@ -26,12 +26,9 @@ if ! command -v conda &>/dev/null; then
   wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   bash miniconda.sh -b -p /root/miniconda
   rm miniconda.sh
-  # Initialize conda for current shell
   source /root/miniconda/etc/profile.d/conda.sh
   conda init bash
 fi
-
-# Initialize conda properly
 source /root/miniconda/etc/profile.d/conda.sh
 
 # 4. Environment Setup
@@ -40,11 +37,40 @@ if ! conda env list | grep -q $ENV_NAME; then
   echo "Creating conda environment from $ENV_FILE..."
   conda env create -f $ENV_FILE
 fi
-
-echo "Activating conda environment..."
 conda activate $ENV_NAME || { echo "Failed to activate environment"; exit 1; }
 
-# 5. RabbitMQ Setup
+# 5. Docker Installation
+if ! command -v docker &>/dev/null; then
+  echo "Installing Docker..."
+  apt-get update -qq
+  apt-get install -qq -y \
+    ca-certificates \
+    curl \
+    gnupg
+
+  # Add Docker's official GPG key
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
+
+  # Set up the repository
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+  # Install Docker Engine
+  apt-get update -qq
+  apt-get install -qq -y \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin
+
+  # Verify Docker installation
+  docker --version || { echo "Docker installation failed"; exit 1; }
+fi
+
+# 6. RabbitMQ Setup
 echo "Starting RabbitMQ..."
 docker rm -f rabbitmq 2>/dev/null
 docker run -d --network host \
@@ -52,11 +78,11 @@ docker run -d --network host \
   -p 15672:15672 -p 5672:5672 \
   rabbitmq:management
 
-# 6. Install Python dependencies
+# 7. Install Python dependencies
 echo "Installing Python requirements..."
 pip install -r requirements.txt
 
-# 7. Start Services
+# 8. Start Services
 echo "Starting processes..."
 pkill -f "python run_master.py"
 pkill -f "python run_slave.py"

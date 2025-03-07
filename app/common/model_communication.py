@@ -40,6 +40,16 @@ class ModelTrainingResponse:
 	id: int
 	performance: float
 	finished_epochs: bool
+	hardware_info: dict = None
+
+	def __post_init__(self):
+		# If hardware_info wasn't provided, try to get it
+		if self.hardware_info is None:
+			try:
+				from app.common.utils import get_hardware_info
+				self.hardware_info = get_hardware_info()
+			except:
+				self.hardware_info = {"error": "Failed to gather hardware info"}
 
 	@classmethod
 	def from_dict(cls, body_dict):

@@ -18,19 +18,43 @@ class InitNodes:
 
 	def master(self):
 		model_architecture_factory: ModelArchitectureFactory = self.get_model_architecture()
-		dataset: Dataset = self.get_dataset()
-		print(model_architecture_factory)
+		
+		# Check if we should use multiple datasets
+		if hasattr(SP, 'DATASET_NAMES') and len(SP.DATASET_NAMES) > 1:
+			datasets = self.get_multiple_datasets()
+			# Use the first dataset as the main one for initialization
+			main_dataset = datasets[0]
+			SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, 
+				{'node': 1, 'msg': f'Initializing master node with {len(datasets)} datasets'})
+		else:
+			main_dataset = self.get_dataset()
+			datasets = [main_dataset]
+			SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, 
+				{'node': 1, 'msg': 'Initializing master node with single dataset'})
+		
 		from app.master_node.optimization_job import OptimizationJob
-		SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Initilizating master node'})
-		optimization_job = OptimizationJob(dataset, model_architecture_factory)
+		SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Initializing master node'})
+		optimization_job = OptimizationJob(main_dataset, model_architecture_factory, datasets)
 		optimization_job.start_optimization(trials=SP.TRIALS)
 
 	def slave(self):
 		model_architecture_factory: ModelArchitectureFactory = self.get_model_architecture()
-		dataset: Dataset = self.get_dataset()
+		
+		# Check if we should use multiple datasets
+		if hasattr(SP, 'DATASET_NAMES') and len(SP.DATASET_NAMES) > 1:
+			datasets = self.get_multiple_datasets()
+			# Use the first dataset as the main one for initialization
+			main_dataset = datasets[0]
+			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, 
+				{'node': 2, 'msg': f'Initializing slave node with {len(datasets)} datasets'})
+		else:
+			main_dataset = self.get_dataset()
+			datasets = [main_dataset]
+			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, 
+				{'node': 2, 'msg': 'Initializing slave node with single dataset'})
+		
 		from app.slave_node.training_slave import TrainingSlave
-		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': 'Initilizating slave node'})
-		training_slave = TrainingSlave(dataset, model_architecture_factory)
+		training_slave = TrainingSlave(main_dataset, model_architecture_factory, datasets)
 		training_slave.start_slave()
 
 	def get_model_architecture(self) -> ModelArchitectureFactory:
@@ -70,7 +94,50 @@ class InitNodes:
 		else:
 			print("Please enter a valid dataset type")
 			return
-
+	
+	def get_multiple_datasets(self) -> list:
+		"""
+		Create and return a list of datasets based on DATASET_NAMES in SystemParameters
+		
+		Returns:
+			list: List of Dataset objects
+		"""
+		datasets = []
+		
+		if hasattr(SP, 'DATASET_NAMES') and len(SP.DATASET_NAMES) > 1:
+			for dataset_name in SP.DATASET_NAMES:
+				if SP.DATASET_TYPE == 1:
+					# For each dataset name, create a dataset instance
+					dataset = ImageClassificationBenchmarkDataset(
+						dataset_name, 
+						SP.dataset_config[dataset_name]['shape'],  # Use shape from config
+						SP.dataset_config[dataset_name]['classes'],  # Use classes from config
+						SP.DATASET_BATCH_SIZE, 
+						SP.DATASET_VALIDATION_SPLIT
+					)
+				elif SP.DATASET_TYPE == 2:
+					dataset = RegressionBenchmarkDataset(
+						dataset_name, 
+						SP.dataset_config[dataset_name]['shape'] if 'shape' in SP.dataset_config[dataset_name] else SP.DATASET_SHAPE,
+						SP.DATASET_FEATURES, 
+						SP.DATASET_LABELS, 
+						SP.DATASET_BATCH_SIZE, 
+						SP.DATASET_VALIDATION_SPLIT
+					)
+				elif SP.DATASET_TYPE == 3:
+					dataset = TimeSeriesBenchmarkDataset(
+						dataset_name, 
+						SP.DATASET_WINDOW_SIZE, 
+						SP.DATASET_DATA_SIZE, 
+						SP.DATASET_BATCH_SIZE, 
+						SP.DATASET_VALIDATION_SPLIT
+					)
+				datasets.append(dataset)
+		else:
+			# If only one dataset, just add the regular dataset
+			datasets.append(self.get_dataset())
+		
+		return datasets
 	#Method for c# graphic interface
 	@staticmethod
 	def change_system_info(parameters: dict):

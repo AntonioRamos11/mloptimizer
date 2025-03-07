@@ -29,7 +29,7 @@ def get_tflops(gpu_name: str) -> Optional[float]:
 
 def get_best_offer(gpu_count: int) -> Optional[Dict]:
     """Find the best offer for a specific GPU count per machine based on price/TFLOPs"""
-    cmd = f'vastai search offers "gpu_count={gpu_count} reliability>0.98" -o json --raw'
+    cmd = f'vastai search offers "gpu_count={gpu_count} reliability>0.98" -o "dph_total asc" --raw'
     print(f"Executing: {cmd}")
     
     try:

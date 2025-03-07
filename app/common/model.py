@@ -14,6 +14,9 @@ from system_parameters import SystemParameters as SP
 #physical_devices = tf.config.list_physical_devices('GPU')
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+from app.common.dataset_switcher import DatasetSwitchCallback
+
+
 class Model:
 	def __init__(self, model_training_request: ModelTrainingRequest, dataset: Dataset):
 		self.id = model_training_request.id
@@ -239,3 +242,133 @@ class Model:
 		print("Model building took", elapsed_seconds, "(miliseconds)")
 		model.summary()
 		return model
+
+	def build_and_train_multiple_datasets(self, datasets_list):
+		"""
+		Train model sequentially on multiple datasets with repetitions
+		
+		Args:
+			datasets_list: List of datasets to train on
+		
+		Returns:
+			tuple: (best_performance, did_finish_epochs)
+		"""
+		import tensorflow as tf
+		from tensorflow.keras.callbacks import EarlyStopping
+		
+		# Initialize tracking variables
+		best_performance = 0.0
+		did_finish_all_epochs = True
+		
+		# Get number of repetitions for each dataset
+		repetitions = getattr(SP, 'DATASET_REPETITIONS', 1)
+		
+		# For each dataset in the list, train multiple times
+		for dataset_index, current_dataset in enumerate(datasets_list):
+			dataset_name = SP.DATASET_NAMES[dataset_index]
+			
+			# Repeat training for this dataset
+			for rep in range(repetitions):
+				try:
+					# Clean up memory
+					tf.keras.backend.clear_session()
+					
+					print(f"\nTraining on dataset {dataset_index+1}/{len(datasets_list)}: "
+						  f"{dataset_name} (Repetition {rep+1}/{repetitions})")
+					
+					# Load the dataset if this is the first repetition
+					if rep == 0:
+						current_dataset.load()
+					
+					# Build model specifically for this dataset
+					print(f"Building model for input shape: {current_dataset.get_input_shape()}")
+					
+					# Build the appropriate model type
+					if self.search_space_type == SearchSpaceType.IMAGE:
+						keras_model = self.build_image_model(
+							self.model_params, 
+							current_dataset.get_input_shape(), 
+							current_dataset.get_classes_count()
+						)
+						use_augmentation = not self.is_partial_training
+					elif self.search_space_type == SearchSpaceType.REGRESSION:
+						keras_model = self.build_regression_model(
+							self.model_params, 
+							current_dataset.get_input_shape(), 
+							current_dataset.get_classes_count()
+						)
+						use_augmentation = False
+					else:
+						keras_model = self.build_time_series_model(
+							self.model_params, 
+							current_dataset.get_input_shape(), 
+							current_dataset.get_classes_count()
+						)
+						use_augmentation = False
+						
+					if keras_model is None:
+						print(f"Failed to build model for dataset {dataset_index+1}, repetition {rep+1}")
+						continue
+						
+					# Get data for training
+					train = current_dataset.get_train_data(use_augmentation)
+					validation = current_dataset.get_validation_data()
+					test = current_dataset.get_test_data()
+					
+					# Define learning rate scheduler
+					def scheduler(epoch):
+						if epoch < 10:
+							return 0.001
+						else:
+							return float(0.001 * tf.math.exp(0.01 * (10 - epoch)).numpy())
+					
+					# Set up callbacks
+					callbacks = [
+						EarlyStopping(monitor='val_loss', patience=self.early_stopping_patience),
+						tf.keras.callbacks.LearningRateScheduler(scheduler)
+					]
+					
+					# Get training steps
+					training_steps = current_dataset.get_training_steps(use_augmentation)
+					validation_steps = current_dataset.get_validation_steps()
+					
+					# Train on current dataset
+					history = keras_model.fit(
+						train,
+						epochs=self.epochs,
+						steps_per_epoch=training_steps,
+						validation_data=validation,
+						validation_steps=validation_steps,
+						callbacks=callbacks
+					)
+					
+					# Evaluate performance
+					if self.search_space_type == SearchSpaceType.IMAGE:
+						loss, current_performance = keras_model.evaluate(test, verbose=0)
+					else:
+						current_performance = 1.0 - keras_model.evaluate(test, verbose=0)
+					
+					log_msg = (f"Performance on {dataset_name} (Rep {rep+1}/{repetitions}): "
+							   f"{current_performance:.4f}")
+					print(log_msg)
+					SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, 
+						{'node': 2, 'msg': log_msg})
+					
+					# Update best performance
+					best_performance = max(best_performance, current_performance)
+					
+					# Check if all epochs completed
+					if len(history.history['loss']) < self.epochs:
+						did_finish_all_epochs = False
+						
+				except Exception as e:
+					print(f"Error training on dataset {dataset_index+1}, repetition {rep+1}: {str(e)}")
+					import traceback
+					print(traceback.format_exc())
+					did_finish_all_epochs = False
+					
+				finally:
+					# Always clean up after each dataset repetition to prevent memory leaks
+					tf.keras.backend.clear_session()
+		
+		return best_performance, did_finish_all_epochs

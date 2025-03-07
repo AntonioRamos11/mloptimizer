@@ -36,6 +36,8 @@ class SystemParameters:
             'classes': 100
         }
     }
+    DATASET_REPETITIONS: int = 4  # Number of times to train on each dataset
+    DATASET_NAMES: list = ['cifar10','mnist'] 
     DATASET_SHAPE: tuple = (32, 32, 3)  # Adjust based on dataset shape
     
     DATASET_CLASSES: int = 10

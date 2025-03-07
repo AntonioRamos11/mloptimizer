@@ -19,7 +19,7 @@
     exit 1
   fi
 
-  # 3. Conda Setup
+  # 3. Conda fSetup 
   export PATH="/root/miniconda/bin:$PATH"
   if ! command -v conda &>/dev/null; then
     echo "Installing Miniconda..."
@@ -85,6 +85,17 @@
   # 8. Start Services
   echo "Starting processes..."
   pkill -f "python run_master.py"
+  pkill -f "python run_slave.py"
+  nohup python run_master.py > master.log 2>&1 &
+  nohup python run_slave.py > slave.log 2>&1 &
+  sleep 2
+  pkill -f "python run_master.py"
+  pkill -f "python run_slave.py"
+  nohup python run_master.py > master.log 2>&1 &
+  nohup python run_slave.py > slave.log 2>&1 &
+
+  sleep 2
+  pkill  -f "python run_master.py"
   pkill -f "python run_slave.py"
   nohup python run_master.py > master.log 2>&1 &
   nohup python run_slave.py > slave.log 2>&1 &

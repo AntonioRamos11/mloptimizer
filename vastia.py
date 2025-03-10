@@ -4,7 +4,71 @@ import argparse
 from tabulate import tabulate
 import time
 
-def search_best_price_performance(num_gpus=4, min_reliability=0.50, limit=30):
+# TFLOPs for different GPU models (FP16/Mixed precision which is most relevant for ML)
+gpu_tflops = {
+    "H200": 989,
+    "H100_SXM": 989,
+    "H100_NVL": 989,
+    "RTX_4090": 330,
+    "RTX_5090": 535,
+    "RTX_6000Ada": 206.1,
+    "A100_SXM4": 312,
+    "RTX_4070": 139,
+    "RTX_3090": 142,
+    "L40": 90.5,
+    "A800_PCIE": 312,
+    "RTX_4080S": 200,
+    "L40S": 91,
+    "RTX_A6000": 149,
+    "RTX_4070S_Ti": 160,
+    "A100_PCIE": 312,
+    "RTX_A5000": 75,
+    "A40": 150,
+    "RTX_5000Ada": 75,
+    "RTX_4080": 200,
+    "RTX_3080": 119,
+    "A100X": 312
+}
+
+# Add a GPU TFLOPs mapping dictionary
+GPU_TFLOPS = {
+    # NVIDIA RTX 30 series (FP32)
+    "RTX_3080": 29.8,
+    "RTX_3090": 35.6,
+    
+    # NVIDIA RTX 40 series (FP32)
+    "RTX_4070": 29.1,
+    "RTX_4070_Ti": 40.1,
+    "RTX_4080": 48.7,
+    "RTX_4080S": 49.2,  # Super variant
+    "RTX_4090": 82.6,
+    
+    # NVIDIA datacenter GPUs
+    "H100_SXM": 989.0,  # H100 SXM5 FP32
+    
+    # Default value for unknown GPUs
+    "default": 0.0
+}
+
+def calculate_total_tflops(gpu_count, gpu_model):
+    """Calculate total TFLOPs based on GPU count and model."""
+    # Handle different format variations in the model name
+    model_key = gpu_model
+    
+    # Standardize model names if needed
+    if model_key not in gpu_tflops:
+        # Try some common variations
+        for key in gpu_tflops.keys():
+            if key in model_key:
+                model_key = key
+                break
+    
+    if model_key in gpu_tflops:
+        return gpu_count * gpu_tflops[model_key]
+    else:
+        # Default to 0 or None if model not found
+        return 0
+def search_best_price_performance(num_gpus=2, min_reliability=0.50, limit=30):
     """
     Search for best price/performance offerings on Vast.ai based on GPU count
     
@@ -82,17 +146,21 @@ def print_results(results, title):
         return
         
     print(f"\n{title}")
-    headers = ["ID", "Model", "$/hr", "DLP", "DLP/$", "GPU Count", "Storage", "RAM"]
+    headers = ["ID", "Model", "$/hr", "DLP", "DLP/$", "TFLOPs", "GPU Count", "Storage", "RAM"]
     table_data = []
     
     for entry in results:
         try:
+            gpu_model = entry.get('Model', 'N/A')
+            tflops = GPU_TFLOPS.get(gpu_model, GPU_TFLOPS["default"])
+            total_tflops = tflops * int(entry.get('GPU_count', 1))
             table_data.append([
                 entry.get('ID', 'N/A'),
-                entry.get('Model', 'N/A'),
+                gpu_model,
                 entry.get('$/hr', 'N/A'),
                 entry.get('DLP', 'N/A'),
                 f"{entry.get('DLP/$', 0):.2f}",
+                total_tflops,
                 entry.get('GPU_count', 'N/A'),
                 entry.get('Storage', 'N/A'),
                 entry.get('RAM', 'N/A')

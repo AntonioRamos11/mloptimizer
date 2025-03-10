@@ -1,181 +1,231 @@
-import os
+import subprocess
 import re
-import numpy as np
-import matplotlib.pyplot as plt
+import argparse
+from tabulate import tabulate
+import time
 
-# === Configuration ===
-BASELINE_TFLOPS = 30.0  # Assumed RTX 3080 performance in TFLOPS
-results_dir = "/home/p0wden/Documents/IA/mloptimizer/results"
-
-# === Functions for processing training logs (baseline: RTX 3080) ===
-
-def get_dataset_type(filename):
-    """Extract dataset type from filename (assumes format like 'mnist-20250218-205917')."""
-    return filename.split("-")[0]
-
-def get_training_time(filepath):
+def search_best_price_performance(num_gpus=4, min_reliability=0.50, limit=30):
     """
-    Extracts training time (in seconds) from a log file.
-    Expected log line: "Optimization took: 01:06:06 (hh:mm:ss) 3966.00772857666 (Seconds)"
-    """
-    with open(filepath, "r") as f:
-        content = f.read()
-        match = re.search(r"Optimization took: \d+:\d+:\d+ \(hh:mm:ss\) (\d+\.\d+) \(Seconds\)", content)
-        if match:
-            return float(match.group(1))
-    return None
-
-# --- Process training logs ---
-dataset_times = {}
-for filename in os.listdir(results_dir):
-    filepath = os.path.join(results_dir, filename)
-    if os.path.isfile(filepath):
-        dataset_type = get_dataset_type(filename)
-        training_time = get_training_time(filepath)
-        if training_time is not None:
-            dataset_times.setdefault(dataset_type, []).append(training_time)
-
-# Compute median training time (in seconds) for each dataset type
-median_times = {dt: np.median(times) for dt, times in dataset_times.items()}
-
-# === GPU Info Parsing & Cost Calculation ===
-
-def parse_gpu_info(info_string, baseline_tflops=BASELINE_TFLOPS):
-    """
-    Parses the GPU info block and returns:
-      - gpu_name (e.g., "2x H200")
-      - tflops (per GPU)
-      - multiplier (number of GPUs)
-      - total_tflops (multiplier * tflops)
-      - relative_factor (total_tflops / baseline_tflops)
-      - cost_per_hour (rental cost)
-    """
-    # --- Extract GPU name (look for a line like "2x H200") ---
-    gpu_name = None
-    for line in info_string.splitlines():
-        line = line.strip()
-        if re.match(r"^\d+x\s+\S+", line):
-            gpu_name = line
-            break
-    if gpu_name is None:
-        gpu_name = "Unknown GPU"
+    Search for best price/performance offerings on Vast.ai based on GPU count
     
-    # --- Extract multiplier from the GPU name (e.g., "2x H200") ---
-    multiplier = 1
-    multiplier_match = re.match(r"(\d+)x", gpu_name)
-    if multiplier_match:
-        multiplier = int(multiplier_match.group(1))
+    Args:
+        num_gpus: Exact number of GPUs to search for
+        min_reliability: Minimum reliability score (0-1)
+        limit: Number of results to return
     
-    # --- Extract the TFLOPS value (e.g., "107.1  TFLOPS") ---
-    tflops_match = re.search(r"(\d+(?:\.\d+)?)\s*TFLOPS", info_string)
-    tflops = float(tflops_match.group(1)) if tflops_match else 0.0
-
-    total_tflops = multiplier * tflops
-    relative_factor = total_tflops / baseline_tflops
-
-    # --- Extract rental cost per hour (e.g., "$6.403/hr") ---
-    cost_match = re.search(r"\$(\d+\.\d+)/hr", info_string)
-    cost_per_hour = float(cost_match.group(1)) if cost_match else 0.0
-
-    return {
-        "gpu_name": gpu_name,
-        "multiplier": multiplier,
-        "tflops": tflops,
-        "total_tflops": total_tflops,
-        "relative_factor": relative_factor,
-        "cost_per_hour": cost_per_hour
-    }
-
-# --- GPU info block (provided as input) ---
-gpu_info_block = """Type #17859058
-, US
-2x H200
-107.1  TFLOPS
-m:32676
-datacenter:97732
-verified
-140 GB
-3111.1 GB/s
-SB27C00631
-PCIE 5.0,16x
-52.7 GB/s
-CPU
-48.0/192 cpu
-516/2064 GB
-SAMSUNG MZWLO3T8HCLS-00A07
-40882 MB/s
-3933.4 GB
-4137 Mbps
-7575 Mbps
-9999 ports
-829.6 DLPerf
-Max CUDA: 12.4
-Max Duration
-4 mon.
-Reliability
-99.66%
-129.6 DLP/$/hr
-$6.403/hr"""
-
-# Parse the GPU info
-gpu_info = parse_gpu_info(gpu_info_block)
-
-# Display parsed GPU information
-print("=== GPU Information ===")
-print(f"GPU Name: {gpu_info['gpu_name']}")
-print(f"TFLOPS per GPU: {gpu_info['tflops']}")
-print(f"Number of GPUs: {gpu_info['multiplier']}")
-print(f"Total TFLOPS: {gpu_info['total_tflops']}")
-print(f"Relative Performance Factor (vs. RTX 3080): {gpu_info['relative_factor']:.2f}")
-print(f"Rental Cost per Hour: ${gpu_info['cost_per_hour']:.3f}/hr")
-print()
-
-# === Estimation of Training Time, Cost, and Summing Totals ===
-
-dataset_labels = []
-estimated_times_hr_list = []
-costs_list = []
-total_cost = 0.0
-
-print("=== Estimated Training Times and Costs (for 4 runs per dataset) ===")
-for dataset_type, median_time in median_times.items():
-    # Estimated time on new GPU (in seconds and then hours)
-    estimated_time_sec = median_time / gpu_info['relative_factor']
-    estimated_time_hr = estimated_time_sec / 3600
-    # Cost for 4 runs
-    cost_for_4_runs = estimated_time_hr * gpu_info['cost_per_hour'] * 4
+    Returns:
+        List of offerings with all metrics calculated
+    """
+    # Run the vastai search offers command
+    command = f"vastai search offers 'reliability > {min_reliability} num_gpus={num_gpus}' -o 'dlperf-'"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
     
-    dataset_labels.append(dataset_type)
-    estimated_times_hr_list.append(estimated_time_hr)
-    costs_list.append(cost_for_4_runs)
-    total_cost += cost_for_4_runs
+    # Check if the command was successful
+    if result.returncode != 0:
+        print(f"Error running vastai command for {num_gpus} GPUs:")
+        print(result.stderr)
+        return []
+    
+    # Parse the output
+    lines = result.stdout.splitlines()
+    if len(lines) < 2:
+        print(f"No results found for {num_gpus} GPUs")
+        return []
+        
+    headers = lines[0].split()
+    data = []
+    
+    for line in lines[1:]:
+        if not line.strip():
+            continue
+        parts = re.split(r'\s{2,}', line)
+        if len(parts) >= len(headers):
+            data.append(dict(zip(headers, parts)))
+    
+    # Calculate DLP/$ and add it to the data
+    for entry in data:
+        try:
+            dlp = float(entry['DLP'])
+            price_per_hour = float(entry['$/hr'])
+            entry['DLP/$'] = dlp / price_per_hour
+            entry['GPU_count'] = num_gpus
+        except (KeyError, ValueError) as e:
+            print(f"Error processing entry: {e}")
+            continue
+    
+    return data
 
-    print(f"Dataset: {dataset_type}")
-    print(f"  Baseline median time (RTX 3080): {median_time/60:.2f} minutes")
-    print(f"  Estimated time on {gpu_info['gpu_name']}: {estimated_time_sec/60:.2f} minutes ({estimated_time_hr:.2f} hours)")
-    print(f"  Estimated cost for 4 training runs: ${cost_for_4_runs:.2f}")
-    print()
+def get_sorted_offers(data, sort_by='DLP/$', reverse=True, limit=10):
+    """
+    Sort offers by specified criteria
+    
+    Args:
+        data: List of offer dictionaries
+        sort_by: Field to sort by ('DLP/$', '$/hr', or 'DLP')
+        reverse: True for descending, False for ascending
+        limit: Number of results to return
+        
+    Returns:
+        Sorted list limited to specified count
+    """
+    try:
+        sorted_data = sorted(data, key=lambda x: float(x.get(sort_by, 0)), reverse=reverse)
+        return sorted_data[:limit]
+    except (ValueError, KeyError) as e:
+        print(f"Error sorting data: {e}")
+        return data[:limit]
 
-print(f"Total estimated cost for all datasets (4 runs each): ${total_cost:.2f}")
+def print_results(results, title):
+    """Print formatted results"""
+    if not results:
+        print(f"\n{title}: No valid offers found")
+        return
+        
+    print(f"\n{title}")
+    headers = ["ID", "Model", "$/hr", "DLP", "DLP/$", "GPU Count", "Storage", "RAM"]
+    table_data = []
+    
+    for entry in results:
+        try:
+            table_data.append([
+                entry.get('ID', 'N/A'),
+                entry.get('Model', 'N/A'),
+                entry.get('$/hr', 'N/A'),
+                entry.get('DLP', 'N/A'),
+                f"{entry.get('DLP/$', 0):.2f}",
+                entry.get('GPU_count', 'N/A'),
+                entry.get('Storage', 'N/A'),
+                entry.get('RAM', 'N/A')
+            ])
+        except Exception as e:
+            print(f"Error formatting entry: {e}")
+    
+    print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
-# === Plotting Training Time and Cost per Dataset ===
+def compare_configurations():
+    """Compare different GPU configurations with multiple sorting criteria"""
+    print("Searching for optimal GPU configurations on Vast.ai...\n")
+    
+    # Get offers for each configuration
+    single_gpu_data = search_best_price_performance(num_gpus=1)
+    dual_gpu_data = search_best_price_performance(num_gpus=2)
+    quad_gpu_data = search_best_price_performance(num_gpus=4)
+    
+    # Sort by DLP/$ (best price-performance)
+    single_gpu_best_value = get_sorted_offers(single_gpu_data, sort_by='DLP/$', reverse=True)
+    dual_gpu_best_value = get_sorted_offers(dual_gpu_data, sort_by='DLP/$', reverse=True)
+    quad_gpu_best_value = get_sorted_offers(quad_gpu_data, sort_by='DLP/$', reverse=True)
+    
+    # Print best value results
+    print_results(single_gpu_best_value, "TOP VALUE OFFERS WITH 1 GPU (Best DLP/$)")
+    print_results(dual_gpu_best_value, "TOP VALUE OFFERS WITH 2 GPUs (Best DLP/$)")
+    print_results(quad_gpu_best_value, "TOP VALUE OFFERS WITH 4 GPUs (Best DLP/$)")
+    
+    # Sort by lowest price
+    single_gpu_cheapest = get_sorted_offers(single_gpu_data, sort_by='$/hr', reverse=False)
+    dual_gpu_cheapest = get_sorted_offers(dual_gpu_data, sort_by='$/hr', reverse=False)
+    quad_gpu_cheapest = get_sorted_offers(quad_gpu_data, sort_by='$/hr', reverse=False)
+    
+    # Print cheapest results
+    print_results(single_gpu_cheapest, "CHEAPEST OFFERS WITH 1 GPU (Lowest $/hr)")
+    print_results(dual_gpu_cheapest, "CHEAPEST OFFERS WITH 2 GPUs (Lowest $/hr)")
+    print_results(quad_gpu_cheapest, "CHEAPEST OFFERS WITH 4 GPUs (Lowest $/hr)")
+    
+    # Sort by highest performance
+    single_gpu_fastest = get_sorted_offers(single_gpu_data, sort_by='DLP', reverse=True)
+    dual_gpu_fastest = get_sorted_offers(dual_gpu_data, sort_by='DLP', reverse=True)
+    quad_gpu_fastest = get_sorted_offers(quad_gpu_data, sort_by='DLP', reverse=True)
+    
+    # Print highest performance results
+    print_results(single_gpu_fastest, "HIGHEST PERFORMANCE OFFERS WITH 1 GPU (Highest DLP)")
+    print_results(dual_gpu_fastest, "HIGHEST PERFORMANCE OFFERS WITH 2 GPUs (Highest DLP)")
+    print_results(quad_gpu_fastest, "HIGHEST PERFORMANCE OFFERS WITH 4 GPUs (Highest DLP)")
+    
+    # Compare best overall configurations
+    print("\nBEST CONFIGURATION COMPARISON")
+    
+    # Best value across configurations
+    best_value_options = []
+    if single_gpu_best_value:
+        best_value_options.append(("1 GPU", single_gpu_best_value[0]))
+    if dual_gpu_best_value:
+        best_value_options.append(("2 GPUs", dual_gpu_best_value[0]))
+    if quad_gpu_best_value:
+        best_value_options.append(("4 GPUs", quad_gpu_best_value[0]))
+    
+    if best_value_options:
+        best_value_options.sort(key=lambda x: float(x[1].get('DLP/$', 0)), reverse=True)
+        print("\nBest overall configuration by VALUE (DLP/$):")
+        config, best = best_value_options[0]
+        print(f"{config}: {best.get('Model', 'Unknown')} - ${best.get('$/hr', 'N/A')}/hr - DLP/${best.get('DLP/$', 0):.2f}")
+    
+    # Best price across configurations
+    best_price_options = []
+    if single_gpu_cheapest:
+        best_price_options.append(("1 GPU", single_gpu_cheapest[0]))
+    if dual_gpu_cheapest:
+        best_price_options.append(("2 GPUs", dual_gpu_cheapest[0]))
+    if quad_gpu_cheapest:
+        best_price_options.append(("4 GPUs", quad_gpu_cheapest[0]))
+    
+    if best_price_options:
+        best_price_options.sort(key=lambda x: float(x[1].get('$/hr', 0)))
+        print("\nBest overall configuration by PRICE ($/hr):")
+        config, best = best_price_options[0]
+        print(f"{config}: {best.get('Model', 'Unknown')} - ${best.get('$/hr', 'N/A')}/hr - DLP/{best.get('DLP', 0)}")
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    # Best performance across configurations
+    best_perf_options = []
+    if single_gpu_fastest:
+        best_perf_options.append(("1 GPU", single_gpu_fastest[0]))
+    if dual_gpu_fastest:
+        best_perf_options.append(("2 GPUs", dual_gpu_fastest[0]))
+    if quad_gpu_fastest:
+        best_perf_options.append(("4 GPUs", quad_gpu_fastest[0]))
+    
+    if best_perf_options:
+        best_perf_options.sort(key=lambda x: float(x[1].get('DLP', 0)), reverse=True)
+        print("\nBest overall configuration by PERFORMANCE (DLP):")
+        config, best = best_perf_options[0]
+        print(f"{config}: {best.get('Model', 'Unknown')} - ${best.get('$/hr', 'N/A')}/hr - DLP {best.get('DLP', 0)}")
 
-# Plot estimated training time per dataset (in hours)
-ax1.bar(dataset_labels, estimated_times_hr_list, color='skyblue')
-ax1.set_title("Estimated Training Time per Dataset")
-ax1.set_xlabel("Dataset")
-ax1.set_ylabel("Estimated Time (hours)")
-ax1.tick_params(axis='x', rotation=45)
+def create_instance(config_id):
+    """Create a Vast.ai instance with the specified configuration ID"""
+    command = f"vastai create instance {config_id}"
+    print(f"Creating instance with config {config_id}...")
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    
+    if result.returncode == 0:
+        print("Instance created successfully!")
+        print(result.stdout)
+        return True
+    else:
+        print("Error creating instance:")
+        print(result.stderr)
+        return False
 
-# Plot estimated cost per dataset
-ax2.bar(dataset_labels, costs_list, color='salmon')
-ax2.set_title("Estimated Cost per Dataset (4 runs)")
-ax2.set_xlabel("Dataset")
-ax2.set_ylabel("Cost (USD)")
-ax2.tick_params(axis='x', rotation=45)
-
-plt.suptitle(f"GPU: {gpu_info['gpu_name']} | Total Estimated Cost: ${total_cost:.2f}", fontsize=16)
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-plt.show()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Test different GPU configurations on Vast.ai")
+    parser.add_argument("--create", type=str, help="Create an instance with the specified config ID")
+    parser.add_argument("--gpus", type=int, choices=[1, 2, 4, 8], help="Search for specific GPU count")
+    parser.add_argument("--sort", type=str, choices=["value", "price", "performance"], 
+                        default="value", help="Sort criterion: value (DLP/$), price ($/hr), or performance (DLP)")
+    
+    args = parser.parse_args()
+    
+    if args.create:
+        create_instance(args.create)
+    elif args.gpus:
+        data = search_best_price_performance(num_gpus=args.gpus)
+        
+        if args.sort == "value":
+            sorted_data = get_sorted_offers(data, sort_by='DLP/$', reverse=True)
+            print_results(sorted_data, f"TOP VALUE OFFERS WITH {args.gpus} GPU{'s' if args.gpus > 1 else ''} (Best DLP/$)")
+        elif args.sort == "price":
+            sorted_data = get_sorted_offers(data, sort_by='$/hr', reverse=False)
+            print_results(sorted_data, f"CHEAPEST OFFERS WITH {args.gpus} GPU{'s' if args.gpus > 1 else ''} (Lowest $/hr)")
+        elif args.sort == "performance":
+            sorted_data = get_sorted_offers(data, sort_by='DLP', reverse=True)
+            print_results(sorted_data, f"HIGHEST PERFORMANCE OFFERS WITH {args.gpus} GPU{'s' if args.gpus > 1 else ''} (Highest DLP)")
+    else:
+        compare_configurations()

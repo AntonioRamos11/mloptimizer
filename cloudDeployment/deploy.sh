@@ -80,7 +80,7 @@
 
   # 7. Install Python dependencies
   echo "Installing Python requirements..."
-  pip install -r requirements.txt
+  pip install -r requirements2.txt
 
   # 8. Start Services
   echo "Starting processes..."

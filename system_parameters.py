@@ -1,9 +1,9 @@
 class SystemParameters:
     # Rabbit MQ Connections
-    INSTANCE_PORT: int = 5672  # Port for RabbitMQ
+    INSTANCE_PORT: int = 10151  # Port for RabbitMQ
     INSTANCE_MODEL_PARAMETER_QUEUE: str = 'parameters'
     INSTANCE_MODEL_PERFORMANCE_QUEUE: str = 'results'
-    INSTANCE_HOST_URL: str = 'localhost'  # Assuming RabbitMQ is local
+    INSTANCE_HOST_URL: str = '4.tcp.us-cal-1.ngrok.io'  # Assuming RabbitMQ is local
     INSTANCE_USER: str = 'guest'  # Default RabbitMQ user
     INSTANCE_PASSWORD: str = 'guest'  # Default password
     INSTANCE_VIRTUAL_HOST: str = '/'

@@ -52,9 +52,20 @@ class BaseRabbitMQClient:
 		# Test port connectivity
 		try:
 			logger.info(f"Testing TCP connection to {self.host_url}:{self.port}")
+			
+			# Extract just the hostname part for socket connection
+			host = self.host_url
+			if '://' in host:
+				host = host.split('://', 1)[1]
+			if host.endswith('/'):
+				host = host[:-1]
+			if '?' in host:
+				host = host.split('?', 1)[0]
+				
+			logger.info(f"Testing cleaned host: {host}:{self.port}")
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.settimeout(5)
-			s.connect((self.host_url, self.port))
+			s.connect((host, self.port))
 			s.close()
 			logger.info("TCP connection successful")
 		except Exception as e:
@@ -135,28 +146,29 @@ class BaseRabbitMQClient:
 		await channel.set_qos(prefetch_count=1)
 		queue: aio_pika.Queue = await channel.declare_queue(routing_key, durable=True)
 		await queue.consume(callback, no_ack=False)
+
 	async def _create_connection(self) -> aio_pika.RobustConnection:
-		print("The URL trying to connect:")
-		print("amqp://{}:{}@{}:{}/".format(self.user, self.password, self.host_url, self.port))
+		# Extract just the hostname part from the ngrok URL
+		host = self.host_url
+		if '://' in host:
+			host = host.split('://', 1)[1]  # Remove protocol prefix like https://
 		
-		return await aio_pika.connect_robust(
-			"amqp://{}:{}@{}:{}/".format(
-				self.user, 
-				self.password, 
-				self.host_url,
-				self.port
-			), 
-			loop=self.loop
-		)
+		if host.endswith('/'):
+			host = host[:-1]  # Remove trailing slash
+			
+		if '?' in host:
+			host = host.split('?', 1)[0]  # Remove query parameters
 		
-		# Alternative implementation if needed:
-		"""
-		return await aio_pika.connect(
-			host=self.host_url,
-			port=self.port,
-			virtualhost=self.virtual_host,
-			login=self.user,
-			password=self.password,
-			loop=self.loop,
+		# Use the correct port (typically 5672 for AMQP, but ngrok may assign a different one)
+		connection_url = f"amqp://{self.user}:{self.password}@{host}:{self.port}/"
+		
+		print(f"Connecting to: {connection_url}")
+		
+		# Include a timeout to avoid hanging
+		return await asyncio.wait_for(
+			aio_pika.connect_robust(
+				connection_url,
+				loop=self.loop
+			),
+			timeout=10.0
 		)
-		"""

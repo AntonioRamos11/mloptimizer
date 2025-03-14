@@ -62,8 +62,8 @@
   sleep 2
   pkill  -f "python run_master.py"
   pkill -f "python run_slave.py"
-  nohup python run_master.py > master.log 2>&1 &
-  nohup python run_slave.py > slave.log 2>&1 &
+  nohup python3 run_master.py > master.log 2>&1 &
+  nohup python3 run_slave.py > slave.log 2>&1 &
 
   echo "Deployment successful!"
   echo "Master log: tail -f $REPO_DIR/master.log"

@@ -1,6 +1,8 @@
 import asyncio
 import time
 import json
+import os
+import GPUtil
 from dataclasses import asdict
 import aio_pika
 from app.common.model import Model
@@ -13,7 +15,74 @@ from app.master_node.optimization_strategy import OptimizationStrategy, Action, 
 from app.common.dataset import * 
 from system_parameters import SystemParameters as SP
 from app.common.socketCommunication import *
+import platform
+import subprocess
+import os
+import json
 
+#add syspath of utils
+
+def get_hardware_info():
+    """
+    Gather hardware information about the system
+    
+    Returns:
+        dict: Dictionary containing hardware information
+    """
+    hardware_info = {}
+    
+    # CPU information
+    hardware_info["cpu_model"] = platform.processor()
+    hardware_info["cpu_cores"] = os.cpu_count()
+    hardware_info["python_version"] = platform.python_version()
+    hardware_info["system"] = platform.system()
+    
+    # RAM information
+    try:
+        import psutil
+        ram = psutil.virtual_memory()
+        hardware_info["ram_total"] = f"{ram.total / (1024**3):.2f} GB"
+        hardware_info["ram_available"] = f"{ram.available / (1024**3):.2f} GB"
+    except ImportError:
+        hardware_info["ram_total"] = "Unknown (psutil not installed)"
+    
+    # GPU information
+    try:
+        # Try to get GPU info using NVIDIA tools
+        nvidia_output = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=gpu_name,memory.total,driver_version", "--format=csv,noheader"], 
+            universal_newlines=True
+        )
+        gpus = []
+        for line in nvidia_output.strip().split("\n"):
+            parts = line.split(", ")
+            if len(parts) >= 2:
+                name, memory = parts[0], parts[1]
+                driver = parts[2] if len(parts) > 2 else "Unknown"
+                gpus.append({"model": name, "memory": memory, "driver": driver})
+        
+        hardware_info["gpu_count"] = len(gpus)
+        hardware_info["gpus"] = gpus
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # If nvidia-smi isn't available or fails, try TensorFlow
+        try:
+            import tensorflow as tf
+            physical_gpus = tf.config.list_physical_devices('GPU')
+            hardware_info["gpu_count"] = len(physical_gpus)
+            hardware_info["gpus"] = [{"device": str(gpu)} for gpu in physical_gpus]
+            
+            # Try to get more GPU details
+            if len(physical_gpus) > 0:
+                for i, gpu in enumerate(physical_gpus):
+                    with tf.device(f'/GPU:{i}'):
+                        gpu_name = tf.test.gpu_device_name()
+                        if i < len(hardware_info["gpus"]):
+                            hardware_info["gpus"][i]["name"] = gpu_name
+        except:
+            hardware_info["gpu_count"] = 0
+            hardware_info["gpus"] = []
+    
+    return hardware_info
 class OptimizationJob:
 
 	def __init__(self, dataset: Dataset, model_architecture_factory: ModelArchitectureFactory):
@@ -88,36 +157,58 @@ class OptimizationJob:
 		await self.rabbitmq_client.publish_model_params(model_training_request_dict)
 
 	async def _log_results(self, best_model):
-		filename = best_model.model_training_request.experiment_id
-		#specifpath 
-		filename = "/home/p0wden/Documents/IA/MLOptimizer/results/" + filename
-		f = open(filename, "a")
-		model_info_json = json.dumps(asdict(best_model))
-		f.write(model_info_json)
-		f.close()
+			# Simple approach using relative paths
+			# This assumes the code is being run from the mloptimizer directory
+			results_path = 'results'  # Relative path to mloptimizer/results
+			
+			# Create results directory if it doesn't exist
+			os.makedirs(results_path, exist_ok=True)
+			print(f"Saving results to: {results_path}")
 
-		print('Finished optimization')
-		print('Best model: ')
-		print(model_info_json)
+			filename = best_model.model_training_request.experiment_id
+			filename = os.path.join(results_path, filename)
+			
+			# Create a structured result object
+			result_data = {
+				"model_info": asdict(best_model),
+				"dataset_ranges": None,
+				"performance_metrics": {
+					"elapsed_seconds": time.time() - self.start_time
+				},
+				"hardware_info": {}
+			}
+			
+			print('Finished optimization')
+			print('Best model: ')
+			print(json.dumps(result_data["model_info"], indent=2))
 
-		self.dataset.load()
-		ranges = self.dataset.get_ranges()
-		print('Information ranges from normalization')
-		print(ranges)
+			# Get dataset ranges
+			try:
+				self.dataset.load()
+				ranges = self.dataset.get_ranges()
+				result_data["dataset_ranges"] = ranges
+				print('Information ranges from normalization')
+				print(ranges)
+			except Exception as e:
+				print(f"Error getting dataset ranges: {e}")
 
-		f = open(filename, "a")
-		ranges_json = json.dumps(ranges)
-		f.write(ranges_json)
-		f.close()
+			# Format elapsed time
+			elapsed_seconds = result_data["performance_metrics"]["elapsed_seconds"]
+			elapsed_time = time.strftime('%H:%M:%S', time.gmtime(elapsed_seconds))
+			result_data["performance_metrics"]["elapsed_time"] = elapsed_time
+			
+			time_text = f"Optimization took: {elapsed_time} (hh:mm:ss) {elapsed_seconds:.2f} (Seconds)"
+			print(time_text)
 
-		elapsed_seconds = time.time() - self.start_time
-		elapsed_time = time.strftime('%H:%M:%S', time.gmtime(elapsed_seconds))
+			# Add hardware information
+			try:
+				info = get_hardware_info()
+				result_data["hardware_info"] = info
+			except Exception as e:
+				print(f"Error collecting hardware information: {e}")
 
-		time_text = "\n Optimization took: " + str(elapsed_time) + " (hh:mm:ss) " + str(elapsed_seconds) + " (Seconds) "
-		print(time_text)
+			# Save all results as a properly formatted JSON file
+			with open(filename + ".json", "w") as f:
+				json.dump(result_data, f, indent=2)
 
-		f = open(filename, "a")
-		f.write(time_text)
-		f.close()
-
-		print("\n ********************************************** \n")
+			print("\n ********************************************** \n")

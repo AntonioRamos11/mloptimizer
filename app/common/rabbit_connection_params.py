@@ -11,6 +11,7 @@ class RabbitConnectionParams:
 	user: str
 	password: str
 	virtual_host: str
+	managment_url: str
 
 	@staticmethod
 	def new():
@@ -22,6 +23,7 @@ class RabbitConnectionParams:
 			user = SP.INSTANCE_CONNECTION[4],
 			password = SP.INSTANCE_CONNECTION[5],
 			virtual_host = SP.INSTANCE_CONNECTION[6],
+			managment_url =  SP.INSTANCE_CONNECTION[7],
 		)
 		"""
 		if connection_type == ConnectionType.MASTER:

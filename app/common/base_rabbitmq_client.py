@@ -5,6 +5,9 @@ import aio_pika
 from aio_pika import IncomingMessage
 from app.common.rabbit_connection_params import RabbitConnectionParams
 from app.common.socketCommunication import *
+import logging
+import socket
+import traceback
 
 #Base class for RabbitMQ opertaions
 
@@ -22,19 +25,64 @@ class BaseRabbitMQClient:
 			self.user,
 			self.password,
 			self.virtual_host,
+			self.management_url,
 		) = astuple(params)
 		self.loop = loop
 
 	#Async function that prepares the queue connection
-	async def prepare_queues(self):	
-		connection: aio_pika.RobustConnection = await self._create_connection()
-		async with connection:
-			channel = await connection.channel()
-			SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Initializing queues...'})
-			await channel.declare_queue(self.model_parameter_queue, durable=True)
-			await channel.declare_queue(self.model_performance_queue, durable=True)
-			await asyncio.sleep(3)
-			SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Queues declared!'})
+	async def prepare_queues(self):
+		logging.basicConfig(level=logging.DEBUG)
+		logger = logging.getLogger("rabbitmq_connection")
+		
+		logger.info(f"=== CONNECTION PARAMETERS ===")
+		logger.info(f"Host: {self.host_url}")
+		logger.info(f"Port: {self.port}")
+		logger.info(f"User: {self.user}")
+		logger.info(f"Password: {'*' * len(self.password) if self.password else 'None'}")
+		logger.info(f"VHost: {getattr(self, 'virtual_host', '/')}")
+		
+		# Validate host resolution
+		try:
+			logger.info(f"Resolving host: {self.host_url}")
+			host_info = socket.getaddrinfo(self.host_url, self.port)
+			logger.info(f"Host resolved: {host_info[0][4]}")
+		except Exception as e:
+			logger.error(f"Host resolution failed: {e}")
+		
+		# Test port connectivity
+		try:
+			logger.info(f"Testing TCP connection to {self.host_url}:{self.port}")
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.settimeout(5)
+			s.connect((self.host_url, self.port))
+			s.close()
+			logger.info("TCP connection successful")
+		except Exception as e:
+			logger.error(f"TCP connection failed: {e}")
+		
+		# Try the actual connection with timeout
+		try:
+			logger.info("Attempting RabbitMQ connection...")
+			connection_task = asyncio.create_task(self._create_connection())
+			connection = await asyncio.wait_for(connection_task, timeout=10.0)
+			
+			logger.info("Connection established successfully!")
+			logger.info(f"Connection info: {connection}")
+			
+			# Rest of your queue preparation code...
+			# ...
+
+			return connection
+			
+		except asyncio.TimeoutError:
+			logger.error("Connection timed out after 10 seconds")
+			raise
+			
+		except Exception as e:
+			logger.error(f"Connection failed: {str(e)}")
+			logger.error(f"Exception type: {type(e).__name__}")
+			logger.error(f"Traceback: {traceback.format_exc()}")
+			raise
 
 	async def publish(self, queue_name: str, message_body: dict, auto_close_connection=True)->aio_pika.Connection:
 		connection = await self._create_connection()
@@ -87,15 +135,28 @@ class BaseRabbitMQClient:
 		await channel.set_qos(prefetch_count=1)
 		queue: aio_pika.Queue = await channel.declare_queue(routing_key, durable=True)
 		await queue.consume(callback, no_ack=False)
-
 	async def _create_connection(self) -> aio_pika.RobustConnection:
-		return await aio_pika.connect_robust("amqp://{}:{}@{}/".format(self.user, self.password, self.host_url), loop=self.loop)
+		print("The URL trying to connect:")
+		print("amqp://{}:{}@{}:{}/".format(self.user, self.password, self.host_url, self.port))
+		
+		return await aio_pika.connect_robust(
+			"amqp://{}:{}@{}:{}/".format(
+				self.user, 
+				self.password, 
+				self.host_url,
+				self.port
+			), 
+			loop=self.loop
+		)
+		
+		# Alternative implementation if needed:
 		"""
 		return await aio_pika.connect(
-			host = self.host_url,
-			port = self.port,
-			virtualhost = self.virtual_host,
-			login = self.user,
-			password = self.password,
-			loop = self.loop,
-		)"""
+			host=self.host_url,
+			port=self.port,
+			virtualhost=self.virtual_host,
+			login=self.user,
+			password=self.password,
+			loop=self.loop,
+		)
+		"""

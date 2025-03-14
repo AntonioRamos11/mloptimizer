@@ -45,54 +45,105 @@ class Model:
 			logging.warning(e)
 
 	def build_and_train(self) -> float:
+		# Detect available GPUs
+		gpus = tf.config.list_physical_devices('GPU')
+		num_gpus = len(gpus)
+		
+		# Choose appropriate distribution strategy
+		if num_gpus >= 2:
+			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': f"Training with {num_gpus} GPUs using MirroredStrategy"})
+			strategy = tf.distribute.MirroredStrategy()
+		elif num_gpus == 1:
+			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Training with single GPU"})
+			strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+		else:
+			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Training with CPU (no GPUs available)"})
+			strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
+		
+		# Set augmentation and dataset parameters
 		if self.search_space_type == SearchSpaceType.IMAGE:
 			use_augmentation = not self.is_partial_training
 		else:
 			use_augmentation = False
+			
+		# Scale batch size based on number of GPUs if needed
+		if num_gpus > 1:
+			# This will be used when loading data
+			original_batch_size = self.dataset.batch_size
+			self.dataset.batch_size *= num_gpus
+			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, 
+												  {'node': 2, 'msg': f"Scaling batch size from {original_batch_size} to {self.dataset.batch_size}"})
+		
+		# Get dataset
 		input_shape = self.dataset.get_input_shape()
 		class_count = self.dataset.get_classes_count()
-		model = self.build_model(input_shape, class_count)
 		train = self.dataset.get_train_data(use_augmentation)
 		training_steps = self.dataset.get_training_steps(use_augmentation)
 		validation = self.dataset.get_validation_data()
 		validation_steps = self.dataset.get_validation_steps()
 		test = self.dataset.get_test_data()
+		
+		# Define learning rate scheduler
 		def scheduler(epoch):
 			if epoch < 10:
 				return 0.001
 			else:
 				return float(0.001 * tf.math.exp(0.01 * (10 - epoch)).numpy())
-		scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
-		early_stopping: keras.callbacks.EarlyStopping = None
-		if self.search_space_type == SearchSpaceType.IMAGE:
-			monitor_exploration_training = 'val_loss'
-			monitor_full_training = 'val_accuracy'
-		elif self.search_space_type == SearchSpaceType.TIME_SERIES:
-			monitor_exploration_training = 'loss'
-			monitor_full_training = 'loss'	
-		else: 
-			monitor_exploration_training = 'val_loss'
-			monitor_full_training = 'val_loss'
+		
+		# Build and compile model within strategy scope
+		with strategy.scope():
+			model = self.build_model(input_shape, class_count)
+			
+			# Set up callbacks
+			scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
+			
+			if self.search_space_type == SearchSpaceType.IMAGE:
+				monitor_exploration_training = 'val_loss'
+				monitor_full_training = 'val_accuracy'
+			elif self.search_space_type == SearchSpaceType.TIME_SERIES:
+				monitor_exploration_training = 'loss'
+				monitor_full_training = 'loss'	
+			else: 
+				monitor_exploration_training = 'val_loss'
+				monitor_full_training = 'val_loss'
 
-		if self.is_partial_training:
-			early_stopping = tf.keras.callbacks.EarlyStopping(monitor=monitor_exploration_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
-		else:
-			early_stopping = tf.keras.callbacks.EarlyStopping(monitor=monitor_full_training, patience=self.early_stopping_patience, verbose=1, restore_best_weights=True)
+			if self.is_partial_training:
+				early_stopping = tf.keras.callbacks.EarlyStopping(
+					monitor=monitor_exploration_training, 
+					patience=self.early_stopping_patience, 
+					verbose=1, 
+					restore_best_weights=True
+				)
+			else:
+				early_stopping = tf.keras.callbacks.EarlyStopping(
+					monitor=monitor_full_training, 
+					patience=self.early_stopping_patience, 
+					verbose=1, 
+					restore_best_weights=True
+				)
+		
+		# Setup logging
 		model_stage = "exp" if self.is_partial_training else "hof"
 		log_dir = "logs/{}/{}-{}".format(self.experiment_id, model_stage, str(self.id))
 		tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 		callbacks = [early_stopping, tensorboard, scheduler_callback]
+		
+		# Log total model parameters
 		total_weights = np.sum([np.prod(v.shape.as_list()) for v in model.variables])
-		cad = 'Total weights ' + str(total_weights)
+		cad = f'Total weights {total_weights} using {num_gpus} GPU(s)'
 		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
+		
+		# Train the model
 		history = model.fit(
 			train,
 			epochs=self.epochs,
 			steps_per_epoch=training_steps,
 			callbacks=callbacks,
-			validation_data = validation,
+			validation_data=validation,
 			validation_steps=validation_steps,
 		)
+		
+		# Process results
 		did_finish_epochs = self._did_finish_epochs(history, self.epochs)
 		if self.search_space_type == SearchSpaceType.IMAGE:
 			loss, training_val = model.evaluate(test, verbose=0)
@@ -100,9 +151,32 @@ class Model:
 		else:
 			training_val = model.evaluate(test, verbose=0)
 			cad = 'Model accuracy ' + str(training_val)
+		
 		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
 		tf.keras.backend.clear_session()
+		
+		# If we scaled the batch size, restore it
+		if num_gpus > 1:
+			self.dataset.batch_size = original_batch_size
+		
 		return training_val, did_finish_epochs
+
+	def build_and_train_multi_gpu(self) -> float:
+		# Set up multi-GPU strategy
+		strategy = tf.distribute.MirroredStrategy()
+		print(f"Training using {strategy.num_replicas_in_sync} GPUs")
+		
+		# Scale batch size according to GPU count
+		global_batch_size = SP.DATASET_BATCH_SIZE * strategy.num_replicas_in_sync
+		
+		# Build model within strategy scope
+		with strategy.scope():
+			input_shape = self.dataset.get_input_shape()
+			class_count = self.dataset.get_classes_count()
+			model = self.build_model(input_shape, class_count)
+		
+		# Continue with training using the strategy
+		# ...rest of your code...
 
 	def is_model_valid(self) -> bool:
 		is_valid = True

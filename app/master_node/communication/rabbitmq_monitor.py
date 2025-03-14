@@ -22,6 +22,9 @@ class RabbitMQMonitor(object):
 	async def get_queue_status(self):
 		if self.cp.host_url == 'localhost':
 				url = 'http://localhost:15672/api/queues/%2F/parameters'
+		#if self.cp.host_url.startswith('http://localhost:15672/api/queues/%2F/parameters'):
+		if(self.cp.host_url.startswith('192')):
+			url = "http://" +self.cp.host_url + ":15672/api/queues/%2F/parameters"
 		else:
 			url = self.cp.managment_url
 			# Use cp.model_parameter_queue or other appropriate attribute

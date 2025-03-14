@@ -11,6 +11,10 @@ from app.common.search_space import *
 from app.common.dataset import Dataset
 from app.common.model_communication import *
 from system_parameters import SystemParameters as SP
+import os
+os.environ["TF_GPU_THREAD_MODE"] = "gpu_private"
+os.environ["TF_GPU_THREAD_COUNT"] = "1"
+os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"  # Better memory allocation
 #physical_devices = tf.config.list_physical_devices('GPU')
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
@@ -94,6 +98,14 @@ class Model:
 		with strategy.scope():
 			model = self.build_model(input_shape, class_count)
 			
+			 # Enable XLA compilation for faster GPU operations
+			model.compile(
+				optimizer=SP.OPTIMIZER, 
+				loss=SP.LOSS_FUNCTION, 
+				metrics=SP.METRICS,
+				jit_compile=True  # Enable XLA compilation
+			)
+			
 			# Set up callbacks
 			scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 			
@@ -132,6 +144,23 @@ class Model:
 		total_weights = np.sum([np.prod(v.shape.as_list()) for v in model.variables])
 		cad = f'Total weights {total_weights} using {num_gpus} GPU(s)'
 		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
+		
+		 # Optimize the data pipeline
+		options = tf.data.Options()
+		options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+		options.experimental_optimization.parallel_batch = True
+		options.experimental_optimization.map_parallelization = True
+		options.experimental_optimization.map_and_batch_fusion = True
+		
+		# Apply options to datasets
+		train = train.with_options(options)
+		validation = validation.with_options(options)
+		test = test.with_options(options)
+		
+		# Add prefetching to prevent I/O bottlenecks
+		train = train.prefetch(tf.data.AUTOTUNE)
+		validation = validation.prefetch(tf.data.AUTOTUNE)
+		test = test.prefetch(tf.data.AUTOTUNE)
 		
 		# Train the model
 		history = model.fit(

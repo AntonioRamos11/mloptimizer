@@ -70,6 +70,7 @@ class TrainingSlave:
 
 	async def _start_listening(self) -> aio_pika.Connection:
 		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Worker started!"})
+	 	
 		return await self.rabbitmq_client.listen_for_model_params(self._on_model_params_received)
 
 	async def _on_model_params_received(self, model_params):

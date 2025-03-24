@@ -1,0 +1,453 @@
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:155 in __init__()] Initializing OptimizationJob with dataset: mnist
+2025-03-24 00:11:27,362 [DEBUG] [selector_events.py:54] Using selector: EpollSelector
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:162 in __init__()] Setting up optimization strategy | {'dataset': 'mnist', 'exploration_size': 10, 'hall_of_fame_size': 5}...
+2025-03-24 00:11:27,362 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:65 in __init__()] Initializing OptimizationStrategy | {'exploration_trials': 10, 'hall_of_fame_size': 5}...
+2025-03-24 00:11:27,362 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:81 in __init__()] Created Optuna study | {'study_name': 'mnist'}...
+2025-03-24 00:11:27,362 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:93 in __init__()] Search space configuration | {'type': 'SearchSpaceType.IMAGE', 'hash': -1710851370541997620}...
+2025-03-24 00:11:27,362 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:117 in __init__()] OptimizationStrategy initialized successfully
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:175 in __init__()] Setting up RabbitMQ clients
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:190 in __init__()] OptimizationJob initialized successfully
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:196 in start_optimization()] Starting optimization with 20 trials
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:201 in start_optimization()] Running optimization startup
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:225 in _run_optimization_startup()] Running optimization startup
+2025-03-24 00:11:27,362 [INFO] [optimization_job.py:61] INFO [optimization_job.py:229 in _run_optimization_startup()] Preparing RabbitMQ queues
+2025-03-24 00:11:27,362 [INFO] [base_rabbitmq_client.py:37] === CONNECTION PARAMETERS ===
+2025-03-24 00:11:27,362 [INFO] [base_rabbitmq_client.py:38] Host: 192.168.100.89
+2025-03-24 00:11:27,362 [INFO] [base_rabbitmq_client.py:39] Port: 5672
+2025-03-24 00:11:27,362 [INFO] [base_rabbitmq_client.py:40] User: guest
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:41] Password: *****
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:42] VHost: /
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:46] Resolving host: 192.168.100.89
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:48] Host resolved: ('192.168.100.89', 5672)
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:54] Testing TCP connection to 192.168.100.89:5672
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:65] Testing cleaned host: 192.168.100.89:5672
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:70] TCP connection successful
+2025-03-24 00:11:27,363 [INFO] [base_rabbitmq_client.py:76] Attempting RabbitMQ connection...
+2025-03-24 00:11:27,363 [DEBUG] [robust_connection.py:127] Starting connection factory for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,363 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,363 [DEBUG] [robust_connection.py:140] Connection attempt for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,363 [DEBUG] [connection.py:455] Connecting to: amqp://guest:******@192.168.100.89:5672/
+2025-03-24 00:11:27,368 [DEBUG] [robust_connection.py:146] Connection made on <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,368 [INFO] [base_rabbitmq_client.py:80] Connection established successfully!
+2025-03-24 00:11:27,368 [INFO] [base_rabbitmq_client.py:81] Connection info: amqp://guest:******@192.168.100.89:5672/
+2025-03-24 00:11:27,368 [INFO] [optimization_job.py:61] INFO [optimization_job.py:232 in _run_optimization_startup()] Getting queue status
+2025-03-24 00:11:27,374 [INFO] [optimization_job.py:61] INFO [optimization_job.py:234 in _run_optimization_startup()] Queue status retrieved | {'consumer_count': 2, 'message_count': 11}...
+2025-03-24 00:11:27,374 [INFO] [optimization_job.py:61] INFO [optimization_job.py:241 in _run_optimization_startup()] Generating initial model 1/3
+2025-03-24 00:11:27,374 [INFO] [optimization_job.py:61] INFO [optimization_job.py:343 in generate_model()] Generating new model
+2025-03-24 00:11:27,374 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:120 in recommend_model()] Recommending model in phase: Phase.EXPLORATION
+2025-03-24 00:11:27,374 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:131 in _recommend_model_exploration()] Recommending exploration model
+2025-03-24 00:11:27,374 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:134 in _recommend_model_exploration()] Created new trial: 0
+2025-03-24 00:11:27,374 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:137 in _recommend_model_exploration()] Generated model parameters | {'trial': 0, 'params_count': 24}...
+2025-03-24 00:11:27,374 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:163 in _recommend_model_exploration()] Created model training request | {'id': 0, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:27,374 [INFO] [optimization_job.py:61] INFO [optimization_job.py:351 in generate_model()] Model recommended by strategy | {'id': 0, 'training_type': 1, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:27,647 [INFO] [optimization_job.py:61] INFO [optimization_job.py:374 in _send_model_to_broker()] Sending model 0 to broker
+2025-03-24 00:11:27,648 [INFO] [optimization_job.py:61] INFO [optimization_job.py:384 in _send_model_to_broker()] Model training request details | {'id': 0, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:27,648 [DEBUG] [robust_connection.py:127] Starting connection factory for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,648 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,648 [DEBUG] [robust_connection.py:140] Connection attempt for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,648 [DEBUG] [connection.py:455] Connecting to: amqp://guest:******@192.168.100.89:5672/
+2025-03-24 00:11:27,653 [DEBUG] [robust_connection.py:146] Connection made on <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,653 [DEBUG] [connection.py:186] Creating AMQP channel for connection: <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:27,653 [DEBUG] [connection.py:195] Channel created: <aio_pika.robust_channel.RobustChannel object at 0x7f75223f8ca0>
+2025-03-24 00:11:27,653 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x06\x00\x14\x00\n\x010\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:27,655 [DEBUG] [connection.py:642] Received frame <Channel.OpenOk object at 0x7f751812aac0> in channel #1 weight=16 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:11:27,655 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x05\x00U\x00\n\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:27,656 [DEBUG] [connection.py:642] Received frame <Confirm.SelectOk object at 0x7f751813ec70> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:11:27,656 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x0b\x00<\x00\n\x00\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:27,656 [DEBUG] [connection.py:642] Received frame <Basic.QosOk object at 0x7f751813ea90> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:11:27,656 [DEBUG] [exchange.py:180] Publishing message with routing key 'parameters' via exchange <RobustExchange(): auto_delete=False, durable=False, arguments={})>: Message:{'app_id': None,
+ 'body_size': 1137,
+ 'cluster_id': None,
+ 'consumer_tag': None,
+ 'content_encoding': 'utf-8',
+ 'content_type': 'application/json',
+ 'correlation_id': None,
+ 'delivery_mode': <DeliveryMode.NOT_PERSISTENT: 1>,
+ 'delivery_tag': None,
+ 'exchange': None,
+ 'expiration': None,
+ 'headers': {},
+ 'message_id': None,
+ 'priority': 0,
+ 'redelivered': None,
+ 'reply_to': None,
+ 'routing_key': None,
+ 'timestamp': None,
+ 'type': 'None',
+ 'user_id': None}
+2025-03-24 00:11:27,657 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x13\x00<\x00(\x00\x00\x00\nparameters\x01\xce\x02\x00\x01\x00\x00\x00L\x00<\x00\x00\x00\x00\x00\x00\x00\x00\x04q\xf8\x80\x10application/json\x05utf-8\x00\x00\x00\x00\x01\x00 986cf94aa6fb4734a0424a3d1cde5cbf\xce\x03\x00\x01\x00\x00\x04q{"id": 0, "training_type": 1, "experiment_id": "mnist-20250324-001127", "architecture": {"base_architecture": "cnn", "cnn_blocks_n": 3, "cnn_blocks_conv_layers_n": 1, "cnn_block_conv_filters": [64, 64, 256], "cnn_block_conv_filter_sizes": [5, 3, 5], "cnn_block_max_pooling_sizes": [2, 2, 2], "cnn_block_dropout_values": [0.1, 0.1, 0.5], "inception_stem_blocks_n": 0, "inception_stem_block_conv_filters": [], "inception_stem_block_conv_filter_sizes": [], "inception_stem_block_max_pooling_sizes": [], "inception_blocks_n": 0, "inception_modules_n": 0, "inception_modules_conv1x1_filters": [], "inception_modules_conv3x3_reduce_filters": [], "inception_modules_conv3x3_filters": [], "inception_modules_conv5x5_reduce_filters": [], "inception_modules_conv5x5_filters": [], "inception_modules_pooling_conv_filters": [], "classifier_layer_type": "mlp", "classifier_layers_n": 2, "classifier_dropouts": [0, 0.1], "classifier_layers_units": [368, 96], "learning_rate": 0.0}, "epochs": 10, "early_stopping_patience": 3, "is_partial_training": true, "search_space_type": "image", "search_space_hash": -1710851370541997620, "dataset_tag": "mnist"}\xce', should_close=False, drain_future=<Future pending cb=[FutureStore.__on_task_done.<locals>.remover() at /home/p0wden/miniconda3/envs/mlopt/lib/python3.9/site-packages/aiormq/base.py:33, <1 more>, <TaskWakeupMethWrapper object at 0x7f751813e850>()]>)
+2025-03-24 00:11:27,658 [DEBUG] [connection.py:642] Received frame <Basic.Ack object at 0x7f751b6ff780> in channel #1 weight=21 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:11:27,658 [INFO] [optimization_job.py:61] INFO [optimization_job.py:388 in _send_model_to_broker()] Model 0 published to RabbitMQ
+2025-03-24 00:11:27,658 [INFO] [optimization_job.py:61] INFO [optimization_job.py:367 in generate_model()] Model 0 sent to broker
+2025-03-24 00:11:27,658 [INFO] [optimization_job.py:61] INFO [optimization_job.py:241 in _run_optimization_startup()] Generating initial model 2/3
+2025-03-24 00:11:27,658 [INFO] [optimization_job.py:61] INFO [optimization_job.py:343 in generate_model()] Generating new model
+2025-03-24 00:11:27,658 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:120 in recommend_model()] Recommending model in phase: Phase.EXPLORATION
+2025-03-24 00:11:27,658 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:131 in _recommend_model_exploration()] Recommending exploration model
+2025-03-24 00:11:27,658 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:134 in _recommend_model_exploration()] Created new trial: 1
+2025-03-24 00:11:27,659 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:137 in _recommend_model_exploration()] Generated model parameters | {'trial': 1, 'params_count': 24}...
+2025-03-24 00:11:27,659 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:163 in _recommend_model_exploration()] Created model training request | {'id': 1, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:27,659 [INFO] [optimization_job.py:61] INFO [optimization_job.py:351 in generate_model()] Model recommended by strategy | {'id': 1, 'training_type': 1, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:28,211 [INFO] [optimization_job.py:61] INFO [optimization_job.py:374 in _send_model_to_broker()] Sending model 1 to broker
+2025-03-24 00:11:28,211 [INFO] [optimization_job.py:61] INFO [optimization_job.py:384 in _send_model_to_broker()] Model training request details | {'id': 1, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:28,211 [DEBUG] [robust_connection.py:127] Starting connection factory for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:28,211 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:28,211 [DEBUG] [robust_connection.py:140] Connection attempt for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:28,211 [DEBUG] [connection.py:455] Connecting to: amqp://guest:******@192.168.100.89:5672/
+2025-03-24 00:11:28,216 [DEBUG] [robust_connection.py:146] Connection made on <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:28,216 [DEBUG] [connection.py:186] Creating AMQP channel for connection: <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:28,216 [DEBUG] [connection.py:195] Channel created: <aio_pika.robust_channel.RobustChannel object at 0x7f75180855b0>
+2025-03-24 00:11:28,216 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x06\x00\x14\x00\n\x010\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:28,217 [DEBUG] [connection.py:642] Received frame <Channel.OpenOk object at 0x7f7518024d00> in channel #1 weight=16 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:11:28,217 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x05\x00U\x00\n\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:28,218 [DEBUG] [connection.py:642] Received frame <Confirm.SelectOk object at 0x7f7518085400> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:11:28,218 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x0b\x00<\x00\n\x00\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:28,218 [DEBUG] [connection.py:642] Received frame <Basic.QosOk object at 0x7f75222f2be0> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:11:28,219 [DEBUG] [exchange.py:180] Publishing message with routing key 'parameters' via exchange <RobustExchange(): auto_delete=False, durable=False, arguments={})>: Message:{'app_id': None,
+ 'body_size': 1128,
+ 'cluster_id': None,
+ 'consumer_tag': None,
+ 'content_encoding': 'utf-8',
+ 'content_type': 'application/json',
+ 'correlation_id': None,
+ 'delivery_mode': <DeliveryMode.NOT_PERSISTENT: 1>,
+ 'delivery_tag': None,
+ 'exchange': None,
+ 'expiration': None,
+ 'headers': {},
+ 'message_id': None,
+ 'priority': 0,
+ 'redelivered': None,
+ 'reply_to': None,
+ 'routing_key': None,
+ 'timestamp': None,
+ 'type': 'None',
+ 'user_id': None}
+2025-03-24 00:11:28,219 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x13\x00<\x00(\x00\x00\x00\nparameters\x01\xce\x02\x00\x01\x00\x00\x00L\x00<\x00\x00\x00\x00\x00\x00\x00\x00\x04h\xf8\x80\x10application/json\x05utf-8\x00\x00\x00\x00\x01\x00 21f10282537548d7ad49c5cd5901c6b4\xce\x03\x00\x01\x00\x00\x04h{"id": 1, "training_type": 1, "experiment_id": "mnist-20250324-001127", "architecture": {"base_architecture": "inception", "cnn_blocks_n": 0, "cnn_blocks_conv_layers_n": 0, "cnn_block_conv_filters": [], "cnn_block_conv_filter_sizes": [], "cnn_block_max_pooling_sizes": [], "cnn_block_dropout_values": [], "inception_stem_blocks_n": 0, "inception_stem_block_conv_filters": [], "inception_stem_block_conv_filter_sizes": [], "inception_stem_block_max_pooling_sizes": [], "inception_blocks_n": 2, "inception_modules_n": 2, "inception_modules_conv1x1_filters": [44, 48], "inception_modules_conv3x3_reduce_filters": [16, 24], "inception_modules_conv3x3_filters": [92, 92], "inception_modules_conv5x5_reduce_filters": [12, 12], "inception_modules_conv5x5_filters": [16, 28], "inception_modules_pooling_conv_filters": [32, 32], "classifier_layer_type": "gap", "classifier_layers_n": 0, "classifier_dropouts": [], "classifier_layers_units": [], "learning_rate": 0.0}, "epochs": 10, "early_stopping_patience": 3, "is_partial_training": true, "search_space_type": "image", "search_space_hash": -1710851370541997620, "dataset_tag": "mnist"}\xce', should_close=False, drain_future=<Future pending cb=[FutureStore.__on_task_done.<locals>.remover() at /home/p0wden/miniconda3/envs/mlopt/lib/python3.9/site-packages/aiormq/base.py:33, <1 more>, <TaskWakeupMethWrapper object at 0x7f751815eeb0>()]>)
+2025-03-24 00:11:28,220 [DEBUG] [connection.py:642] Received frame <Basic.Ack object at 0x7f751b719e00> in channel #1 weight=21 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:11:28,220 [INFO] [optimization_job.py:61] INFO [optimization_job.py:388 in _send_model_to_broker()] Model 1 published to RabbitMQ
+2025-03-24 00:11:28,220 [INFO] [optimization_job.py:61] INFO [optimization_job.py:367 in generate_model()] Model 1 sent to broker
+2025-03-24 00:11:28,220 [INFO] [optimization_job.py:61] INFO [optimization_job.py:241 in _run_optimization_startup()] Generating initial model 3/3
+2025-03-24 00:11:28,220 [INFO] [optimization_job.py:61] INFO [optimization_job.py:343 in generate_model()] Generating new model
+2025-03-24 00:11:28,220 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:120 in recommend_model()] Recommending model in phase: Phase.EXPLORATION
+2025-03-24 00:11:28,220 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:131 in _recommend_model_exploration()] Recommending exploration model
+2025-03-24 00:11:28,220 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:134 in _recommend_model_exploration()] Created new trial: 2
+2025-03-24 00:11:28,221 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:137 in _recommend_model_exploration()] Generated model parameters | {'trial': 2, 'params_count': 24}...
+2025-03-24 00:11:28,221 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:163 in _recommend_model_exploration()] Created model training request | {'id': 2, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:28,221 [INFO] [optimization_job.py:61] INFO [optimization_job.py:351 in generate_model()] Model recommended by strategy | {'id': 2, 'training_type': 1, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:29,016 [INFO] [optimization_job.py:61] INFO [optimization_job.py:374 in _send_model_to_broker()] Sending model 2 to broker
+2025-03-24 00:11:29,017 [INFO] [optimization_job.py:61] INFO [optimization_job.py:384 in _send_model_to_broker()] Model training request details | {'id': 2, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:11:29,017 [DEBUG] [robust_connection.py:127] Starting connection factory for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,017 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,017 [DEBUG] [robust_connection.py:140] Connection attempt for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,017 [DEBUG] [connection.py:455] Connecting to: amqp://guest:******@192.168.100.89:5672/
+2025-03-24 00:11:29,022 [DEBUG] [robust_connection.py:146] Connection made on <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,022 [DEBUG] [connection.py:186] Creating AMQP channel for connection: <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,022 [DEBUG] [connection.py:195] Channel created: <aio_pika.robust_channel.RobustChannel object at 0x7f75103eebb0>
+2025-03-24 00:11:29,022 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x06\x00\x14\x00\n\x010\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,024 [DEBUG] [connection.py:642] Received frame <Channel.OpenOk object at 0x7f751035d200> in channel #1 weight=16 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:11:29,024 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x05\x00U\x00\n\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,024 [DEBUG] [connection.py:642] Received frame <Confirm.SelectOk object at 0x7f7518073e80> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:11:29,025 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x0b\x00<\x00\n\x00\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,025 [DEBUG] [connection.py:642] Received frame <Basic.QosOk object at 0x7f7518073b80> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:11:29,025 [DEBUG] [exchange.py:180] Publishing message with routing key 'parameters' via exchange <RobustExchange(): auto_delete=False, durable=False, arguments={})>: Message:{'app_id': None,
+ 'body_size': 1102,
+ 'cluster_id': None,
+ 'consumer_tag': None,
+ 'content_encoding': 'utf-8',
+ 'content_type': 'application/json',
+ 'correlation_id': None,
+ 'delivery_mode': <DeliveryMode.NOT_PERSISTENT: 1>,
+ 'delivery_tag': None,
+ 'exchange': None,
+ 'expiration': None,
+ 'headers': {},
+ 'message_id': None,
+ 'priority': 0,
+ 'redelivered': None,
+ 'reply_to': None,
+ 'routing_key': None,
+ 'timestamp': None,
+ 'type': 'None',
+ 'user_id': None}
+2025-03-24 00:11:29,026 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x13\x00<\x00(\x00\x00\x00\nparameters\x01\xce\x02\x00\x01\x00\x00\x00L\x00<\x00\x00\x00\x00\x00\x00\x00\x00\x04N\xf8\x80\x10application/json\x05utf-8\x00\x00\x00\x00\x01\x00 61c6516305d2444fa72248fc9077cd55\xce\x03\x00\x01\x00\x00\x04N{"id": 2, "training_type": 1, "experiment_id": "mnist-20250324-001127", "architecture": {"base_architecture": "inception", "cnn_blocks_n": 0, "cnn_blocks_conv_layers_n": 0, "cnn_block_conv_filters": [], "cnn_block_conv_filter_sizes": [], "cnn_block_max_pooling_sizes": [], "cnn_block_dropout_values": [], "inception_stem_blocks_n": 0, "inception_stem_block_conv_filters": [], "inception_stem_block_conv_filter_sizes": [], "inception_stem_block_max_pooling_sizes": [], "inception_blocks_n": 1, "inception_modules_n": 3, "inception_modules_conv1x1_filters": [4], "inception_modules_conv3x3_reduce_filters": [12], "inception_modules_conv3x3_filters": [20], "inception_modules_conv5x5_reduce_filters": [8], "inception_modules_conv5x5_filters": [24], "inception_modules_pooling_conv_filters": [12], "classifier_layer_type": "gap", "classifier_layers_n": 0, "classifier_dropouts": [], "classifier_layers_units": [], "learning_rate": 0.0}, "epochs": 10, "early_stopping_patience": 3, "is_partial_training": true, "search_space_type": "image", "search_space_hash": -1710851370541997620, "dataset_tag": "mnist"}\xce', should_close=False, drain_future=<Future pending cb=[FutureStore.__on_task_done.<locals>.remover() at /home/p0wden/miniconda3/envs/mlopt/lib/python3.9/site-packages/aiormq/base.py:33, <1 more>, <TaskWakeupMethWrapper object at 0x7f75180739d0>()]>)
+2025-03-24 00:11:29,027 [DEBUG] [connection.py:642] Received frame <Basic.Ack object at 0x7f751037a400> in channel #1 weight=21 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:11:29,027 [INFO] [optimization_job.py:61] INFO [optimization_job.py:388 in _send_model_to_broker()] Model 2 published to RabbitMQ
+2025-03-24 00:11:29,027 [INFO] [optimization_job.py:61] INFO [optimization_job.py:367 in generate_model()] Model 2 sent to broker
+2025-03-24 00:11:29,027 [INFO] [optimization_job.py:61] INFO [optimization_job.py:245 in _run_optimization_startup()] Optimization startup completed
+2025-03-24 00:11:29,027 [INFO] [optimization_job.py:61] INFO [optimization_job.py:204 in start_optimization()] Starting main optimization loop
+2025-03-24 00:11:29,027 [INFO] [optimization_job.py:61] INFO [optimization_job.py:252 in _run_optimization_loop()] Setting up model results listener for 20 trials
+2025-03-24 00:11:29,027 [DEBUG] [robust_connection.py:127] Starting connection factory for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,027 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,027 [DEBUG] [robust_connection.py:140] Connection attempt for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,027 [DEBUG] [connection.py:455] Connecting to: amqp://guest:******@192.168.100.89:5672/
+2025-03-24 00:11:29,032 [DEBUG] [robust_connection.py:146] Connection made on <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,032 [DEBUG] [connection.py:186] Creating AMQP channel for connection: <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:29,032 [DEBUG] [connection.py:195] Channel created: <aio_pika.robust_channel.RobustChannel object at 0x7f7518073430>
+2025-03-24 00:11:29,032 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x06\x00\x14\x00\n\x010\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,033 [DEBUG] [connection.py:642] Received frame <Channel.OpenOk object at 0x7f75103dfd80> in channel #1 weight=16 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:11:29,033 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x05\x00U\x00\n\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,034 [DEBUG] [connection.py:642] Received frame <Confirm.SelectOk object at 0x7f75180ddb50> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:11:29,034 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x0b\x00<\x00\n\x00\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,034 [DEBUG] [connection.py:642] Received frame <Basic.QosOk object at 0x7f75180dd3d0> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:11:29,034 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x0b\x00<\x00\n\x00\x00\x00\x00\x00\x01\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,035 [DEBUG] [connection.py:642] Received frame <Basic.QosOk object at 0x7f75180dd730> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:11:29,035 [DEBUG] [queue.py:98] Declaring queue: <RobustQueue(results): auto_delete=False, durable=True, exclusive=False, arguments=None
+2025-03-24 00:11:29,035 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x13\x002\x00\n\x00\x00\x07results\x02\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,036 [DEBUG] [connection.py:642] Received frame <Queue.DeclareOk object at 0x7f75180f64a0> in channel #1 weight=28 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:11:29,036 [DEBUG] [queue.py:233] Start to consuming queue: <RobustQueue(results): auto_delete=False, durable=True, exclusive=False, arguments=None
+2025-03-24 00:11:29,036 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00:\x00<\x00\x14\x00\x00\x07results&ctag1.db16327d25834648bd175294240f355e\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:29,037 [DEBUG] [connection.py:642] Received frame <Basic.ConsumeOk object at 0x7f7518062680> in channel #1 weight=51 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:11:29,037 [INFO] [optimization_job.py:61] INFO [optimization_job.py:255 in _run_optimization_loop()] Model results listener established
+2025-03-24 00:11:29,037 [INFO] [optimization_job.py:61] INFO [optimization_job.py:208 in start_optimization()] Entering event loop
+2025-03-24 00:11:32,371 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:11:32,654 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 1 channels>
+2025-03-24 00:11:33,217 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 1 channels>
+2025-03-24 00:11:34,023 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 1 channels>
+2025-03-24 00:11:34,033 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 1 channels>
+2025-03-24 00:11:57,369 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d6a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:11:57,369 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:57,653 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223349a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:11:57,653 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:58,216 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223eb190> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:11:58,216 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:59,022 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75222f29a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:11:59,023 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:11:59,032 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073700> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:11:59,032 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:27,370 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ddee0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:12:27,370 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:27,654 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334880> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:12:27,654 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:28,217 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dc70> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:12:28,217 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:29,023 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180dd310> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:12:29,024 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:29,033 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:29,033 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180734f0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:12:57,371 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180dda90> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:12:57,371 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:57,655 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d220> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:12:57,655 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:58,218 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dd30> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:12:58,218 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:59,024 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518085d60> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:12:59,025 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:59,033 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:12:59,034 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dc10> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:13:27,372 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073700> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:13:27,372 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:27,656 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ddee0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:13:27,656 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:28,219 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223349a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:13:28,219 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:29,025 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223eb190> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:13:29,026 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:29,034 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:29,035 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180dd580> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:13:57,373 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180734f0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:13:57,373 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:57,657 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180dda90> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:13:57,657 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:58,220 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334880> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:13:58,220 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:59,027 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dc70> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:13:59,028 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:13:59,037 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073e80> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:13:59,038 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:27,374 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073ac0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:14:27,374 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:27,658 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d6a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:14:27,658 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:28,221 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ddee0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:14:28,221 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:29,027 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dd30> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:14:29,030 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:29,037 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518085d60> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:14:29,040 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:31,107 [DEBUG] [connection.py:642] Received frame <Basic.Deliver object at 0x7f751b7407c0> in channel #1 weight=69 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:14:31,107 [DEBUG] [connection.py:642] Received frame <pamqp.header.ContentHeader object at 0x7f7518085d60> in channel #1 weight=84 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:14:31,107 [DEBUG] [connection.py:642] Received frame <pamqp.body.ContentBody object at 0x7f75180dde50> in channel #1 weight=78 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:14:31,108 [INFO] [optimization_job.py:61] INFO [optimization_job.py:266 in on_model_results()] Received model training response | {'id': 0, 'performance': 0.9790999889373779, 'finished_epochs': False}...
+2025-03-24 00:14:31,108 [INFO] [optimization_job.py:61] INFO [optimization_job.py:277 in on_model_results()] Reporting model response to optimization strategy
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:303 in report_model_response()] Processing model response | {'id': 0, 'performance': 0.9790999889373779, 'finished_epochs': False}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:315 in report_model_response()] Current state before processing response | {'phase': <Phase.EXPLORATION: 1>, 'search_space_type': <SearchSpaceType.IMAGE: 'image'>, 'exploration_completed': 0, 'deep_training_completed': 0}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:324 in report_model_response()] Handling exploration classification response
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:351 in _report_model_response_exploration_classification()] Processing exploration classification response | {'trial_id': 0, 'performance': 0.9790999889373779}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:372 in _report_model_response_exploration_classification()] Registered completed model | {'total_completed': 1}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:375 in _report_model_response_exploration_classification()] Best exploration trial | {'id': 0, 'score': 0.9790999889373779}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:217 in should_generate()] Checking should_generate in phase: Phase.EXPLORATION
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:233 in _should_generate_exploration()] Should generate exploration? | {'requests': 3, 'target': 10, 'pending': 7, 'result': True}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:260 in should_wait()] Checking should_wait in phase: Phase.EXPLORATION
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:277 in _should_wait_exploration()] Should wait for exploration? | {'requests': 3, 'completed': 1, 'result': True}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:386 in _report_model_response_exploration_classification()] Decision state | {'should_generate': True, 'should_wait': True, 'exploration_generated': 3, 'exploration_completed': 1}...
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:394 in _report_model_response_exploration_classification()] Decided: GENERATE_MODEL
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:341 in report_model_response()] Action decided: Action.GENERATE_MODEL
+2025-03-24 00:14:31,108 [INFO] [optimization_job.py:61] INFO [optimization_job.py:281 in on_model_results()] Strategy returned action: Action.GENERATE_MODEL
+2025-03-24 00:14:31,108 [INFO] [optimization_job.py:61] INFO [optimization_job.py:291 in on_model_results()] Action: GENERATE_MODEL - Generating new model
+2025-03-24 00:14:31,108 [INFO] [optimization_job.py:61] INFO [optimization_job.py:343 in generate_model()] Generating new model
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:120 in recommend_model()] Recommending model in phase: Phase.EXPLORATION
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:131 in _recommend_model_exploration()] Recommending exploration model
+2025-03-24 00:14:31,108 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:134 in _recommend_model_exploration()] Created new trial: 3
+2025-03-24 00:14:31,109 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:137 in _recommend_model_exploration()] Generated model parameters | {'trial': 3, 'params_count': 24}...
+2025-03-24 00:14:31,109 [DEBUG] [optimization_strategy.py:53] DEBUG [optimization_strategy.py:163 in _recommend_model_exploration()] Created model training request | {'id': 3, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:14:31,109 [INFO] [optimization_job.py:61] INFO [optimization_job.py:351 in generate_model()] Model recommended by strategy | {'id': 3, 'training_type': 1, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:14:31,475 [INFO] [optimization_job.py:61] INFO [optimization_job.py:374 in _send_model_to_broker()] Sending model 3 to broker
+2025-03-24 00:14:31,475 [INFO] [optimization_job.py:61] INFO [optimization_job.py:384 in _send_model_to_broker()] Model training request details | {'id': 3, 'epochs': 10, 'is_partial_training': True}...
+2025-03-24 00:14:31,475 [DEBUG] [robust_connection.py:127] Starting connection factory for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:14:31,476 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:14:31,476 [DEBUG] [robust_connection.py:140] Connection attempt for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:14:31,476 [DEBUG] [connection.py:455] Connecting to: amqp://guest:******@192.168.100.89:5672/
+2025-03-24 00:14:31,480 [DEBUG] [robust_connection.py:146] Connection made on <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:14:31,480 [DEBUG] [connection.py:186] Creating AMQP channel for connection: <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 0 channels>
+2025-03-24 00:14:31,480 [DEBUG] [connection.py:195] Channel created: <aio_pika.robust_channel.RobustChannel object at 0x7f75103006a0>
+2025-03-24 00:14:31,481 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x06\x00\x14\x00\n\x010\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:31,482 [DEBUG] [connection.py:642] Received frame <Channel.OpenOk object at 0x7f75102ff380> in channel #1 weight=16 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:14:31,482 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x05\x00U\x00\n\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:31,482 [DEBUG] [connection.py:642] Received frame <Confirm.SelectOk object at 0x7f75180ab3a0> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:14:31,483 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x0b\x00<\x00\n\x00\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:31,483 [DEBUG] [connection.py:642] Received frame <Basic.QosOk object at 0x7f75180ab280> in channel #1 weight=12 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:14:31,483 [DEBUG] [exchange.py:180] Publishing message with routing key 'parameters' via exchange <RobustExchange(): auto_delete=False, durable=False, arguments={})>: Message:{'app_id': None,
+ 'body_size': 1135,
+ 'cluster_id': None,
+ 'consumer_tag': None,
+ 'content_encoding': 'utf-8',
+ 'content_type': 'application/json',
+ 'correlation_id': None,
+ 'delivery_mode': <DeliveryMode.NOT_PERSISTENT: 1>,
+ 'delivery_tag': None,
+ 'exchange': None,
+ 'expiration': None,
+ 'headers': {},
+ 'message_id': None,
+ 'priority': 0,
+ 'redelivered': None,
+ 'reply_to': None,
+ 'routing_key': None,
+ 'timestamp': None,
+ 'type': 'None',
+ 'user_id': None}
+2025-03-24 00:14:31,484 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\x13\x00<\x00(\x00\x00\x00\nparameters\x01\xce\x02\x00\x01\x00\x00\x00L\x00<\x00\x00\x00\x00\x00\x00\x00\x00\x04o\xf8\x80\x10application/json\x05utf-8\x00\x00\x00\x00\x01\x00 908b98fe995e4b2c98356e4d631c3f11\xce\x03\x00\x01\x00\x00\x04o{"id": 3, "training_type": 1, "experiment_id": "mnist-20250324-001127", "architecture": {"base_architecture": "cnn", "cnn_blocks_n": 3, "cnn_blocks_conv_layers_n": 4, "cnn_block_conv_filters": [64, 64, 128], "cnn_block_conv_filter_sizes": [5, 5, 3], "cnn_block_max_pooling_sizes": [2, 2, 2], "cnn_block_dropout_values": [0.1, 0.1, 0], "inception_stem_blocks_n": 0, "inception_stem_block_conv_filters": [], "inception_stem_block_conv_filter_sizes": [], "inception_stem_block_max_pooling_sizes": [], "inception_blocks_n": 0, "inception_modules_n": 0, "inception_modules_conv1x1_filters": [], "inception_modules_conv3x3_reduce_filters": [], "inception_modules_conv3x3_filters": [], "inception_modules_conv5x5_reduce_filters": [], "inception_modules_conv5x5_filters": [], "inception_modules_pooling_conv_filters": [], "classifier_layer_type": "mlp", "classifier_layers_n": 2, "classifier_dropouts": [0, 0.1], "classifier_layers_units": [288, 80], "learning_rate": 0.0}, "epochs": 10, "early_stopping_patience": 3, "is_partial_training": true, "search_space_type": "image", "search_space_hash": -1710851370541997620, "dataset_tag": "mnist"}\xce', should_close=False, drain_future=<Future pending cb=[FutureStore.__on_task_done.<locals>.remover() at /home/p0wden/miniconda3/envs/mlopt/lib/python3.9/site-packages/aiormq/base.py:33, <1 more>, <TaskWakeupMethWrapper object at 0x7f75180abac0>()]>)
+2025-03-24 00:14:31,485 [DEBUG] [connection.py:642] Received frame <Basic.Ack object at 0x7f7510354b40> in channel #1 weight=21 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:14:31,485 [INFO] [optimization_job.py:61] INFO [optimization_job.py:388 in _send_model_to_broker()] Model 3 published to RabbitMQ
+2025-03-24 00:14:31,485 [INFO] [optimization_job.py:61] INFO [optimization_job.py:367 in generate_model()] Model 3 sent to broker
+2025-03-24 00:14:31,485 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x01\x00\x01\x00\x00\x00\r\x00<\x00P\x00\x00\x00\x00\x00\x00\x00\x01\x00\xce', should_close=False, drain_future=<Future pending cb=[FutureStore.__on_task_done.<locals>.remover() at /home/p0wden/miniconda3/envs/mlopt/lib/python3.9/site-packages/aiormq/base.py:33, <1 more>, <TaskWakeupMethWrapper object at 0x7f75180ab220>()]>)
+2025-03-24 00:14:36,483 [DEBUG] [robust_connection.py:129] Waiting for connection close event for <RobustConnection: "amqp://guest:******@192.168.100.89:5672/" 1 channels>
+2025-03-24 00:14:57,375 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518085d60> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:14:57,375 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:57,659 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334ac0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:14:57,659 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:58,222 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78de50> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:14:58,222 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:59,028 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223349a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:14:59,031 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:14:59,041 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:01,481 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75103001f0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:15:01,481 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:27,376 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7510300130> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:15:27,376 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:27,660 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180734f0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:15:27,660 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:28,223 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073700> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:15:28,223 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:29,029 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334880> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:15:29,032 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:29,038 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dc70> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:15:29,042 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:31,482 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab6d0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:15:31,482 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:57,376 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75103eee50> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:15:57,377 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:57,661 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073ac0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:15:57,661 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:58,223 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:58,224 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75103000d0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:15:59,030 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78de50> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:15:59,033 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:15:59,039 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dd30> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:15:59,043 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:01,483 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab070> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:16:01,483 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:27,377 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7510300670> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:16:27,378 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:27,661 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518085d60> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:16:27,662 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:28,225 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334ac0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:16:28,225 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:29,030 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d6a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:16:29,034 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:29,040 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223349a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:16:29,044 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:31,483 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223eb190> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:16:31,484 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:57,378 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab6d0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:16:57,379 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:57,662 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:57,662 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180734f0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:16:58,225 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d220> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:16:58,226 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:59,031 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073700> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:16:59,035 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:16:59,041 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334880> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:16:59,045 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:01,484 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:01,484 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7510300d90> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:17:27,379 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab100> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:17:27,380 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:27,663 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:27,663 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7510300130> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:17:28,226 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518085d60> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:17:28,227 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:29,032 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75103000d0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:17:29,036 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:29,042 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78de50> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:17:29,046 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:31,485 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dd30> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:17:31,486 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:57,380 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dc70> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:17:57,381 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:57,664 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:57,664 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab6d0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:17:58,227 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180734f0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:17:58,228 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:59,033 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334ac0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:17:59,037 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:17:59,043 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d6a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:17:59,047 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:01,486 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223349a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:18:01,487 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:27,381 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75223eb190> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:18:27,382 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:27,665 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab100> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:18:27,666 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:28,228 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073ac0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:18:28,229 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:29,034 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d220> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:18:29,038 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:29,044 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518073700> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:18:29,048 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:31,487 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334880> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:18:31,488 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:57,382 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7510300d90> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:18:57,383 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:57,666 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7510300670> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:18:57,666 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:58,229 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab6d0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:18:58,229 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:59,035 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7518085d60> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:18:59,039 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:18:59,045 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75103000d0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:18:59,049 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:19:01,488 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78de50> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:19:01,488 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:19:27,383 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78dd30> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232a130>
+2025-03-24 00:19:27,383 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:19:27,667 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:19:27,667 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75103eee50> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f7518145720>
+2025-03-24 00:19:28,230 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180ab100> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f752232e3b0>
+2025-03-24 00:19:28,230 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:19:29,036 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f75180734f0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f75103bf180>
+2025-03-24 00:19:29,040 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:19:29,046 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f7522334ac0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751807aae0>
+2025-03-24 00:19:29,049 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)
+2025-03-24 00:19:31,489 [DEBUG] [connection.py:642] Received frame <pamqp.heartbeat.Heartbeat object at 0x7f751b78d6a0> in channel #0 weight=8 on <Connection: "amqp://guest:******@192.168.100.89:5672/" at 0x7f751b7974f0>
+2025-03-24 00:19:31,489 [DEBUG] [connection.py:717] Prepare to send ChannelFrame(payload=b'\x08\x00\x00\x00\x00\x00\x00\xce', should_close=False, drain_future=None)

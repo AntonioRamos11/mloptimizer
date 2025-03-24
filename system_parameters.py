@@ -1,12 +1,12 @@
 class SystemParameters:
     # Rabbit MQ Connections
     INSTANCE_PORT: int = 5672  # Port for RabbitMQ
-    INSTANCE_MANAGMENT_URL = "https://1453fb7aea110449dbaf261bea6eac35.serveo.net"
-    #INSTANCE_MANAGMENT_URL = "192.168.100.89"
+    #INSTANCE_MANAGMENT_URL = "https://1453fb7aea110449dbaf261bea6eac35.serveo.net"
+    INSTANCE_MANAGMENT_URL = "192.168.100.89"
     INSTANCE_MODEL_PARAMETER_QUEUE: str = 'parameters'
     INSTANCE_MODEL_PERFORMANCE_QUEUE: str = 'results'
-    #INSTANCE_HOST_URL: str = '192.168.100.89'
-    INSTANCE_HOST_URL: str = 'serveo.net'
+    INSTANCE_HOST_URL: str = '192.168.100.89'
+    #INSTANCE_HOST_URL: str = 'serveo.net'
     INSTANCE_USER: str = 'guest'  # Default RabbitMQ user
     INSTANCE_PASSWORD: str = 'guest'  # Default password
     INSTANCE_VIRTUAL_HOST: str = '/'
@@ -55,6 +55,8 @@ class SystemParameters:
     DATASET_LABELS: int = 10
     DATASET_WINDOW_SIZE: int = 100
     DATASET_DATA_SIZE: int = 1
+
+    
 
     # AutoML parameters
     TRAIN_GPU: bool = True

@@ -18,6 +18,7 @@ class InitNodes:
 
 	def master(self):
 		model_architecture_factory: ModelArchitectureFactory = self.get_model_architecture()
+		
 		dataset: Dataset = self.get_dataset()
 		print(model_architecture_factory)
 		from app.master_node.optimization_job import OptimizationJob
@@ -68,6 +69,7 @@ class InitNodes:
 				SP.DATASET_BATCH_SIZE, 
 				SP.DATASET_VALIDATION_SPLIT)
 		else:
+			
 			print("Please enter a valid dataset type")
 			return
 

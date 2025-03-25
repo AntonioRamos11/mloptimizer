@@ -55,7 +55,7 @@
 # Stop any running processes
 echo "Stopping existing processes..."
 pkill -f "python -u run_master.py" || true
-pkill -f "python  -u run_slave.py" || true
+pkill -f "python -u run_slave.py" || true
 sleep 2
 
 # Clean up only specific logs, not optimization logs

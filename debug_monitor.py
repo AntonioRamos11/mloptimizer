@@ -8,6 +8,7 @@ import signal
 import sys
 import glob
 import subprocess
+import re
 
 # For NVIDIA GPU monitoring
 try:
@@ -131,10 +132,7 @@ def print_status(processes):
         os.path.join(log_dir, 'slave.log')
     ]
 
-    # For optimization logs, check all files matching the pattern
-    optimization_logs = glob.glob(os.path.join(log_dir, 'optimization_job_*.log'))
-    if optimization_logs:
-        log_files.extend(sorted(optimization_logs, key=os.path.getmtime, reverse=True)[:2])
+   
     
     # Check for logs and print their status
     print("\nLog Files:")
@@ -146,6 +144,44 @@ def print_status(processes):
             log_name = os.path.basename(log)  # Just show filename, not full path
             print(f"{log_name}: {size:.1f} KB, Last modified: {mtime.strftime('%H:%M:%S')}")
 
+def extract_training_progress(log_files):
+    """Extract epoch and training progress information from logs"""
+    training_info = {}
+    for log in log_files:
+        if not os.path.exists(log):
+            continue
+            
+        try:
+            with open(log, 'r') as f:
+                content = f.read()
+                
+                # Extract the latest epoch info
+                epoch_matches = re.findall(r'Epoch (\d+)/(\d+)', content)
+                if epoch_matches:
+                    current, total = epoch_matches[-1]  # Get the last match
+                    training_info['epoch'] = f"Epoch {current}/{total}"
+                
+                # Extract the latest step progress
+                progress_lines = re.findall(r'(\d+)/(\d+) [━\s]+.+accuracy: ([\d\.]+) - loss: ([\d\.]+)', content)
+                if progress_lines:
+                    # Get the latest progress line
+                    current, total, acc, loss = progress_lines[-1]
+                    training_info['progress'] = {
+                        'current': int(current),
+                        'total': int(total),
+                        'accuracy': float(acc),
+                        'loss': float(loss)
+                    }
+            
+            if 'epoch' in training_info:
+                # Found what we need, no need to check other logs
+                break
+                
+        except Exception as e:
+            print(f"Error extracting training progress: {e}")
+    
+    return training_info
+
 def tail_logs(num_lines=10):
     """Show recent log entries"""
     # Update log file paths
@@ -155,22 +191,40 @@ def tail_logs(num_lines=10):
         os.path.join(log_dir, 'master.log'),
         os.path.join(log_dir, 'slave.log')
     ]
-
-    # For optimization logs, check all files matching the pattern
-    optimization_logs = glob.glob(os.path.join(log_dir, 'optimization_job_*.log'))
-    if optimization_logs:
-        log_files.extend(sorted(optimization_logs, key=os.path.getmtime, reverse=True)[:2])
     
+  
+    
+    # Extract training progress
+    training_info = extract_training_progress(log_files)
+    if training_info:
+        print("\n🔄 Training Progress:")
+        print("-" * 80)
+        if 'epoch' in training_info:
+            print(f"Current: {training_info['epoch']}")
+        if 'progress' in training_info:
+            prog = training_info['progress']
+            percent = (prog['current'] / prog['total']) * 100
+            bar_length = 40
+            filled_length = int(bar_length * prog['current'] // prog['total'])
+            bar = '█' * filled_length + '░' * (bar_length - filled_length)
+            print(f"Steps: {prog['current']}/{prog['total']} [{bar}] {percent:.1f}%")
+            print(f"Metrics: accuracy={prog['accuracy']:.4f}, loss={prog['loss']:.4f}")
+    
+    # Show last few lines of logs
     for log in log_files:
         if os.path.exists(log):
-            log_name = os.path.basename(log)  # Just show filename, not full path
+            log_name = os.path.basename(log)
             print(f"\nLast {num_lines} lines from {log_name}:")
             print("-" * 80)
             try:
                 with open(log, 'r') as f:
                     lines = f.readlines()
                     for line in lines[-num_lines:]:
-                        print(line.strip())
+                        # Highlight epoch lines
+                        if "Epoch" in line and "/" in line:
+                            print(f"\033[1;32m{line.strip()}\033[0m")  # Green for epoch lines
+                        else:
+                            print(line.strip())
             except Exception as e:
                 print(f"Error reading log file: {e}")
 

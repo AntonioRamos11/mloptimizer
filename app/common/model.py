@@ -56,6 +56,8 @@ class Model:
 		elif num_gpus == 1:
 			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Training with single GPU"})
 			strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+			#strategy = tf.distribute.MirroredStrategy()
+
 		else:
 			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Training with CPU (no GPUs available)"})
 			strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
@@ -65,14 +67,14 @@ class Model:
 			use_augmentation = not self.is_partial_training
 		else:
 			use_augmentation = False
-			
+		original_batch_size = self.dataset.batch_size
+
 		# Scale batch size based on number of GPUs if needed
-		if num_gpus > 1:
+		"""if num_gpus > 1:
 			# This will be used when loading data
-			original_batch_size = self.dataset.batch_size
 			self.dataset.batch_size *= num_gpus
 			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, 
-												  {'node': 2, 'msg': f"Scaling batch size from {original_batch_size} to {self.dataset.batch_size}"})
+												  {'node': 2, 'msg': f"Scaling batch size from {original_batch_size} to {self.dataset.batch_size}"})"""
 		
 		# Get dataset
 		input_shape = self.dataset.get_input_shape()
@@ -156,8 +158,8 @@ class Model:
 		tf.keras.backend.clear_session()
 		
 		# If we scaled the batch size, restore it
-		if num_gpus > 1:
-			self.dataset.batch_size = original_batch_size
+		"""if num_gpus > 1:
+			self.dataset.batch_size = original_batch_size"""
 		
 		return training_val, did_finish_epochs
 

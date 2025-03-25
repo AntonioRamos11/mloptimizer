@@ -1,11 +1,11 @@
 class SystemParameters:
     # Rabbit MQ Connections
-    INSTANCE_PORT: int = 5672  # Port for RabbitMQ
-    #INSTANCE_MANAGMENT_URL = "https://1453fb7aea110449dbaf261bea6eac35.serveo.net"
-    INSTANCE_MANAGMENT_URL = "192.168.100.89"
+    INSTANCE_PORT: int = 10117  # Port for RabbitMQ
+    INSTANCE_MANAGMENT_URL = "https://quiet-husky-46.telebit.io"
+    #INSTANCE_MANAGMENT_URL = "192.168.100.89"
     INSTANCE_MODEL_PARAMETER_QUEUE: str = 'parameters'
     INSTANCE_MODEL_PERFORMANCE_QUEUE: str = 'results'
-    INSTANCE_HOST_URL: str = '192.168.100.89'
+    INSTANCE_HOST_URL: str = '4.tcp.us-cal-1.ngrok.io'
     #INSTANCE_HOST_URL: str = 'serveo.net'
     INSTANCE_USER: str = 'guest'  # Default RabbitMQ user
     INSTANCE_PASSWORD: str = 'guest'  # Default password

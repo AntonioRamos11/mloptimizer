@@ -14,6 +14,8 @@ from system_parameters import SystemParameters as SP
 #physical_devices = tf.config.list_physical_devices('GPU')
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+gpus = tf.config.list_physical_devices('GPU')
+
 class Model:
 	def __init__(self, model_training_request: ModelTrainingRequest, dataset: Dataset):
 		self.id = model_training_request.id
@@ -29,7 +31,10 @@ class Model:
 
 	def build_model(self, input_shape: tuple, class_count: int):
 		if self.search_space_type == SearchSpaceType.IMAGE:
-			return self.build_image_model(self.model_params, input_shape, class_count)
+			if(gpus>1):
+				return self.build_image_model(self.model_params, input_shape, class_count)
+			else:
+				return self.build_image_model(self.model_params, input_shape, class_count)
 		elif self.search_space_type == SearchSpaceType.REGRESSION:
 			return self.build_regression_model(self.model_params, input_shape, class_count)
 		elif self.search_space_type == SearchSpaceType.TIME_SERIES:
@@ -46,7 +51,6 @@ class Model:
 
 	def build_and_train(self) -> float:
 		# Detect available GPUs
-		gpus = tf.config.list_physical_devices('GPU')
 		num_gpus = len(gpus)
 		
 		# Choose appropriate distribution strategy
@@ -276,6 +280,7 @@ class Model:
 			self._add_mlp_architecture(model, model_parameters, class_count, SP.KERNEL_INITIALIZER, SP.LAYERS_ACTIVATION_FUNCTION)
 			model.add(keras.layers.Dense(class_count))
 			model.add(keras.layers.Activation(SP.OUTPUT_ACTIVATION_FUNCTION, dtype=SP.DTYPE))
+		
 		model.compile(optimizer=SP.OPTIMIZER, loss=SP.LOSS_FUNCTION, metrics=SP.METRICS)
 		elapsed_seconds = int(round(time.time() * 1000)) - start_time
 		print("Model building took", elapsed_seconds, "(miliseconds)")

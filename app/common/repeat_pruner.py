@@ -1,5 +1,5 @@
 from optuna.pruners import BasePruner
-from optuna.structs import TrialState
+from optuna.trial import TrialState
 from app.common.socketCommunication import *
 
 class RepeatPruner(BasePruner):

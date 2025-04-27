@@ -23,7 +23,7 @@ class RabbitMQMonitor(object):
 		if self.cp.host_url == 'localhost':
 				url = 'http://localhost:15672/api/queues/%2F/parameters'
 		#if self.cp.host_url.startswith('http://localhost:15672/api/queues/%2F/parameters'):
-		if(self.cp.host_url.startswith('192')):
+		elif(self.cp.host_url.startswith('192')):
 			url = "http://" +self.cp.host_url + ":15672/api/queues/%2F/parameters"
 		else:
 			url = self.cp.managment_url

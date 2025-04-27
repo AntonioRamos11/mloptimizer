@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List
 import optuna
 from optuna.samplers import TPESampler
-from optuna.structs import TrialState
+from optuna.trial import TrialState
 from app.common.model_communication import *
 from app.common.search_space import *
 from app.common.repeat_pruner import RepeatPruner

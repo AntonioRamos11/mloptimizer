@@ -11,8 +11,20 @@ from app.common.search_space import *
 from app.common.dataset import Dataset
 from app.common.model_communication import *
 from system_parameters import SystemParameters as SP
+from app.common.hardware_performance_logger import HardwarePerformanceLogger
+from app.common.hardware_performance_callback import HardwarePerformanceCallback
 #physical_devices = tf.config.list_physical_devices('GPU')
+
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+try:
+    gpus = tf.config.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+    print(f"Memory growth enabled on {len(gpus)} GPU(s)")
+except Exception as e:
+    print(f"Error configuring GPU memory growth: {e}")
+
 
 class Model:
 	def __init__(self, model_training_request: ModelTrainingRequest, dataset: Dataset):
@@ -26,6 +38,7 @@ class Model:
 		self.is_partial_training = model_training_request.is_partial_training
 		self.model: tf.keras.Model
 		self.dataset: Dataset = dataset
+		self.performance_logger = HardwarePerformanceLogger()
 
 	def build_model(self, input_shape: tuple, class_count: int):
 		if self.search_space_type == SearchSpaceType.IMAGE:
@@ -45,21 +58,32 @@ class Model:
 			logging.warning(e)
 
 	def build_and_train(self) -> float:
-		# Detect available GPUs
+		 # Start timing
+		self.performance_logger.start_timing()
+		build_start_time = int(round(time.time() * 1000))
+		 # Set memory growth to avoid allocating all GPU memory at once
+		
+
+
+		# Enable mixed precision globally
+		tf.keras.mixed_precision.set_global_policy('mixed_float16')
+
+		# Detect GPUs and configure strategy
 		gpus = tf.config.list_physical_devices('GPU')
 		num_gpus = len(gpus)
 		
-		# Choose appropriate distribution strategy
 		if num_gpus >= 2:
-			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': f"Training with {num_gpus} GPUs using MirroredStrategy"})
-			strategy = tf.distribute.MirroredStrategy()
+			# Enable batch size scaling
+			original_batch_size = self.dataset.batch_size
+			self.dataset.batch_size *= num_gpus  # Critical for multi-GPU perf
+			
+			strategy = tf.distribute.MirroredStrategy(
+				cross_device_ops=tf.distribute.NcclAllReduce(),  # Use NCCL for multi-GPU communication
+				devices=[f"/gpu:{i}" for i in range(num_gpus)]
+			)
 		elif num_gpus == 1:
-			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Training with single GPU"})
 			strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
-			#strategy = tf.distribute.MirroredStrategy()
-
 		else:
-			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Training with CPU (no GPUs available)"})
 			strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
 		
 		# Set augmentation and dataset parameters
@@ -67,15 +91,7 @@ class Model:
 			use_augmentation = not self.is_partial_training
 		else:
 			use_augmentation = False
-		original_batch_size = self.dataset.batch_size
 
-		# Scale batch size based on number of GPUs if needed
-		"""if num_gpus > 1:
-			# This will be used when loading data
-			self.dataset.batch_size *= num_gpus
-			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, 
-												  {'node': 2, 'msg': f"Scaling batch size from {original_batch_size} to {self.dataset.batch_size}"})"""
-		
 		# Get dataset
 		input_shape = self.dataset.get_input_shape()
 		class_count = self.dataset.get_classes_count()
@@ -95,7 +111,9 @@ class Model:
 		# Build and compile model within strategy scope
 		with strategy.scope():
 			model = self.build_model(input_shape, class_count)
+			build_time_ms = int(round(time.time() * 1000)) - build_start_time
 			
+			tf.config.optimizer.set_jit(True)
 			# Set up callbacks
 			scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 			
@@ -104,7 +122,7 @@ class Model:
 				monitor_full_training = 'val_accuracy'
 			elif self.search_space_type == SearchSpaceType.TIME_SERIES:
 				monitor_exploration_training = 'loss'
-				monitor_full_training = 'loss'	
+				monitor_full_training = 'loss'    
 			else: 
 				monitor_exploration_training = 'val_loss'
 				monitor_full_training = 'val_loss'
@@ -128,12 +146,18 @@ class Model:
 		model_stage = "exp" if self.is_partial_training else "hof"
 		log_dir = "logs/{}/{}-{}".format(self.experiment_id, model_stage, str(self.id))
 		tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
-		callbacks = [early_stopping, tensorboard, scheduler_callback]
 		
-		# Log total model parameters
-		total_weights = np.sum([np.prod(v.shape.as_list()) for v in model.variables])
-		cad = f'Total weights {total_weights} using {num_gpus} GPU(s)'
-		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
+		# Add performance logger callback
+		performance_callback = HardwarePerformanceCallback(self.performance_logger)
+		callbacks = [early_stopping, tensorboard, scheduler_callback, performance_callback]
+		
+		# Get model metrics before training
+		model_metrics = self.performance_logger.get_model_metrics(
+			model, 
+			self.id, 
+			self.experiment_id,
+			self.search_space_type.name
+		)
 		
 		# Train the model
 		history = model.fit(
@@ -144,6 +168,25 @@ class Model:
 			validation_data=validation,
 			validation_steps=validation_steps,
 		)
+		
+		# Get optimizer information
+		# Get optimizer information
+		optimizer_name = SP.OPTIMIZER
+		# Extract learning rate from the optimizer
+		learning_rate = scheduler(self.epochs - 1)  # Get the learning rate for the last epoch
+		
+		# Get training metrics after training
+		training_metrics = self.performance_logger.get_training_metrics(
+			history,
+			build_time_ms,
+			self.dataset.batch_size,
+			optimizer_name,
+			learning_rate
+		)
+		
+		# Save the hardware performance log
+		log_file = self.performance_logger.save_log(model_metrics, training_metrics)
+		print(f"Hardware performance log saved to: {log_file}")
 		
 		# Process results
 		did_finish_epochs = self._did_finish_epochs(history, self.epochs)
@@ -158,28 +201,12 @@ class Model:
 		tf.keras.backend.clear_session()
 		
 		# If we scaled the batch size, restore it
-		"""if num_gpus > 1:
-			self.dataset.batch_size = original_batch_size"""
+		if num_gpus > 1:
+			self.dataset.batch_size = original_batch_size
 		
 		return training_val, did_finish_epochs
 
-	def build_and_train_multi_gpu(self) -> float:
-		# Set up multi-GPU strategy
-		strategy = tf.distribute.MirroredStrategy()
-		print(f"Training using {strategy.num_replicas_in_sync} GPUs")
-		
-		# Scale batch size according to GPU count
-		global_batch_size = SP.DATASET_BATCH_SIZE * strategy.num_replicas_in_sync
-		
-		# Build model within strategy scope
-		with strategy.scope():
-			input_shape = self.dataset.get_input_shape()
-			class_count = self.dataset.get_classes_count()
-			model = self.build_model(input_shape, class_count)
-		
-		# Continue with training using the strategy
-		# ...rest of your code...
-
+	
 	def is_model_valid(self) -> bool:
 		is_valid = True
 		try:
@@ -283,6 +310,7 @@ class Model:
 		print("Model building took", elapsed_seconds, "(miliseconds)")
 		model.summary()
 		return model
+
 
 	def build_regression_model(self, model_parameters: RegressionModelArchitectureParameters, input_shape: tuple, class_count: int) -> keras.Sequential:
 		start_time = int(round(time.time() * 1000))

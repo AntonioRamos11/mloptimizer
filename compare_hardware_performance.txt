@@ -1,5 +1,5 @@
 # Find fastest GPU for high parameter models
-python compare_hardware_performance.py --sort-by params_per_ms --descending
+python  app/common/compare_hardware_performance.py --sort-by params_per_ms --descending
 
 # Compare training times across hardware, but sort by parameter count
 python app/common/compare_hardware_performance.py --metric train_time_ms --sort-by parameters --descending

@@ -6,7 +6,9 @@ class SystemParameters:
     INSTANCE_HOST_URL: str = 'localhost'
     INSTANCE_MODEL_PARAMETER_QUEUE: str = 'parameters'
     INSTANCE_MODEL_PERFORMANCE_QUEUE: str = 'results'
-    #if not local
+    #if not local 
+    #~/telebit http 15672
+    #ngrok tcp 5672
     INSTANCE_HOST_URL: str = '4.tcp.us-cal-1.ngrok.io'
     INSTANCE_MANAGMENT_URL = "https://quiet-husky-46.telebit.io"
     INSTANCE_PORT: int = 11497   # Port for RabbitMQ

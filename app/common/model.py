@@ -38,6 +38,16 @@ class Model:
 		self.dataset: Dataset = dataset
 		self.performance_logger = HardwarePerformanceLogger(tf_module=tf)
 
+	def convert_to_tfrecord(self, data, filename):
+		with tf.io.TFRecordWriter(filename) as writer:
+			for x, y in data:
+				feature = {
+					'x': tf.train.Feature(float_list=tf.train.FloatList(value=x.flatten())),
+					'y': tf.train.Feature(int64_list=tf.train.Int64List(value=[y]))
+				}
+				example = tf.train.Example(features=tf.train.Features(feature=feature))
+				writer.write(example.SerializeToString())
+
 	def _reset_gpu_memory(self):
 		"""Aggressively clean up GPU memory"""
 		try:
@@ -111,14 +121,46 @@ class Model:
 		else:
 			use_augmentation = False
 
+
+
 		# Get dataset
 		input_shape = self.dataset.get_input_shape()
 		class_count = self.dataset.get_classes_count()
+		
+		# Get raw datasets
 		train = self.dataset.get_train_data(use_augmentation)
-		training_steps = self.dataset.get_training_steps(use_augmentation)
 		validation = self.dataset.get_validation_data()
-		validation_steps = self.dataset.get_validation_steps()
 		test = self.dataset.get_test_data()
+		
+		# Optimize data pipeline for multi-GPU performance
+		options = tf.data.Options()
+		options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+		
+		# Apply optimizations to training data
+		train = train.with_options(options)
+		train = train.cache()  # Cache data after first epoch if it fits in memory
+		train = train.prefetch(tf.data.AUTOTUNE)  # Prefetch next batch while current is processing
+		
+		# Apply the same to validation data
+		validation = validation.with_options(options)
+		validation = validation.prefetch(tf.data.AUTOTUNE)
+		
+		# Apply the same to test data
+		test = test.with_options(options)
+		test = test.prefetch(tf.data.AUTOTUNE)
+		
+		# Add to Dataset preprocessing
+		def preprocess_gpu(x, y):
+			# Move preprocessing to GPU for operations like:
+			x = tf.image.random_flip_left_right(x)
+			x = tf.image.random_brightness(x, 0.1)
+			return x, y
+		
+		# Apply to dataset
+		train = train.map(preprocess_gpu, num_parallel_calls=tf.data.AUTOTUNE)
+		
+		training_steps = self.dataset.get_training_steps(use_augmentation)
+		validation_steps = self.dataset.get_validation_steps()
 		
 		# Define learning rate scheduler
 		def scheduler(epoch):
@@ -222,6 +264,12 @@ class Model:
 		# If we scaled the batch size, restore it
 		if num_gpus > 1:
 			self.dataset.batch_size = original_batch_size
+		
+		# Save the processed dataset
+		tf.data.experimental.save(processed_dataset, "path/to/saved/dataset")
+
+		# Load it later
+		loaded_dataset = tf.data.experimental.load("path/to/saved/dataset")
 		
 		return training_val, did_finish_epochs
 
@@ -362,3 +410,49 @@ class Model:
 		print("Model building took", elapsed_seconds, "(miliseconds)")
 		model.summary()
 		return model
+
+	def checkpoint_dataset(self, dataset, directory, name):
+		"""Save a preprocessed dataset to disk to avoid repeating preprocessing"""
+		import os
+		
+		# Create directory if it doesn't exist
+		os.makedirs(directory, exist_ok=True)
+		
+		# Create a path that includes relevant model info
+		path = os.path.join(directory, f"{name}_{self.search_space_type.name}_{self.id}.tf_dataset")
+		
+		# Save the dataset
+		try:
+			logging.info(f"Saving preprocessed dataset to {path}")
+			tf.data.experimental.save(dataset, path)
+			logging.info(f"Successfully saved dataset checkpoint")
+			return path
+		except Exception as e:
+			logging.warning(f"Failed to save dataset checkpoint: {e}")
+			return None
+
+	def load_checkpointed_dataset(self, directory, name):
+		"""Load a preprocessed dataset from disk if it exists"""
+		import os
+		
+		# Create the expected path
+		path = os.path.join(directory, f"{name}_{self.search_space_type.name}_{self.id}.tf_dataset")
+		
+		# Check if the dataset exists
+		if os.path.exists(path):
+			try:
+				logging.info(f"Loading preprocessed dataset from {path}")
+				
+				# TensorFlow's dataset loading function
+				dataset = tf.data.experimental.load(path)
+				
+				# Need to specify output types and shapes as they aren't saved
+				element_spec = dataset.element_spec
+				logging.info(f"Successfully loaded dataset with spec: {element_spec}")
+				return dataset
+			except Exception as e:
+				logging.warning(f"Failed to load dataset checkpoint: {e}")
+				return None
+		else:
+			logging.info(f"No dataset checkpoint found at {path}")
+			return None

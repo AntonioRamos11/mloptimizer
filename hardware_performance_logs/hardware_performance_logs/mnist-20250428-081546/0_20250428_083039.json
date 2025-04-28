@@ -1,0 +1,81 @@
+{
+  "timestamp": "20250428_083039",
+  "hardware_info": {
+    "hostname": "fed235fff9ec",
+    "cpu_model": "x86_64",
+    "cpu_cores": 32,
+    "cpu_threads": 64,
+    "ram_total_gb": 125.6491928100586,
+    "ram_available_gb": 118.61304092407227,
+    "gpu_count": 2,
+    "gpu_models": [
+      "NVIDIA GeForce RTX 4070 Ti SUPER",
+      "NVIDIA GeForce RTX 4070 Ti SUPER"
+    ],
+    "gpu_memory_gb": [
+      15.9921875,
+      15.9921875
+    ],
+    "tensorflow_version": "2.17.0",
+    "cuda_version": "12.4",
+    "cudnn_version": "9"
+  },
+  "model_metrics": {
+    "model_id": 0,
+    "experiment_id": "mnist-20250428-081546",
+    "model_type": "IMAGE",
+    "total_parameters": 2274,
+    "trainable_parameters": 2130,
+    "non_trainable_parameters": 144,
+    "layer_count": 5,
+    "layer_details": [
+      {
+        "name": "inception_v1_module_bn",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 1544
+      },
+      {
+        "name": "max_pooling2d_1",
+        "class_name": "MaxPooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "conv2d_6",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 730
+      },
+      {
+        "name": "global_average_pooling2d",
+        "class_name": "GlobalAveragePooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "activation",
+        "class_name": "Activation",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      }
+    ]
+  },
+  "training_metrics": {
+    "build_time_ms": 1500,
+    "train_time_ms": 22238,
+    "train_time_per_epoch_ms": [
+      12651.171445846558,
+      4469.594240188599,
+      881.5021514892578,
+      869.4796562194824,
+      884.0339183807373
+    ],
+    "epochs_completed": 5,
+    "batch_size": 2048,
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "final_loss": 1.9580612182617188,
+    "final_accuracy": 0.3805416524410248
+  }
+}

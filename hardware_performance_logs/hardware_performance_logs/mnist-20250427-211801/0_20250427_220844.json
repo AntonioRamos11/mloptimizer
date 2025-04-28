@@ -1,0 +1,114 @@
+{
+  "timestamp": "20250427_220844",
+  "hardware_info": {
+    "hostname": "pswd",
+    "cpu_model": "Unknown",
+    "cpu_cores": 14,
+    "cpu_threads": 20,
+    "ram_total_gb": 31.13628387451172,
+    "ram_available_gb": 17.212787628173828,
+    "gpu_count": 1,
+    "gpu_models": [
+      "NVIDIA GeForce RTX 3080"
+    ],
+    "gpu_memory_gb": [
+      10.0
+    ],
+    "tensorflow_version": "2.19.0",
+    "cuda_version": "12.5.1",
+    "cudnn_version": "9"
+  },
+  "model_metrics": {
+    "model_id": 0,
+    "experiment_id": "mnist-20250427-211801",
+    "model_type": "IMAGE",
+    "total_parameters": 29402,
+    "trainable_parameters": 28890,
+    "non_trainable_parameters": 512,
+    "layer_count": 6,
+    "layer_details": [
+      {
+        "name": "inception_v1_module_bn",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 10368
+      },
+      {
+        "name": "inception_v1_module_bn_1",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 17704
+      },
+      {
+        "name": "max_pooling2d_2",
+        "class_name": "MaxPooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "conv2d_12",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 1330
+      },
+      {
+        "name": "global_average_pooling2d",
+        "class_name": "GlobalAveragePooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "activation",
+        "class_name": "Activation",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      }
+    ]
+  },
+  "training_metrics": {
+    "build_time_ms": 785,
+    "train_time_ms": 527743,
+    "train_time_per_epoch_ms": [
+      21114.952087402344,
+      15334.004640579224,
+      15341.09878540039,
+      15218.902349472046,
+      15225.443601608276,
+      15389.726161956787,
+      15440.263748168945,
+      15345.84355354309,
+      15227.769374847412,
+      15232.181310653687,
+      15598.6008644104,
+      16382.906436920166,
+      15948.618412017822,
+      15404.290676116943,
+      15375.417947769165,
+      15539.38603401184,
+      15367.674350738525,
+      15352.842092514038,
+      15243.467569351196,
+      15200.229406356812,
+      15197.378873825073,
+      15120.508432388306,
+      15139.619588851929,
+      15080.741167068481,
+      15245.56016921997,
+      15158.664226531982,
+      15150.582790374756,
+      15152.684688568115,
+      15168.384790420532,
+      15149.866819381714,
+      15153.085708618164,
+      15129.968166351318,
+      15139.200925827026,
+      15165.304183959961
+    ],
+    "epochs_completed": 34,
+    "batch_size": 32,
+    "optimizer": "adam",
+    "learning_rate": 0.0002490753249730915,
+    "final_loss": 0.033426683396101,
+    "final_accuracy": 0.9888229370117188
+  }
+}

@@ -27,7 +27,7 @@ GPU_SPECS = {
 }
 
 # Directory containing the log files
-results_dir = "/home/p0wden/Documents/IA/mloptimizer/results"
+results_dir = "/home/p0wden/Downloads/mloptimizer/results"
 
 # Function to extract dataset type from filename
 def get_dataset_type(filename):

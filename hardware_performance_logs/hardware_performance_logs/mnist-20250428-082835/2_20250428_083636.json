@@ -1,0 +1,123 @@
+{
+  "timestamp": "20250428_083636",
+  "hardware_info": {
+    "hostname": "fed235fff9ec",
+    "cpu_model": "x86_64",
+    "cpu_cores": 32,
+    "cpu_threads": 64,
+    "ram_total_gb": 125.6491928100586,
+    "ram_available_gb": 118.30567169189453,
+    "gpu_count": 2,
+    "gpu_models": [
+      "NVIDIA GeForce RTX 4070 Ti SUPER",
+      "NVIDIA GeForce RTX 4070 Ti SUPER"
+    ],
+    "gpu_memory_gb": [
+      15.9921875,
+      15.9921875
+    ],
+    "tensorflow_version": "2.17.0",
+    "cuda_version": "12.4",
+    "cudnn_version": "9"
+  },
+  "model_metrics": {
+    "model_id": 2,
+    "experiment_id": "mnist-20250428-082835",
+    "model_type": "IMAGE",
+    "total_parameters": 1296906,
+    "trainable_parameters": 1296322,
+    "non_trainable_parameters": 584,
+    "layer_count": 12,
+    "layer_details": [
+      {
+        "name": "conv2d",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 2080
+      },
+      {
+        "name": "batch_normalization",
+        "class_name": "BatchNormalization",
+        "output_shape": "Unknown",
+        "parameter_count": 320
+      },
+      {
+        "name": "max_pooling2d",
+        "class_name": "MaxPooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "inception_v1_module_bn",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 45568
+      },
+      {
+        "name": "max_pooling2d_2",
+        "class_name": "MaxPooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "flatten",
+        "class_name": "Flatten",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "dense",
+        "class_name": "Dense",
+        "output_shape": "Unknown",
+        "parameter_count": 1229200
+      },
+      {
+        "name": "dropout",
+        "class_name": "Dropout",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "dense_1",
+        "class_name": "Dense",
+        "output_shape": "Unknown",
+        "parameter_count": 19248
+      },
+      {
+        "name": "dropout_1",
+        "class_name": "Dropout",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "dense_2",
+        "class_name": "Dense",
+        "output_shape": "Unknown",
+        "parameter_count": 490
+      },
+      {
+        "name": "activation",
+        "class_name": "Activation",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      }
+    ]
+  },
+  "training_metrics": {
+    "build_time_ms": 1905,
+    "train_time_ms": 40359,
+    "train_time_per_epoch_ms": [
+      22074.551105499268,
+      12242.223501205444,
+      1009.7377300262451,
+      1007.1415901184082,
+      1024.996280670166
+    ],
+    "epochs_completed": 5,
+    "batch_size": 2048,
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "final_loss": 0.0655011534690857,
+    "final_accuracy": 0.9809583425521851
+  }
+}

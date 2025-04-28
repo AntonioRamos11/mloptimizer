@@ -46,6 +46,7 @@
   # 7. Install Python dependencies
   echo "Installing Python requirements..."
   pip install -r requirements2.txt
+  conda install tensorflow-gpu -y
 
   # 8. Start Services
 

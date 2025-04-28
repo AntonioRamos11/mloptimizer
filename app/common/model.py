@@ -38,7 +38,7 @@ class Model:
 		self.is_partial_training = model_training_request.is_partial_training
 		self.model: tf.keras.Model
 		self.dataset: Dataset = dataset
-		self.performance_logger = HardwarePerformanceLogger()
+		self.performance_logger = HardwarePerformanceLogger(tf_module=tf)
 
 	def build_model(self, input_shape: tuple, class_count: int):
 		if self.search_space_type == SearchSpaceType.IMAGE:

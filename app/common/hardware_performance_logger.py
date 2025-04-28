@@ -3,11 +3,11 @@ import json
 import time
 import platform
 import psutil
-import tensorflow as tf
 import numpy as np
 from dataclasses import dataclass, asdict
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
+from types import ModuleType  # Import ModuleType from types, not typing
 
 @dataclass
 class ModelMetrics:
@@ -48,9 +48,15 @@ class HardwareInfo:
     cudnn_version: Optional[str] = None
 
 class HardwarePerformanceLogger:
-    def __init__(self, base_log_dir="hardware_performance_logs"):
-        """Initialize the hardware performance logger"""
+    def __init__(self, tf_module: Optional[ModuleType] = None, base_log_dir="hardware_performance_logs"):
+        """Initialize the hardware performance logger
+        
+        Args:
+            tf_module: TensorFlow module, if None the hardware info will have limited GPU details
+            base_log_dir: Directory for storing logs
+        """
         self.base_log_dir = base_log_dir
+        self.tf = tf_module  # Store the TensorFlow module
         os.makedirs(base_log_dir, exist_ok=True)
         self.hardware_info = self._collect_hardware_info()
         self.log_file = None
@@ -73,51 +79,53 @@ class HardwarePerformanceLogger:
         # GPU information
         gpu_models = []
         gpu_memory_gb = []
-        
-        try:
-            gpus = tf.config.list_physical_devices('GPU')
-            gpu_count = len(gpus)
-            
-            # Try to get detailed GPU info
-            if gpu_count > 0:
-                try:
-                    import subprocess
-                    # Try nvidia-smi for NVIDIA GPUs
-                    nvidia_output = subprocess.check_output(
-                        ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
-                        universal_newlines=True
-                    )
-                    for line in nvidia_output.strip().split("\n"):
-                        parts = line.split(", ")
-                        if len(parts) >= 2:
-                            gpu_models.append(parts[0])
-                            # Convert MiB to GB
-                            memory_str = parts[1].split(" ")[0]
-                            gpu_memory_gb.append(float(memory_str) / 1024)
-                except (subprocess.SubprocessError, FileNotFoundError):
-                    # If nvidia-smi fails, use basic info
-                    gpu_models = [f"GPU {i}" for i in range(gpu_count)]
-                    gpu_memory_gb = [0.0] * gpu_count
-            else:
-                gpu_count = 0
-        except:
-            gpu_count = 0
-        
-        # TensorFlow and CUDA versions
-        tf_version = tf.__version__
+        gpu_count = 0
+        tf_version = "N/A"
         cuda_version = None
         cudnn_version = None
         
-        # Try to get CUDA version
-        try:
-            cuda_version = tf.sysconfig.get_build_info()["cuda_version"]
-            cudnn_version = tf.sysconfig.get_build_info()["cudnn_version"]
-        except:
-            # If the above method fails, try another approach
+        # Only try to access TensorFlow if the module was provided
+        if self.tf is not None:
             try:
-                from tensorflow.python.platform import build_info
-                cuda_version = build_info.build_info["cuda_version"]
-                cudnn_version = build_info.build_info["cudnn_version"]
+                gpus = self.tf.config.list_physical_devices('GPU')
+                gpu_count = len(gpus)
+                
+                # Try to get detailed GPU info
+                if gpu_count > 0:
+                    try:
+                        import subprocess
+                        # Try nvidia-smi for NVIDIA GPUs
+                        nvidia_output = subprocess.check_output(
+                            ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
+                            universal_newlines=True
+                        )
+                        for line in nvidia_output.strip().split("\n"):
+                            parts = line.split(", ")
+                            if len(parts) >= 2:
+                                gpu_models.append(parts[0])
+                                # Convert MiB to GB
+                                memory_str = parts[1].split(" ")[0]
+                                gpu_memory_gb.append(float(memory_str) / 1024)
+                    except (subprocess.SubprocessError, FileNotFoundError):
+                        # If nvidia-smi fails, use basic info
+                        gpu_models = [f"GPU {i}" for i in range(gpu_count)]
+                        gpu_memory_gb = [0.0] * gpu_count
+                
+                # TensorFlow and CUDA versions
+                tf_version = self.tf.__version__
+                
+                # Try to get CUDA version
+                try:
+                    cuda_version = self.tf.sysconfig.get_build_info()["cuda_version"]
+                    cudnn_version = self.tf.sysconfig.get_build_info()["cudnn_version"]
+                except:
+                    # If the above method fails, try another approach
+                    try:
+                        from tensorflow.python.platform import build_info
+                        cuda_version = build_info.build_info["cuda_version"]
+                        cudnn_version = build_info.build_info["cudnn_version"]
+                    except:
+                        pass
             except:
                 pass
                 
@@ -136,7 +144,7 @@ class HardwarePerformanceLogger:
             cudnn_version=cudnn_version
         )
     
-    def get_model_metrics(self, model: tf.keras.Model, model_id: str, 
+    def get_model_metrics(self, model: Any, model_id: str, 
                         experiment_id: str, model_type: str) -> ModelMetrics:
         """Extract and record model architecture metrics"""
         trainable_params = np.sum([np.prod(v.shape) for v in model.trainable_variables])

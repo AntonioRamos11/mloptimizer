@@ -6,3 +6,5 @@ python app/common/compare_hardware_performance.py --metric train_time_ms --sort-
 
 # Show most efficient processing (lowest ms per million parameters)
 python app/common/compare_hardware_performance.py --metric efficiency --sort-by efficiency
+
+ scp -P 45088 -r root@66.179.249.233:/workspace/mloptimizer/results results

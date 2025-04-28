@@ -1,6 +1,5 @@
 class SystemParameters:
     # Rabbit MQ Connections
-    #INSTANCE_PORT: int = 17121  # Port for RabbitMQ
     #INSTANCE_MANAGMENT_URL = "192.168.100.89"
     INSTANCE_PORT: int = 5672  # Port for RabbitMQ
     INSTANCE_MANAGMENT_URL = "localhost"
@@ -10,6 +9,7 @@ class SystemParameters:
     #if not local
     INSTANCE_HOST_URL: str = '4.tcp.us-cal-1.ngrok.io'
     INSTANCE_MANAGMENT_URL = "https://quiet-husky-46.telebit.io"
+    INSTANCE_PORT: int = 11497   # Port for RabbitMQ
 
     #INSTANCE_HOST_URL: str = 'serveo.net'
     INSTANCE_USER: str = 'guest'  # Default RabbitMQ user

@@ -104,8 +104,10 @@ class Model:
 		if num_gpus >= 2:
 			# Enable batch size scaling
 			original_batch_size = self.dataset.batch_size
-			self.dataset.batch_size *= num_gpus  # Critical for multi-GPU perf
-			
+			gpu_info = [tf.config.experimental.get_memory_info(f'GPU:{i}') for i in range(num_gpus)]
+			safe_batch_size = int(min([i['current'] for i in gpu_info]) * 0.9 / (1024**2))  # 90% of smallest memory
+			self.dataset.batch_size = safe_batch_size * num_gpus   # Critical for multi-GPU perf
+					
 			strategy = tf.distribute.MirroredStrategy(
 				cross_device_ops=tf.distribute.NcclAllReduce(),  # Use NCCL for multi-GPU communication
 				devices=[f"/gpu:{i}" for i in range(num_gpus)]
@@ -149,15 +151,15 @@ class Model:
 		test = test.with_options(options)
 		test = test.prefetch(tf.data.AUTOTUNE)
 		
-		# Add to Dataset preprocessing
-		def preprocess_gpu(x, y):
+		# Add to Dataset preprocessing -is using the GPU
+		"""def preprocess_gpu(x, y):
 			# Move preprocessing to GPU for operations like:
 			x = tf.image.random_flip_left_right(x)
 			x = tf.image.random_brightness(x, 0.1)
 			return x, y
 		
 		# Apply to dataset
-		train = train.map(preprocess_gpu, num_parallel_calls=tf.data.AUTOTUNE)
+		train = train.map(preprocess_gpu, num_parallel_calls=tf.data.AUTOTUNE)"""
 		
 		training_steps = self.dataset.get_training_steps(use_augmentation)
 		validation_steps = self.dataset.get_validation_steps()
@@ -174,7 +176,8 @@ class Model:
 			model = self.build_model(input_shape, class_count)
 			build_time_ms = int(round(time.time() * 1000)) - build_start_time
 			
-			tf.config.optimizer.set_jit(True)
+			#tf.config.optimizer.set_jit(True)
+			tf.function(jit_compile=True)
 			# Set up callbacks
 			scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 			
@@ -265,11 +268,7 @@ class Model:
 		if num_gpus > 1:
 			self.dataset.batch_size = original_batch_size
 		
-		# Save the processed dataset
-		tf.data.experimental.save(processed_dataset, "path/to/saved/dataset")
 
-		# Load it later
-		loaded_dataset = tf.data.experimental.load("path/to/saved/dataset")
 		
 		return training_val, did_finish_epochs
 

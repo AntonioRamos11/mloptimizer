@@ -9,9 +9,9 @@ class SystemParameters:
     #if not local 
     #~/telebit http 15672
     #ngrok tcp 5672
-    INSTANCE_HOST_URL: str = '8.tcp.ngrok.io'
+    INSTANCE_HOST_URL: str = '0.tcp.us-cal-1.ngrok.io'
     INSTANCE_MANAGMENT_URL = "https://curvy-lion-61.telebit.io"
-    INSTANCE_PORT: int = 19456   # Port for RabbitMQ
+    INSTANCE_PORT: int = 12826   # Port for RabbitMQ
 
     #INSTANCE_HOST_URL: str = 'serveo.net'
     INSTANCE_USER: str = 'guest'  # Default RabbitMQ user

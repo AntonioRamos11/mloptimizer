@@ -104,9 +104,35 @@ class Model:
 		if num_gpus >= 2:
 			# Enable batch size scaling
 			original_batch_size = self.dataset.batch_size
-			gpu_info = [tf.config.experimental.get_memory_info(f'GPU:{i}') for i in range(num_gpus)]
-			safe_batch_size = int(min([i['current'] for i in gpu_info]) * 0.9 / (1024**2))  # 90% of smallest memory
-			self.dataset.batch_size = safe_batch_size * num_gpus   # Critical for multi-GPU perf
+			
+			# Method 1: Set a minimum batch size per GPU
+			MIN_BATCH_SIZE_PER_GPU = 4  # Minimum batch size per GPU
+			
+			try:
+				# Try to calculate batch size based on available memory
+				gpu_info = [tf.config.experimental.get_memory_info(f'GPU:{i}') for i in range(num_gpus)]
+				
+				# Calculate safe batch size, ensuring it's at least the minimum
+				memory_mb = min([i['current'] for i in gpu_info]) / (1024**2)
+				calculated_batch = int(memory_mb * 0.9)  # 90% of smallest memory in MB
+				
+				# Ensure batch size is at least the minimum
+				safe_batch_size = max(calculated_batch, MIN_BATCH_SIZE_PER_GPU)
+				
+				# Set batch size for all GPUs
+				self.dataset.batch_size = safe_batch_size * num_gpus
+				
+				logging.info(f"Set batch size to {self.dataset.batch_size} ({safe_batch_size} per GPU)")
+			except Exception as e:
+				# Fallback: use original batch size or set a reasonable default
+				logging.warning(f"Error calculating batch size from GPU memory: {e}")
+				self.dataset.batch_size = max(original_batch_size, MIN_BATCH_SIZE_PER_GPU * num_gpus)
+				logging.info(f"Using fallback batch size: {self.dataset.batch_size}")
+			
+			# Final validation to ensure positive batch size
+			if self.dataset.batch_size <= 0:
+				self.dataset.batch_size = 32 * num_gpus  # Set a reasonable default
+				logging.warning(f"Invalid batch size detected, reset to {self.dataset.batch_size}")
 					
 			strategy = tf.distribute.MirroredStrategy(
 				cross_device_ops=tf.distribute.NcclAllReduce(),  # Use NCCL for multi-GPU communication

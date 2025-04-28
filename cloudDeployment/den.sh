@@ -70,6 +70,7 @@ export PYTHONUNBUFFERED=1  # Ensure Python output isn't buffered
 export OPTUNA_WARN_EXPERIMENTAL=1  # Enable Optuna warnings
 
 echo "Starting master process with debugging..."
+mkdir -p logs
 python -u run_master.py > logs/master.log 2>&1 &
 master_pid=$!
 echo "Master PID: $master_pid"

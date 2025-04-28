@@ -4,6 +4,8 @@ import logging
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+import gc
+
 from tensorflow.keras import layers, regularizers
 from tensorflow.keras import mixed_precision
 from app.common.inception_module import InceptionV1ModuleBN
@@ -16,6 +18,9 @@ from app.common.hardware_performance_callback import HardwarePerformanceCallback
 #physical_devices = tf.config.list_physical_devices('GPU')
 
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+
+from tensorflow.config.experimental import VirtualDeviceConfiguration
 
 
 
@@ -32,6 +37,25 @@ class Model:
 		self.model: tf.keras.Model
 		self.dataset: Dataset = dataset
 		self.performance_logger = HardwarePerformanceLogger(tf_module=tf)
+
+	def _reset_gpu_memory(self):
+		"""Aggressively clean up GPU memory"""
+		try:
+			# Clear TensorFlow session
+			tf.keras.backend.clear_session(
+				free_memory=True
+			)
+
+			
+			# Force garbage collection
+			gc.collect()
+			
+			# Give GPU time to release memory
+			time.sleep(0.5)
+			
+			logging.info("GPU memory reset complete")
+		except Exception as e:
+			logging.warning(f"Error resetting GPU memory: {e}")
 
 	def build_model(self, input_shape: tuple, class_count: int):
 		if self.search_space_type == SearchSpaceType.IMAGE:
@@ -52,6 +76,8 @@ class Model:
 
 	def build_and_train(self) -> float:
 		 # Start timing
+
+		self._reset_gpu_memory()
 		self.performance_logger.start_timing()
 		build_start_time = int(round(time.time() * 1000))
 		 # Set memory growth to avoid allocating all GPU memory at once

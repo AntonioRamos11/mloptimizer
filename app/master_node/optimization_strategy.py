@@ -359,70 +359,120 @@ class OptimizationStrategy(object):
                 debug_trace(f"WARNING: Trial {model_training_response.id} not found in storage", include_trace=True)
                 return Action.GENERATE_MODEL
                 
+            # Validate performance value
+            if model_training_response.performance is None:
+                debug_trace(f"ERROR: Trial {model_training_response.id} reported None performance", include_trace=True)
+                return Action.GENERATE_MODEL
+                
             # Adjust performance for finished epochs
             performance = model_training_response.performance
             if model_training_response.finished_epochs is True:
                 performance = performance * 1.03
                 debug_trace(f"Adjusted performance: {performance} (1.03x bonus for finished epochs)")
                 
-            self.storage.set_trial_value(model_training_response.id, model_training_response.performance)
-            self.storage.set_trial_state(model_training_response.id, TrialState.COMPLETE)
+            # Set trial results in storage
+            try:
+                self.storage.set_trial_value(model_training_response.id, performance)
+                self.storage.set_trial_state(model_training_response.id, TrialState.COMPLETE)
+                debug_trace(f"Trial {model_training_response.id} marked as complete with value {performance}")
+            except Exception as storage_error:
+                debug_trace(f"ERROR updating trial in storage: {str(storage_error)}", include_trace=True)
             
-            self._register_completed_model(model_training_response)
-            debug_trace(f"Registered completed model", {"total_completed": len(self.exploration_models_completed)})
+            # Register the completed model - with validation
+            try:
+                self._register_completed_model(model_training_response)
+                debug_trace(f"Registered completed model", {"total_completed": len(self.exploration_models_completed)})
+            except Exception as register_error:
+                debug_trace(f"ERROR registering completed model: {str(register_error)}", include_trace=True)
+                # Add the model to completed models directly as fallback
+                for request in self.exploration_models_requests:
+                    if request.id == model_training_response.id:
+                        completed_model = CompletedModel(request, performance)
+                        self.exploration_models_completed.append(completed_model)
+                        debug_trace("Added model via fallback method")
+                        break
             
-            best_trial = self.get_best_exploration_classification_model()
-            debug_trace("Best exploration trial", {
-                "id": best_trial.model_training_request.id, 
-                "score": best_trial.performance
-            })
-            
-            cad = 'Best exploration trial so far is # ' + str(best_trial.model_training_request.id) + ' with a score of ' + str(best_trial.performance)
-            SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': cad})
-            
-            # Check conditions and decide action
-            should_gen = self.should_generate()
-            should_wait = self.should_wait()
-            debug_trace(f"Decision state", {
-                "should_generate": should_gen, 
-                "should_wait": should_wait,
-                "exploration_generated": len(self.exploration_models_requests),
-                "exploration_completed": len(self.exploration_models_completed)
-            })
-            
-            if should_gen:
-                debug_trace("Decided: GENERATE_MODEL")
+            # Safety check: ensure we have completed models before finding the best
+            if not self.exploration_models_completed:
+                debug_trace("ERROR: No completed models available to determine best model", include_trace=True)
                 return Action.GENERATE_MODEL
-            elif should_wait:
-                debug_trace("Decided: WAIT")
-                return Action.WAIT
-            elif not self._should_generate_exploration() and not self._should_wait_exploration():
-                debug_trace("Building Hall of Fame and transitioning to DEEP_TRAINING phase")
-                self._build_hall_of_fame_classification()
                 
-                # Log phase transition
-                self.debug_state["phase_transitions"].append({
-                    "time": str(datetime.datetime.now()),
-                    "from": "EXPLORATION",
-                    "to": "DEEP_TRAINING",
-                    "models_completed": len(self.exploration_models_completed),
-                    "best_model": best_trial.model_training_request.id,
-                    "best_performance": best_trial.performance
+            # Get best model
+            try:
+                best_trial = self.get_best_exploration_classification_model()
+                debug_trace("Best exploration trial", {
+                    "id": best_trial.model_training_request.id, 
+                    "score": best_trial.performance
                 })
                 
-                self.phase = Phase.DEEP_TRAINING
-                debug_trace("Decided: START_NEW_PHASE")
-                return Action.START_NEW_PHASE
+                cad = f'Best exploration trial so far is # {best_trial.model_training_request.id} with a score of {best_trial.performance}'
+                SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': cad})
+            except Exception as best_model_error:
+                debug_trace(f"ERROR finding best model: {str(best_model_error)}", include_trace=True)
+            
+            # Check conditions and decide action
+            try:
+                should_gen = self.should_generate()
+                should_wait = self.should_wait()
+                debug_trace(f"Decision state", {
+                    "should_generate": should_gen, 
+                    "should_wait": should_wait,
+                    "exploration_generated": len(self.exploration_models_requests),
+                    "exploration_completed": len(self.exploration_models_completed)
+                })
                 
+                if should_gen:
+                    debug_trace("Decided: GENERATE_MODEL")
+                    return Action.GENERATE_MODEL
+                elif should_wait:
+                    debug_trace("Decided: WAIT")
+                    return Action.WAIT
+                elif not self._should_generate_exploration() and not self._should_wait_exploration():
+                    debug_trace("Building Hall of Fame and transitioning to DEEP_TRAINING phase")
+                    
+                    # Build hall of fame with error handling
+                    try:
+                        self._build_hall_of_fame_classification()
+                    except Exception as hof_error:
+                        debug_trace(f"ERROR building hall of fame: {str(hof_error)}", include_trace=True)
+                        # Fallback: manually build hall of fame with top models
+                        if len(self.exploration_models_completed) > 0:
+                            try:
+                                debug_trace("Using fallback hall of fame building")
+                                stored_models = sorted(
+                                    self.exploration_models_completed, 
+                                    key=lambda m: float(m.performance) if m.performance is not None else float('-inf'), 
+                                    reverse=True
+                                )
+                                self.hall_of_fame = stored_models[:self.hall_of_fame_size]
+                            except Exception as fallback_error:
+                                debug_trace(f"ERROR in fallback hall of fame: {str(fallback_error)}", include_trace=True)
+                    
+                    # Log phase transition
+                    self.debug_state["phase_transitions"].append({
+                        "time": str(datetime.datetime.now()),
+                        "from": "EXPLORATION",
+                        "to": "DEEP_TRAINING",
+                        "models_completed": len(self.exploration_models_completed),
+                        "best_model": best_trial.model_training_request.id if 'best_trial' in locals() else None,
+                        "best_performance": best_trial.performance if 'best_trial' in locals() else None
+                    })
+                    
+                    self.phase = Phase.DEEP_TRAINING
+                    debug_trace("Decided: START_NEW_PHASE")
+                    return Action.START_NEW_PHASE
+            except Exception as decision_error:
+                debug_trace(f"ERROR making decision: {str(decision_error)}", include_trace=True)
+                return Action.WAIT  # Safe default
+                    
             # This should never happen, but add as a fallback
             debug_trace("WARNING: No clear action determined, defaulting to WAIT")
             return Action.WAIT
             
         except Exception as e:
+            # Catch-all error handler with detailed information
             debug_trace(f"ERROR in exploration classification handler: {str(e)}", include_trace=True)
             return Action.WAIT  # Safe default
-
-    # Continue implementing the rest of the methods with similar debugging...
 
     def _report_model_response_hof_classification(self, model_training_response: ModelTrainingResponse):
         debug_trace("Processing HoF classification response", {
@@ -543,8 +593,25 @@ class OptimizationStrategy(object):
         return best_model
 
     def get_best_exploration_classification_model(self):
-        best_model = max(self.exploration_models_completed, key=lambda completed_model: completed_model.performance)
-        return best_model
+        """Get best exploration model with improved error handling"""
+        if not self.exploration_models_completed:
+            debug_trace("ERROR: No exploration models completed yet", include_trace=True)
+            raise ValueError("No exploration models completed")
+            
+        try:
+            # Filter out models with None performance
+            valid_models = [m for m in self.exploration_models_completed if m.performance is not None]
+            
+            if not valid_models:
+                debug_trace("ERROR: No models with valid performance values", include_trace=True)
+                raise ValueError("No models with valid performance")
+                
+            best_model = max(valid_models, key=lambda completed_model: completed_model.performance)
+            return best_model
+            
+        except Exception as e:
+            debug_trace(f"ERROR finding best exploration model: {str(e)}", include_trace=True)
+            raise
 
     def get_best_exploration_regression_model(self):
         best_model = min(self.exploration_models_completed, key=lambda completed_model: completed_model.performance)
@@ -573,14 +640,31 @@ class OptimizationStrategy(object):
             print(model)
 
     def _register_completed_model(self, model_training_response: ModelTrainingResponse):
-        model_training_request = next(
-            request
-            for request in self.exploration_models_requests
-            if request.id == model_training_response.id
-        )
-        performance = model_training_response.performance
-        completed_model = CompletedModel(model_training_request, performance)
-        self.exploration_models_completed.append(completed_model)
+        """Register a completed model with improved error handling"""
+        try:
+            # Find matching request
+            matching_request = None
+            for request in self.exploration_models_requests:
+                if request.id == model_training_response.id:
+                    matching_request = request
+                    break
+                    
+            if matching_request is None:
+                debug_trace(f"ERROR: No matching request found for model {model_training_response.id}", include_trace=True)
+                raise ValueError(f"No matching request for model {model_training_response.id}")
+                
+            performance = model_training_response.performance
+            if performance is None:
+                debug_trace(f"WARNING: Model {model_training_response.id} has None performance, using 0 as fallback")
+                performance = 0.0
+                
+            completed_model = CompletedModel(matching_request, performance)
+            self.exploration_models_completed.append(completed_model)
+            debug_trace(f"Successfully registered model {model_training_response.id} with performance {performance}")
+            
+        except Exception as e:
+            debug_trace(f"ERROR in _register_completed_model: {str(e)}", include_trace=True)
+            raise
 
 
 class Phase(Enum):

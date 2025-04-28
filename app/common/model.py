@@ -106,9 +106,7 @@ class Model:
 			original_batch_size = self.dataset.batch_size
 			self.dataset.batch_size *= num_gpus *32 # Critical for multi-GPU perf
 			
-			strategy = tf.distribute.MirroredStrategy(
-				cross_device_ops=tf.distribute.NcclAllReduce(),  # Use NCCL for multi-GPU communication
-				devices=[f"/gpu:{i}" for i in range(num_gpus)]
+			
 					
 			strategy = tf.distribute.MirroredStrategy(
 				cross_device_ops=tf.distribute.NcclAllReduce(),  # Use NCCL for multi-GPU communication

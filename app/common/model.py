@@ -17,13 +17,6 @@ from app.common.hardware_performance_callback import HardwarePerformanceCallback
 
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-try:
-    gpus = tf.config.list_physical_devices('GPU')
-    for gpu in gpus:
-        tf.config.experimental.set_memory_growth(gpu, True)
-    print(f"Memory growth enabled on {len(gpus)} GPU(s)")
-except Exception as e:
-    print(f"Error configuring GPU memory growth: {e}")
 
 
 class Model:

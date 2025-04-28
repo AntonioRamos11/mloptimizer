@@ -5,7 +5,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 from tabulate import tabulate
-from app.common.hardware_performance_logger import HardwarePerformanceLogger
+from hardware_performance_logger import HardwarePerformanceLogger
 
 def find_log_files(log_dir, experiment_id=None):
     """Find all hardware performance log files"""
@@ -90,7 +90,7 @@ def plot_comparison(comparison_data, metric='train_time_ms'):
 
 def main():
     parser = argparse.ArgumentParser(description='Compare hardware performance logs')
-    parser.add_argument('--log-dir', default='hardware_performance_logs', 
+    parser.add_argument('--log-tdir', default='hardware_performance_logs', 
                         help='Directory containing hardware performance logs')
     parser.add_argument('--experiment-id', help='Filter logs by experiment ID')
     parser.add_argument('--metric', default='train_time_ms',

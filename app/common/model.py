@@ -15,7 +15,10 @@ from app.common.model_communication import *
 from system_parameters import SystemParameters as SP
 from app.common.hardware_performance_logger import HardwarePerformanceLogger
 from app.common.hardware_performance_callback import HardwarePerformanceCallback
+from app.common.GpuMetrics import GPUMetricsCollector
 #physical_devices = tf.config.list_physical_devices('GPU')
+
+
 
 #tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
@@ -91,6 +94,10 @@ class Model:
 		self.performance_logger.start_timing()
 		build_start_time = int(round(time.time() * 1000))
 		 # Set memory growth to avoid allocating all GPU memory at once
+
+		metrics_collector = GPUMetricsCollector(framework='tensorflow')
+		initial_metrics = metrics_collector.collect_metrics()
+
 		
 
 
@@ -134,6 +141,8 @@ class Model:
 		validation = self.dataset.get_validation_data()
 		test = self.dataset.get_test_data()
 		
+		pipeline_metrics = metrics_collector._get_data_pipeline_latency(train)
+
 		# Optimize data pipeline for multi-GPU performance
 		options = tf.data.Options()
 		options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
@@ -175,7 +184,11 @@ class Model:
 		with strategy.scope():
 			model = self.build_model(input_shape, class_count)
 			build_time_ms = int(round(time.time() * 1000)) - build_start_time
-			
+
+			metrics_collector.model = model  # Store model for latency measurements
+			metrics_collector.register_model(model)
+			training_step_metrics = metrics_collector._get_training_step_latency(model)
+
 			#tf.config.optimizer.set_jit(True)
 			tf.function(jit_compile=True)
 			# Set up callbacks
@@ -204,16 +217,45 @@ class Model:
 					patience=self.early_stopping_patience, 
 					verbose=1, 
 					restore_best_weights=True
-				)
 		
-		# Setup logging
+				)
+		class MetricsCollectionCallback(tf.keras.callbacks.Callback):
+			def __init__(self, collector):
+				super().__init__()
+				self.collector = collector
+				
+			def on_epoch_begin(self, epoch, logs=None):
+				self.collector.collect_metrics()
+				
+			def on_epoch_end(self, epoch, logs=None):
+				self.collector.collect_metrics()
+				
+			def on_train_end(self, logs=None):
+				self.collector.collect_metrics()
+			
+			# Setup logging
 		model_stage = "exp" if self.is_partial_training else "hof"
 		log_dir = "logs/{}/{}-{}".format(self.experiment_id, model_stage, str(self.id))
 		tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 		
+
+		#CALLBACK LIST TO THE GPUMONITOR 
+
+		metrics_callback = MetricsCollectionCallback(metrics_collector)
+		
+		# Get model metrics before training
+		model_metrics = self.performance_logger.get_model_metrics(
+			model, 
+			self.id, 
+			self.experiment_id,
+			self.search_space_type.name
+		)
+    
 		# Add performance logger callback
 		performance_callback = HardwarePerformanceCallback(self.performance_logger)
 		callbacks = [early_stopping, tensorboard, scheduler_callback, performance_callback]
+		callbacks.append(metrics_callback)
+
 		
 		# Get model metrics before training
 		model_metrics = self.performance_logger.get_model_metrics(
@@ -232,7 +274,24 @@ class Model:
 			validation_data=validation,
 			validation_steps=validation_steps,
 		)
+
+
 		
+
+		final_metrics = metrics_collector.collect_metrics()
+		metrics_dir = metrics_collector.save_organized_metrics(
+        model_id=self.id,
+        experiment_id=self.experiment_id,
+        base_dir="hardware_metrics"
+    	)
+
+		import os 
+		report_path = os.path.join(metrics_dir, "hardware_report.json")
+		metrics_collector.generate_hardware_report(
+			save_path=report_path,
+			model_id=self.id,
+			experiment_id=self.experiment_id
+    )
 		# Get optimizer information
 		# Get optimizer information
 		optimizer_name = SP.OPTIMIZER

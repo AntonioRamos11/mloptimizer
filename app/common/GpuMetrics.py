@@ -1,3 +1,4 @@
+import io
 import os
 import time
 import json
@@ -316,24 +317,117 @@ class GPUMetricsCollector:
         return results
     
     def _get_pcie_throughput(self):
-        """Get PCIe throughput stats"""
+        """Get PCIe throughput stats using memory controller activity as proxy"""
         results = {}
         try:
             for device in self.gpu_devices:
                 index = device['index']
-                output = subprocess.check_output(
-                    ["nvidia-smi", f"--id={index}", "--query-gpu=pcie.rx.throughput,pcie.tx.throughput", "--format=csv,noheader"],
+                # Get PCIe link configuration first (indicates maximum theoretical bandwidth)
+                link_output = subprocess.check_output(
+                    ["nvidia-smi", f"--id={index}", "--query-gpu=pcie.link.gen.current,pcie.link.width.current", "--format=csv,noheader"],
                     universal_newlines=True
                 ).strip()
-                rx_str, tx_str = output.split(',')
-                results[index] = {
-                    'rx': rx_str.strip(),
-                    'tx': tx_str.strip()
-                }
+                gen, width = link_output.split(',')
+                
+                # Calculate theoretical max bandwidth
+                width_str = width.strip()
+                try:
+                    gen_num = float(gen.strip())
+ 
+                    if width_str.startswith('x') and len(width_str) > 1:
+                        width_num = int(width_str[1:])
+                    else:
+                        width_num = int(width_str)                 
+                    bandwidth = 0
+                    if gen_num == 3.0:
+                        bandwidth = width_num * 0.985  # PCIe 3.0: ~0.985 GB/s per lane
+                    elif gen_num == 4.0:
+                        bandwidth = width_num * 1.97   # PCIe 4.0: ~1.97 GB/s per lane
+                    elif gen_num == 5.0:
+                        bandwidth = width_num * 3.94   # PCIe 5.0: ~3.94 GB/s per lane
+                except (ValueError, IndexError) as e:
+                    print(f"Error parsing PCIe info: {e}")
+                # PCIe bandwidth in GB/s (approximate):
+                
+                
+                # Get memory controller utilization as proxy for PCIe activity
+                try:
+                    # Run dmon with utilization stats (-s u)
+                    dmon_process = subprocess.Popen(
+                        ["nvidia-smi", "dmon", "-s", "u", "-c", "3", "-d", "1"],
+                        stdout=subprocess.PIPE, 
+                        stderr=subprocess.PIPE,
+                        universal_newlines=True
+                    )
+                    stdout, stderr = dmon_process.communicate(timeout=4)
+                    
+                    # Parse output to get memory controller utilization (column 3)
+                    lines = stdout.strip().split('\n')
+                    mem_utils = []
+                    
+                    for i, line in enumerate(lines):
+                        # Skip header lines (first two lines)
+                        if i < 2 or line.startswith('#') or not line.strip():
+                            continue
+                        
+                        parts = line.split()
+                        # Check if this is our GPU and we have enough columns
+                        if len(parts) >= 6 and parts[0].strip() == str(index):
+                            # Memory controller utilization is the 3rd column (index 2)
+                            try:
+                                mem_util = parts[2].strip()
+                                if mem_util:  # Make sure it's not empty
+                                    print(mem_util)
+                                    mem_utils.append(int(mem_util))
+                            except (ValueError, IndexError):
+                                # Skip invalid values
+                                
+                                pass
+                    
+                    # Calculate average memory controller utilization
+                    if mem_utils:
+                        avg_mem_util = sum(mem_utils) / len(mem_utils)
+                        
+                        results[index] = {
+                            'link_gen': gen.strip(),
+                            'link_width': width.strip(),
+                            'max_bandwidth_GBps': bandwidth,
+                            'mem_controller_util': avg_mem_util,
+                            'estimated_usage_GBps': (avg_mem_util / 100.0) * bandwidth if bandwidth > 0 else 0
+                        }
+                    else:
+                        # No valid data found
+                        results[index] = {
+                            'link_gen': gen.strip(),
+                            'link_width': width.strip(),
+                            'max_bandwidth_GBps': bandwidth,
+                            'mem_controller_util': 0,
+                            'estimated_usage_GBps': 0,
+                            'note': 'No valid memory controller data found'
+                        }
+                        
+                except subprocess.TimeoutExpired:
+                    dmon_process.kill()
+                    results[index] = {
+                        'link_gen': gen.strip(),
+                        'link_width': width.strip(),
+                        'max_bandwidth_GBps': bandwidth,
+                        'error': 'Timeout collecting memory utilization data'
+                    }
+                    
+                except Exception as e:
+                    results[index] = {
+                        'link_gen': gen.strip(),
+                        'link_width': width.strip(),
+                        'max_bandwidth_GBps': bandwidth,
+                        'error': str(e)
+                    }
+                    
         except Exception as e:
             results['error'] = str(e)
+        
         return results
-    
+        
     def _get_inference_latency(self, batch_size=1, num_runs=10):
         """Measure inference latency if model is available"""
         if not hasattr(self, 'model') or self.model is None:

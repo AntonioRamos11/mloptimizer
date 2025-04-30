@@ -280,8 +280,8 @@ class Model:
 
 		final_metrics = metrics_collector.collect_metrics()
 		metrics_dir = metrics_collector.save_organized_metrics(
-        model_id=self.id,
-        experiment_id=self.experiment_id,
+        model_id=str(self.id),
+        experiment_id=str(self.experiment_id),
         base_dir="hardware_metrics"
     	)
 
@@ -289,8 +289,8 @@ class Model:
 		report_path = os.path.join(metrics_dir, "hardware_report.json")
 		metrics_collector.generate_hardware_report(
 			save_path=report_path,
-			model_id=self.id,
-			experiment_id=self.experiment_id
+			model_id=str(self.id),
+			experiment_id=str(self.experiment_id)
     )
 		# Get optimizer information
 		# Get optimizer information

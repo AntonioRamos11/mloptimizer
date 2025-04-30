@@ -9,9 +9,9 @@ class SystemParameters:
     #if not local 
     #~/telebit http 15672
     #ngrok tcp 5672
-    INSTANCE_HOST_URL: str = '0.tcp.us-cal-1.ngrok.io'
-    INSTANCE_MANAGMENT_URL = "https://curvy-lion-61.telebit.io"
-    INSTANCE_PORT: int = 12826   # Port for RabbitMQ
+    #INSTANCE_HOST_URL: str = '0.tcp.us-cal-1.ngrok.io'
+    #INSTANCE_MANAGMENT_URL = "https://curvy-lion-61.telebit.io"
+    #INSTANCE_PORT: int = 12826   # Port for RabbitMQ
 
     #INSTANCE_HOST_URL: str = 'serveo.net'
     INSTANCE_USER: str = 'guest'  # Default RabbitMQ user
@@ -24,8 +24,8 @@ class SystemParameters:
         INSTANCE_USER, INSTANCE_PASSWORD, INSTANCE_VIRTUAL_HOST,INSTANCE_MANAGMENT_URL
     ]
     
-    #DATASET_NAME: str = 'mnist'  # Example datasetr
-    DATASET_NAME: str = 'cifar10'  # Example dataset
+    DATASET_NAME: str = 'mnist'  # Example datasetr
+    #DATASET_NAME: str = 'cifar10'  # Example dataset
 
     # Define specific dataset configurations
     dataset_config = {

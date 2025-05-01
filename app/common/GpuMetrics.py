@@ -76,10 +76,19 @@ class GPUMetricsCollector:
                 # Get layer details
                 layers = []
                 for i, layer in enumerate(model.layers):
+                    # Fix: Safely get output shape to avoid attribute error
+                    try:
+                        output_shape = str(layer.output.shape)
+                    except (AttributeError, ValueError):
+                        try:
+                            output_shape = str(layer.get_output_shape_at(0))
+                        except (AttributeError, ValueError):
+                            output_shape = "Unknown"
+                    
                     layer_info = {
                         'name': layer.name,
                         'type': layer.__class__.__name__,
-                        'shape': str(layer.output_shape),
+                        'shape': output_shape,  # Using the safely obtained shape
                         'params': layer.count_params()
                     }
                     
@@ -377,7 +386,6 @@ class GPUMetricsCollector:
                             try:
                                 mem_util = parts[2].strip()
                                 if mem_util:  # Make sure it's not empty
-                                    print(mem_util)
                                     mem_utils.append(int(mem_util))
                             except (ValueError, IndexError):
                                 # Skip invalid values
@@ -483,16 +491,26 @@ class GPUMetricsCollector:
                 
                 # Create dummy input based on model's input shape
                 input_shape = model.input_shape
+                
+                # Fix: Safely get output shape dimension for target
+                try:
+                    output_dim = model.output.shape[-1]
+                except (AttributeError, ValueError):
+                    # Try to get from the last layer
+                    try:
+                        output_dim = model.layers[-1].output.shape[-1]
+                    except (AttributeError, ValueError, IndexError):
+                        return {'error': 'Could not determine output shape for model'}
+                
                 if isinstance(input_shape, list):
                     # Handle multiple inputs
                     dummy_input = [tf.random.normal([batch_size] + list(shape[1:])) for shape in input_shape]
-                    dummy_target = tf.random.normal([batch_size, model.output_shape[-1]])
+                    dummy_target = tf.random.normal([batch_size, output_dim])
                 else:
                     # Single input
                     dummy_input = tf.random.normal([batch_size] + list(input_shape[1:]))
-                    dummy_target = tf.random.normal([batch_size, model.output_shape[-1]])
+                    dummy_target = tf.random.normal([batch_size, output_dim])
                 
-                # Define a training step function
                 @tf.function
                 def train_step(x, y):
                     with tf.GradientTape() as tape:

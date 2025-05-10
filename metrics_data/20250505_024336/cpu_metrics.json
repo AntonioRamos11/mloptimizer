@@ -1,0 +1,668 @@
+[
+  {
+    "timestamp": "2025-05-05T02:38:18.822807",
+    "metrics": {
+      "utilization": {
+        "overall": 1.0,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 20,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 20.497905731201172,
+        "available_gb": 9.522247314453125,
+        "percent_used": 69.4,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6982269287109375,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:39:18.464025",
+    "metrics": {
+      "utilization": {
+        "overall": 0.5,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.1,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 20,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 20.78414535522461,
+        "available_gb": 9.241867065429688,
+        "percent_used": 70.3,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6982192993164062,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:39:21.221754",
+    "metrics": {
+      "utilization": {
+        "overall": 0.5,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 18,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 20.781139373779297,
+        "available_gb": 9.246601104736328,
+        "percent_used": 70.3,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6982192993164062,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:40:21.132301",
+    "metrics": {
+      "utilization": {
+        "overall": 1.0,
+        "per_core": [
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 19,
+        "unused_core_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 21.072792053222656,
+        "available_gb": 8.95321273803711,
+        "percent_used": 71.2,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6982040405273438,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:40:23.899848",
+    "metrics": {
+      "utilization": {
+        "overall": 0.0,
+        "per_core": [
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 20,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 21.07366180419922,
+        "available_gb": 8.952350616455078,
+        "percent_used": 71.2,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6982040405273438,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:41:23.683574",
+    "metrics": {
+      "utilization": {
+        "overall": 0.0,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 20,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 21.3660888671875,
+        "available_gb": 8.657970428466797,
+        "percent_used": 72.2,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6981964111328125,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:41:26.452342",
+    "metrics": {
+      "utilization": {
+        "overall": 0.5,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 20,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 21.37346649169922,
+        "available_gb": 8.650592803955078,
+        "percent_used": 72.2,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6981964111328125,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:42:26.317360",
+    "metrics": {
+      "utilization": {
+        "overall": 0.5,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 19,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 21.673274993896484,
+        "available_gb": 8.352737426757812,
+        "percent_used": 73.2,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6981315612792969,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:42:29.082083",
+    "metrics": {
+      "utilization": {
+        "overall": 1.0,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          18.2,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 20,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 21.672805786132812,
+        "available_gb": 8.353206634521484,
+        "percent_used": 73.2,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6981315612792969,
+        "swap_percent": 73.2
+      }
+    }
+  },
+  {
+    "timestamp": "2025-05-05T02:43:33.308024",
+    "metrics": {
+      "utilization": {
+        "overall": 0.5,
+        "per_core": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 20,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 22.158870697021484,
+        "available_gb": 7.8442840576171875,
+        "percent_used": 74.8,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.6981124877929688,
+        "swap_percent": 73.2
+      }
+    }
+  }
+]

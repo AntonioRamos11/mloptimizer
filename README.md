@@ -24,7 +24,7 @@ Fault tolerance with automatic retry mechanisms
 Comprehensive Reporting:
 
 Detailed performance metrics in JSON format
-Hardware utilization summaries
+Hardware utilization summaries  
 Model architecture snapshots
 System Requirements
 Python 3.10+

@@ -98,7 +98,13 @@ class Model:
 		metrics_collector = GPUMetricsCollector(framework='tensorflow')
 		initial_metrics = metrics_collector.collect_metrics()
 
-		
+		metrics_collector.configure_auto_save(
+			enabled=True,
+			interval_seconds=300,  # Save every 5 minutes
+			save_path='metrics_data',
+			max_history=500  # Keep only the last 500 records in memory
+		)
+
 
 
 		# Enable mixed precision globally
@@ -282,7 +288,9 @@ class Model:
 		metrics_dir = metrics_collector.save_organized_metrics(
         model_id=str(self.id),
         experiment_id=str(self.experiment_id),
-        base_dir="hardware_metrics"
+        base_dir="hardware_metrics",
+		clear_after_save=True,
+    	save_raw=True
     	)
 
 		import os 

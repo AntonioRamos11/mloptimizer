@@ -1,0 +1,92 @@
+{
+  "timestamp": "20250504_235232",
+  "hardware_info": {
+    "hostname": "pswd",
+    "cpu_model": "Unknown",
+    "cpu_cores": 14,
+    "cpu_threads": 20,
+    "ram_total_gb": 31.13628387451172,
+    "ram_available_gb": 20.127216339111328,
+    "gpu_count": 1,
+    "gpu_models": [
+      "NVIDIA GeForce RTX 3080"
+    ],
+    "gpu_memory_gb": [
+      10.0
+    ],
+    "tensorflow_version": "2.19.0",
+    "cuda_version": "12.5.1",
+    "cudnn_version": "9"
+  },
+  "model_metrics": {
+    "model_id": 1,
+    "experiment_id": "mnist-20250504-234423",
+    "model_type": "IMAGE",
+    "total_parameters": 203786,
+    "trainable_parameters": 202370,
+    "non_trainable_parameters": 1416,
+    "layer_count": 7,
+    "layer_details": [
+      {
+        "name": "inception_v1_module_bn",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 47624
+      },
+      {
+        "name": "inception_v1_module_bn_1",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 77076
+      },
+      {
+        "name": "inception_v1_module_bn_2",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 77076
+      },
+      {
+        "name": "max_pooling2d_3",
+        "class_name": "MaxPooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "conv2d_18",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 2010
+      },
+      {
+        "name": "global_average_pooling2d",
+        "class_name": "GlobalAveragePooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "activation",
+        "class_name": "Activation",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      }
+    ]
+  },
+  "training_metrics": {
+    "build_time_ms": 3476,
+    "train_time_ms": 215118,
+    "train_time_per_epoch_ms": [
+      36055.670976638794,
+      30523.110389709473,
+      30647.03416824341,
+      30587.623834609985,
+      30522.343635559082,
+      30516.952991485596
+    ],
+    "epochs_completed": 6,
+    "batch_size": 32,
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "final_loss": 0.032436661422252655,
+    "final_accuracy": 0.9896875023841858
+  }
+}

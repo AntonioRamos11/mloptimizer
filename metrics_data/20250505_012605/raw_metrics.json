@@ -1,0 +1,942 @@
+[
+  {
+    "timestamp": "2025-05-05T01:20:13.289874",
+    "gpu": {
+      "utilization": {
+        "0": 32
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 51
+      },
+      "power": {
+        "0": {
+          "draw_watts": 127.45,
+          "limit_watts": 370.0,
+          "percentage": 34.44594594594595
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 13.3,
+        "per_core": [
+          20.0,
+          9.1,
+          0.0,
+          0.0,
+          10.0,
+          10.0,
+          18.2,
+          0.0,
+          10.0,
+          0.0,
+          60.0,
+          0.0,
+          18.2,
+          10.0,
+          10.0,
+          0.0,
+          10.0,
+          10.0,
+          0.0,
+          10.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 16,
+        "unused_core_indices": [
+          0,
+          1,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.021438598632812,
+        "available_gb": 3.8253860473632812,
+        "percent_used": 87.7,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.516357421875,
+        "swap_percent": 54.1
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 23.828458786010742,
+        "throughput_samples_per_sec": 41.96662524338679
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  },
+  {
+    "timestamp": "2025-05-05T01:21:38.764978",
+    "gpu": {
+      "utilization": {
+        "0": 51
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 53
+      },
+      "power": {
+        "0": {
+          "draw_watts": 183.47,
+          "limit_watts": 370.0,
+          "percentage": 49.586486486486486
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1980,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 12.2,
+        "per_core": [
+          10.0,
+          9.1,
+          0.0,
+          9.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          44.4,
+          0.0,
+          0.0,
+          16.7,
+          0.0,
+          18.2,
+          0.0,
+          9.1,
+          9.1,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 12,
+        "unused_core_indices": [
+          1,
+          3,
+          7,
+          10,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.238540649414062,
+        "available_gb": 3.6093063354492188,
+        "percent_used": 88.4,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.591796875,
+        "swap_percent": 62.0
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 24.0203857421875,
+        "throughput_samples_per_sec": 41.63130478973447
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  },
+  {
+    "timestamp": "2025-05-05T01:21:41.613540",
+    "gpu": {
+      "utilization": {
+        "0": 32
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 52
+      },
+      "power": {
+        "0": {
+          "draw_watts": 129.08,
+          "limit_watts": 370.0,
+          "percentage": 34.88648648648649
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 31.3,
+        "per_core": [
+          0.0,
+          0.0,
+          20.0,
+          18.2,
+          0.0,
+          0.0,
+          20.0,
+          0.0,
+          50.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          30.0,
+          18.2,
+          20.0,
+          20.0,
+          11.1,
+          10.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 17,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.206199645996094,
+        "available_gb": 3.6416473388671875,
+        "percent_used": 88.3,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.60107421875,
+        "swap_percent": 63.0
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 24.948620796203613,
+        "throughput_samples_per_sec": 40.082376022652454
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  },
+  {
+    "timestamp": "2025-05-05T01:23:07.410907",
+    "gpu": {
+      "utilization": {
+        "0": 41
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 53
+      },
+      "power": {
+        "0": {
+          "draw_watts": 186.01,
+          "limit_watts": 370.0,
+          "percentage": 50.27297297297297
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1980,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 7.7,
+        "per_core": [
+          18.2,
+          0.0,
+          18.2,
+          0.0,
+          10.0,
+          0.0,
+          27.3,
+          9.1,
+          27.3,
+          0.0,
+          22.2,
+          0.0,
+          18.2,
+          10.0,
+          0.0,
+          0.0,
+          10.0,
+          18.2,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 5,
+        "unused_core_indices": [
+          1,
+          3,
+          7,
+          15,
+          17
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.410064697265625,
+        "available_gb": 3.4377822875976562,
+        "percent_used": 89.0,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.714111328125,
+        "swap_percent": 74.8
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 23.792290687561035,
+        "throughput_samples_per_sec": 42.03042124576996
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  },
+  {
+    "timestamp": "2025-05-05T01:23:10.248191",
+    "gpu": {
+      "utilization": {
+        "0": 28
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 52
+      },
+      "power": {
+        "0": {
+          "draw_watts": 131.56,
+          "limit_watts": 370.0,
+          "percentage": 35.556756756756755
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 13.3,
+        "per_core": [
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          11.1,
+          0.0,
+          9.1,
+          0.0,
+          22.2,
+          0.0,
+          11.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          9.1,
+          9.1
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 9,
+        "unused_core_indices": [
+          1,
+          5,
+          6,
+          9,
+          11,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.424964904785156,
+        "available_gb": 3.4228782653808594,
+        "percent_used": 89.0,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.714111328125,
+        "swap_percent": 74.8
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 23.46212863922119,
+        "throughput_samples_per_sec": 42.62187866144077
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  },
+  {
+    "timestamp": "2025-05-05T01:24:34.994119",
+    "gpu": {
+      "utilization": {
+        "0": 41
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 53
+      },
+      "power": {
+        "0": {
+          "draw_watts": 180.47,
+          "limit_watts": 370.0,
+          "percentage": 48.77567567567567
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1980,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.3333333333333333,
+          "estimated_usage_GBps": 0.2101333333333333
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 12.8,
+        "per_core": [
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          27.3,
+          0.0,
+          22.2,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 8,
+        "unused_core_indices": [
+          0,
+          3,
+          9,
+          11,
+          15,
+          16,
+          17,
+          18
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.64377212524414,
+        "available_gb": 3.2041664123535156,
+        "percent_used": 89.7,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.797607421875,
+        "swap_percent": 83.6
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 23.55794906616211,
+        "throughput_samples_per_sec": 42.44851693971816
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  },
+  {
+    "timestamp": "2025-05-05T01:24:37.850843",
+    "gpu": {
+      "utilization": {
+        "0": 27
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 52
+      },
+      "power": {
+        "0": {
+          "draw_watts": 130.51,
+          "limit_watts": 370.0,
+          "percentage": 35.27297297297297
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 6.1,
+        "per_core": [
+          18.2,
+          0.0,
+          20.0,
+          10.0,
+          25.0,
+          9.1,
+          0.0,
+          0.0,
+          27.3,
+          9.1,
+          60.0,
+          9.1,
+          10.0,
+          0.0,
+          16.7,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 11,
+        "unused_core_indices": [
+          0,
+          1,
+          2,
+          4,
+          5,
+          7,
+          9,
+          11,
+          13,
+          15,
+          16
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.62548065185547,
+        "available_gb": 3.2224578857421875,
+        "percent_used": 89.7,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.797607421875,
+        "swap_percent": 83.6
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 23.460865020751953,
+        "throughput_samples_per_sec": 42.624174305400295
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  },
+  {
+    "timestamp": "2025-05-05T01:26:02.898206",
+    "gpu": {
+      "utilization": {
+        "0": 49
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9767,
+          "total_mb": 10240,
+          "percentage": 95.380859375
+        }
+      },
+      "temperature": {
+        "0": 52
+      },
+      "power": {
+        "0": {
+          "draw_watts": 184.56,
+          "limit_watts": 370.0,
+          "percentage": 49.88108108108108
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1980,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": false
+    },
+    "cpu": {
+      "utilization": {
+        "overall": 11.3,
+        "per_core": [
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          9.1,
+          0.0,
+          10.0,
+          0.0,
+          11.1,
+          0.0,
+          70.0,
+          0.0,
+          9.1,
+          10.0,
+          10.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "logical_cores": 20,
+        "physical_cores": 14
+      },
+      "unused_cores": {
+        "unused_core_count": 14,
+        "unused_core_indices": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          9,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "threshold": 10
+      },
+      "memory": {
+        "total_gb": 31.13628387451172,
+        "used_gb": 26.916107177734375,
+        "available_gb": 2.932464599609375,
+        "percent_used": 90.6,
+        "swap_total_gb": 0.9540977478027344,
+        "swap_used_gb": 0.853515625,
+        "swap_percent": 89.5
+      }
+    },
+    "latency": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 23.769164085388184,
+        "throughput_samples_per_sec": 42.07131544077893
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/home/p0wden/Downloads/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    },
+    "framework_specific": {
+      "version": "2.19.0",
+      "built_with_cuda": true,
+      "gpu_available": true,
+      "eager_execution": true
+    }
+  }
+]

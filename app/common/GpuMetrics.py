@@ -9,7 +9,7 @@ import subprocess
 from typing import Dict, List, Any, Optional
 
 class GPUMetricsCollector:
-    def __init__(self, framework='tensorflow'):
+    def __init__(self, framework='tensorflow',min_collection_interval=1.0):
         self.framework = framework
         self.gpu_devices = self._detect_gpus()
         self.metrics_history = []
@@ -17,7 +17,15 @@ class GPUMetricsCollector:
         self.idle_start_time = time.time()  # Track when GPU went idle
         self.is_idle = True
         self.model_architecture = None
-        
+
+        self.min_collection_interval = min_collection_interval
+        self.last_save_time = time.time()
+        self.save_interval = 60  # Default: save every 60 seconds
+        self.pending_save = False
+        self.auto_save_path = None
+        self.auto_save_enabled = False
+        self.max_history_size = 1000  # Maximum number of metrics to keep in memory
+            
     def _detect_gpus(self):
         """Detect available GPUs and their capabilities"""
         devices = []
@@ -64,15 +72,15 @@ class GPUMetricsCollector:
         """Register a neural network model to collect its architecture"""
         self.model_architecture = self._extract_model_architecture(model)
         
-    def _extract_model_architecture(self, model):
-        """Extract architecture details from a model"""
+    def _extract_model_architecture(self, model, include_text_summary=False):
+        """Extract architecture details from a model
+        
+        Args:
+            model: The TensorFlow model to analyze
+            include_text_summary: Whether to include the text-based summary with box characters
+        """
         if self.framework == 'tensorflow':
             try:
-                # Get model summary as string
-                string_io = io.StringIO()
-                model.summary(print_fn=lambda x: string_io.write(x + '\n'))
-                summary_string = string_io.getvalue()
-                
                 # Get layer details
                 layers = []
                 for i, layer in enumerate(model.layers):
@@ -115,8 +123,7 @@ class GPUMetricsCollector:
                 trainable_params = sum([np.prod(v.shape) for v in model.trainable_variables])
                 non_trainable_params = total_params - trainable_params
                 
-                return {
-                    'summary': summary_string,
+                result = {
                     'layers': layers,
                     'total_params': total_params,
                     'trainable_params': trainable_params,
@@ -124,33 +131,73 @@ class GPUMetricsCollector:
                     'input_shape': str(model.input_shape),
                     'output_shape': str(model.output_shape)
                 }
+                
+                # Only include text summary if requested
+                if include_text_summary:
+                    # Get model summary as string
+                    string_io = io.StringIO()
+                    model.summary(print_fn=lambda x: string_io.write(x + '\n'))
+                    summary_string = string_io.getvalue()
+                    result['summary'] = summary_string
+                    
+                return result
             except Exception as e:
                 return {'error': str(e)}
         return None
         
-    def collect_metrics(self):
-        """Collect comprehensive GPU, CPU, and latency metrics"""
+    def collect_metrics(self, force=False):
+        """
+        Collect comprehensive GPU, CPU, and latency metrics with rate limiting
+        """
         current_time = time.time()
+        
+        # Check if we should collect (rate limiting)
+        if not force and self.last_collection_time and \
+           (current_time - self.last_collection_time) < self.min_collection_interval:
+            # Too soon since last collection
+            return None
+        
+        # Get GPU utilization first
+        gpu_util = self._get_gpu_utilization()
         
         # Calculate idle time if we were idle
         idle_time = 0
         if self.is_idle and self.last_collection_time:
             idle_time = current_time - self.idle_start_time
         
-        # Update idle tracking
+        # Update last collection time
         self.last_collection_time = current_time
-        self.is_idle = False  # Assume active when collecting metrics
         
+        # AFTER calculating idle time, now check if we should change idle state
+        # If all GPUs have utilization below threshold, mark as idle
+        threshold = 5  # Consider idle if below 5%
+        all_idle = True
+        for gpu_id, util in gpu_util.items():
+            if isinstance(util, (int, float)) and util >= threshold:
+                all_idle = False
+                break
+        
+        # Update idle state but don't reset it automatically
+        if all_idle and not self.is_idle:
+            self.idle_start_time = current_time
+            self.is_idle = True
+        elif not all_idle and self.is_idle:
+            self.is_idle = False
+        
+        # Note: We DON'T set self.is_idle = False here unconditionally
+
+        # Collect all metrics
         metrics = {
             'timestamp': datetime.now().isoformat(),
             'gpu': {
-                'utilization': self._get_gpu_utilization(),
+                'utilization': gpu_util,  # Reuse the utilization we already got
                 'memory': self._get_memory_usage(),
                 'temperature': self._get_temperature(),
                 'power': self._get_power_usage(),
                 'clock_speeds': self._get_clock_speeds(),
                 'pcie_throughput': self._get_pcie_throughput(),
-                'idle_time': idle_time
+                'idle_time': idle_time,
+                'is_currently_idle': self.is_idle  # Add this for better tracking
             },
             'cpu': {
                 'utilization': self._get_cpu_utilization(),
@@ -166,6 +213,29 @@ class GPUMetricsCollector:
         }
         
         self.metrics_history.append(metrics)
+        
+        # Limit history size to prevent memory issues
+        if len(self.metrics_history) > self.max_history_size:
+            # Remove oldest items
+            self.metrics_history = self.metrics_history[-self.max_history_size:]
+        
+        # Check if we should auto-save
+        if self.auto_save_enabled and \
+           (current_time - self.last_save_time) > self.save_interval:
+            self.pending_save = True
+            
+        # Perform auto-save if needed
+        if self.pending_save and self.auto_save_path:
+            self.save_organized_metrics(
+                base_dir=self.auto_save_path,
+                clear_after_save=True
+            )
+            self.last_save_time = current_time
+            self.pending_save = False
+        
+        # Get GPU utilization
+        
+        
         return metrics
     
     def mark_idle(self):
@@ -616,7 +686,7 @@ class GPUMetricsCollector:
         return None
     
     def get_metrics_summary(self):
-        """Get a summary of collected metrics"""
+        """Get a summary of collected metrics including idle time"""
         if not self.metrics_history:
             return "No metrics collected"
             
@@ -627,6 +697,12 @@ class GPUMetricsCollector:
         avg_gpu_mem = {}
         avg_cpu_util = 0
         avg_inference_latency = 0
+        
+        # Add idle time tracking
+        total_idle_time_seconds = 0
+        max_idle_time_seconds = 0
+        idle_count = 0
+        gpu_idle_periods = 0
         
         inference_count = 0
         
@@ -651,19 +727,47 @@ class GPUMetricsCollector:
             if isinstance(latency_data, dict) and 'avg_latency_ms' in latency_data:
                 avg_inference_latency += latency_data['avg_latency_ms']
                 inference_count += 1
+                
+            # Idle time (measured in seconds)
+            gpu_data = record.get('gpu', {})
+            if 'idle_time' in gpu_data:
+                idle_time = gpu_data['idle_time']
+                if isinstance(idle_time, (int, float)) and idle_time > 0:
+                    total_idle_time_seconds += idle_time
+                    max_idle_time_seconds = max(max_idle_time_seconds, idle_time)
+                    idle_count += 1
+                    
+            # Track when GPU transitions to idle state
+            if gpu_data.get('is_currently_idle', False):
+                gpu_idle_periods += 1
         
         if inference_count > 0:
             avg_inference_latency /= inference_count
         
+        # Calculate average idle time and percentage of time spent idle
+        avg_idle_time_seconds = total_idle_time_seconds / idle_count if idle_count > 0 else 0
+        
+        # Add idle metrics to the summary
         return {
             'num_records': num_records,
             'avg_gpu_utilization': avg_gpu_util,
             'avg_gpu_memory': avg_gpu_mem,
             'avg_cpu_utilization': avg_cpu_util,
             'avg_inference_latency_ms': avg_inference_latency if inference_count > 0 else 'Not measured',
-            'model_architecture': self.model_architecture
+            'model_architecture': self.model_architecture,
+            'idle_time': {
+                'total_seconds': total_idle_time_seconds,
+                'average_seconds': avg_idle_time_seconds,
+                'max_seconds': max_idle_time_seconds,
+                'idle_records_count': idle_count,
+                'idle_periods_detected': gpu_idle_periods,
+                'time_unit': 'seconds'
+            }
         }
-    def save_organized_metrics(self, model_id=None, experiment_id=None, base_dir='hardware_metrics'):
+    
+    def save_organized_metrics(self, model_id=None, experiment_id=None, 
+                          base_dir='hardware_metrics', clear_after_save=False,
+                          save_raw=True, save_compressed=False):
         """
         Save metrics in an organized directory structure for later analysis
         
@@ -671,9 +775,21 @@ class GPUMetricsCollector:
             model_id: Unique identifier for the model
             experiment_id: Experiment identifier
             base_dir: Base directory for metrics storage
+            clear_after_save: Whether to clear metrics history after saving
+            save_raw: Whether to save complete raw data (can be large)
+            save_compressed: Whether to save a compressed version
         """
         import os
         from datetime import datetime
+        
+        # Check if we have metrics to save
+        if not self.metrics_history:
+            print("No metrics to save")
+            return None
+        
+        # Get I/O stats before saving (for monitoring)
+        process = psutil.Process(os.getpid())
+        io_before = process.io_counters() if hasattr(process, 'io_counters') else None
         
         # Create timestamp for this report
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -730,7 +846,7 @@ class GPUMetricsCollector:
             'devices': self.gpu_devices,
         }
         
-        # Save all files
+        # Save all files - main summary always saved
         with open(os.path.join(save_dir, 'metadata.json'), 'w') as f:
             json.dump(metadata, f, indent=2, default=str)
             
@@ -746,12 +862,13 @@ class GPUMetricsCollector:
         with open(os.path.join(save_dir, 'latency_metrics.json'), 'w') as f:
             json.dump(latency_metrics, f, indent=2, default=str)
         
-        # Save full raw data as well
-        with open(os.path.join(save_dir, 'raw_metrics.json'), 'w') as f:
-            json.dump(self.metrics_history, f, indent=2, default=str)
+        # Optionally save raw data (can be large)
+        if save_raw:
+            with open(os.path.join(save_dir, 'raw_metrics.json'), 'w') as f:
+                json.dump(self.metrics_history, f, indent=2, default=str)
         
-        # For larger datasets, save a compressed version too
-        if len(self.metrics_history) > 100:
+        # For larger datasets, optionally save a compressed version
+        if save_compressed and len(self.metrics_history) > 100:
             import gzip
             with gzip.open(os.path.join(save_dir, 'raw_metrics.json.gz'), 'wt') as f:
                 json.dump(self.metrics_history, f)
@@ -776,11 +893,25 @@ class GPUMetricsCollector:
             f.write(f"  - gpu_metrics.json: GPU-specific metrics\n")
             f.write(f"  - cpu_metrics.json: CPU-specific metrics\n")
             f.write(f"  - latency_metrics.json: Latency measurements\n")
-            f.write(f"  - raw_metrics.json: Complete raw metrics data\n")
+            if save_raw:
+                f.write(f"  - raw_metrics.json: Complete raw metrics data\n")
             if self.model_architecture:
                 f.write(f"  - model_architecture.json: Neural network model architecture\n")
         
-        print(f"Organized metrics saved to {save_dir}")
+        # Report I/O stats if available
+        if io_before:
+            io_after = process.io_counters()
+            write_bytes = io_after.write_bytes - io_before.write_bytes
+            print(f"Metrics saved to {save_dir} (wrote {write_bytes/1024/1024:.2f} MB)")
+        else:
+            print(f"Metrics saved to {save_dir}")
+        
+        # Clear history if requested to free memory
+        if clear_after_save:
+            original_size = len(self.metrics_history)
+            self.metrics_history = []
+            print(f"Cleared metrics history ({original_size} records)")
+        
         return save_dir
 
     def generate_hardware_report(self, save_path=None, model_id=None, experiment_id=None):
@@ -882,3 +1013,27 @@ class GPUMetricsCollector:
             print(f"Hardware report saved to {save_path}")
         
         return report
+
+    def configure_auto_save(self, enabled=True, interval_seconds=60, 
+                            save_path='hardware_metrics', max_history=1000):
+        """
+        Configure automatic periodic saving of metrics
+        
+        Args:
+            enabled: Whether to enable auto-saving
+            interval_seconds: How often to save metrics (in seconds)
+            save_path: Directory to save metrics to
+            max_history: Maximum number of metrics to keep in memory
+        """
+        self.auto_save_enabled = enabled
+        self.save_interval = interval_seconds
+        self.auto_save_path = save_path
+        self.max_history_size = max_history
+        self.last_save_time = time.time()
+        
+        print(f"Auto-save {'enabled' if enabled else 'disabled'}, interval: {interval_seconds}s, "
+              f"path: {save_path}, max history: {max_history} records")
+        
+        # Create save directory if it doesn't exist
+        if enabled and save_path:
+            os.makedirs(save_path, exist_ok=True)

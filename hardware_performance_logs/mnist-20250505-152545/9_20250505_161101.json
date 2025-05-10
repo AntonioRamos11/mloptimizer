@@ -1,0 +1,164 @@
+{
+  "timestamp": "20250505_161101",
+  "hardware_info": {
+    "hostname": "pswd",
+    "cpu_model": "Unknown",
+    "cpu_cores": 14,
+    "cpu_threads": 20,
+    "ram_total_gb": 31.13628387451172,
+    "ram_available_gb": 17.962329864501953,
+    "gpu_count": 1,
+    "gpu_models": [
+      "NVIDIA GeForce RTX 3080"
+    ],
+    "gpu_memory_gb": [
+      10.0
+    ],
+    "tensorflow_version": "2.19.0",
+    "cuda_version": "12.5.1",
+    "cudnn_version": "9"
+  },
+  "model_metrics": {
+    "model_id": 9,
+    "experiment_id": "mnist-20250505-152545",
+    "model_type": "IMAGE",
+    "total_parameters": 912730,
+    "trainable_parameters": 912218,
+    "non_trainable_parameters": 512,
+    "layer_count": 15,
+    "layer_details": [
+      {
+        "name": "conv2d",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 1664
+      },
+      {
+        "name": "batch_normalization",
+        "class_name": "BatchNormalization",
+        "output_shape": "Unknown",
+        "parameter_count": 256
+      },
+      {
+        "name": "conv2d_1",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 102464
+      },
+      {
+        "name": "batch_normalization_1",
+        "class_name": "BatchNormalization",
+        "output_shape": "Unknown",
+        "parameter_count": 256
+      },
+      {
+        "name": "conv2d_2",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 102464
+      },
+      {
+        "name": "batch_normalization_2",
+        "class_name": "BatchNormalization",
+        "output_shape": "Unknown",
+        "parameter_count": 256
+      },
+      {
+        "name": "conv2d_3",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 102464
+      },
+      {
+        "name": "batch_normalization_3",
+        "class_name": "BatchNormalization",
+        "output_shape": "Unknown",
+        "parameter_count": 256
+      },
+      {
+        "name": "max_pooling2d",
+        "class_name": "MaxPooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "dropout",
+        "class_name": "Dropout",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "flatten",
+        "class_name": "Flatten",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "dense",
+        "class_name": "Dense",
+        "output_shape": "Unknown",
+        "parameter_count": 602160
+      },
+      {
+        "name": "dropout_1",
+        "class_name": "Dropout",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "dense_1",
+        "class_name": "Dense",
+        "output_shape": "Unknown",
+        "parameter_count": 490
+      },
+      {
+        "name": "activation",
+        "class_name": "Activation",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      }
+    ]
+  },
+  "training_metrics": {
+    "build_time_ms": 2888,
+    "train_time_ms": 808804,
+    "train_time_per_epoch_ms": [
+      26473.08397293091,
+      24044.95644569397,
+      24057.68918991089,
+      23962.02778816223,
+      24146.21114730835,
+      24212.780237197876,
+      24013.95344734192,
+      24125.733613967896,
+      24062.80469894409,
+      24089.280366897583,
+      24078.492641448975,
+      24078.696727752686,
+      24091.59564971924,
+      24198.97484779358,
+      24090.633153915405,
+      24087.105751037598,
+      24212.438344955444,
+      24108.52003097534,
+      24176.910877227783,
+      24082.120895385742,
+      24064.017295837402,
+      24053.584098815918,
+      24077.744007110596,
+      24181.203603744507,
+      24055.700540542603,
+      24039.06798362732,
+      24066.611528396606,
+      23996.58751487732,
+      24152.655124664307,
+      24054.033279418945
+    ],
+    "epochs_completed": 30,
+    "batch_size": 32,
+    "optimizer": "adam",
+    "learning_rate": 0.0002490753249730915,
+    "final_loss": 0.020791184157133102,
+    "final_accuracy": 0.9974166750907898
+  }
+}

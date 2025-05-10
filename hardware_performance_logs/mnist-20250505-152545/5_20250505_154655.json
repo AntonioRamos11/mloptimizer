@@ -1,0 +1,84 @@
+{
+  "timestamp": "20250505_154655",
+  "hardware_info": {
+    "hostname": "pswd",
+    "cpu_model": "Unknown",
+    "cpu_cores": 14,
+    "cpu_threads": 20,
+    "ram_total_gb": 31.13628387451172,
+    "ram_available_gb": 18.128345489501953,
+    "gpu_count": 1,
+    "gpu_models": [
+      "NVIDIA GeForce RTX 3080"
+    ],
+    "gpu_memory_gb": [
+      10.0
+    ],
+    "tensorflow_version": "2.19.0",
+    "cuda_version": "12.5.1",
+    "cudnn_version": "9"
+  },
+  "model_metrics": {
+    "model_id": 5,
+    "experiment_id": "mnist-20250505-152545",
+    "model_type": "IMAGE",
+    "total_parameters": 35418,
+    "trainable_parameters": 35042,
+    "non_trainable_parameters": 376,
+    "layer_count": 5,
+    "layer_details": [
+      {
+        "name": "inception_v1_module_bn",
+        "class_name": "InceptionV1ModuleBN",
+        "output_shape": "Unknown",
+        "parameter_count": 33808
+      },
+      {
+        "name": "max_pooling2d_1",
+        "class_name": "MaxPooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "conv2d_6",
+        "class_name": "Conv2D",
+        "output_shape": "Unknown",
+        "parameter_count": 1610
+      },
+      {
+        "name": "global_average_pooling2d",
+        "class_name": "GlobalAveragePooling2D",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      },
+      {
+        "name": "activation",
+        "class_name": "Activation",
+        "output_shape": "Unknown",
+        "parameter_count": 0
+      }
+    ]
+  },
+  "training_metrics": {
+    "build_time_ms": 3021,
+    "train_time_ms": 179749,
+    "train_time_per_epoch_ms": [
+      17261.738777160645,
+      15911.866664886475,
+      14943.508386611938,
+      14527.88233757019,
+      14032.64832496643,
+      15178.133487701416,
+      14085.681915283203,
+      13391.35479927063,
+      13250.74315071106,
+      13277.675151824951
+    ],
+    "epochs_completed": 10,
+    "batch_size": 32,
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "final_loss": 0.23946994543075562,
+    "final_accuracy": 0.9267500042915344
+  }
+}

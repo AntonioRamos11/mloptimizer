@@ -1,0 +1,111 @@
+{
+  "num_records": 14,
+  "avg_gpu_utilization": {
+    "0": 14.357142857142854
+  },
+  "avg_gpu_memory": {
+    "0": 97.08147321428571
+  },
+  "avg_cpu_utilization": 2.942857142857143,
+  "avg_inference_latency_ms": 19.845831394195557,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "conv2d",
+        "type": "Conv2D",
+        "shape": "(None, 24, 24, 56)",
+        "params": 1456,
+        "filters": 56,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization",
+        "type": "BatchNormalization",
+        "shape": "(None, 24, 24, 56)",
+        "params": 224
+      },
+      {
+        "name": "max_pooling2d",
+        "type": "MaxPooling2D",
+        "shape": "(None, 8, 8, 56)",
+        "params": 0
+      },
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 208)",
+        "params": 49076
+      },
+      {
+        "name": "inception_v1_module_bn_1",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 208)",
+        "params": 70964
+      },
+      {
+        "name": "inception_v1_module_bn_2",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 208)",
+        "params": 70964
+      },
+      {
+        "name": "max_pooling2d_4",
+        "type": "MaxPooling2D",
+        "shape": "(None, 4, 4, 208)",
+        "params": 0
+      },
+      {
+        "name": "flatten",
+        "type": "Flatten",
+        "shape": "(None, 3328)",
+        "params": 0
+      },
+      {
+        "name": "dense",
+        "type": "Dense",
+        "shape": "(None, 304)",
+        "params": 1012016,
+        "units": 304,
+        "activation": "relu"
+      },
+      {
+        "name": "dropout",
+        "type": "Dropout",
+        "shape": "(None, 304)",
+        "params": 0
+      },
+      {
+        "name": "dense_1",
+        "type": "Dense",
+        "shape": "(None, 10)",
+        "params": 3050,
+        "units": 10,
+        "activation": "linear"
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 1207750,
+    "trainable_params": "1206270",
+    "non_trainable_params": "1480",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 145.7605926990509,
+    "average_seconds": 36.440148174762726,
+    "max_seconds": 54.240365743637085,
+    "idle_records_count": 4,
+    "idle_periods_detected": 4,
+    "time_unit": "seconds"
+  }
+}

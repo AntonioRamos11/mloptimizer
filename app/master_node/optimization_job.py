@@ -403,7 +403,7 @@ class OptimizationJob:
         try:
             # Simple approach using relative paths
             # This assumes the code is being run from the mloptimizer directory
-            results_path = 'results'  # Relative path to mloptimizer/results
+            results_path = 'results_multi'  # Relative path to mloptimizer/results
             
             # Create results directory if it doesn't exist
             os.makedirs(results_path, exist_ok=True)

@@ -165,13 +165,7 @@ class Model:
 		
 		pipeline_metrics = metrics_collector._get_data_pipeline_latency(train)
 		
-		# Apply the same to validation data
-		validation = validation.with_options(options)
-		validation = validation.prefetch(tf.data.AUTOTUNE)
-		
-		# Apply the same to test data
-		test = test.with_options(options)
-		test = test.prefetch(tf.data.AUTOTUNE)
+		# Datasets are already fully optimized in build_pipeline() - no need for additional options
 		
 		# Add to Dataset preprocessing -is using the GPU
 		"""def preprocess_gpu(x, y):

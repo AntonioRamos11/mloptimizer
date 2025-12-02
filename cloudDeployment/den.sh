@@ -54,9 +54,10 @@ INSTANCE_MANAGMENT_URL="https://selfish-donkey-2.telebit.io" \
   # 8. Configure System Parameters
   echo "Configuring system parameters..."
   
-INSTANCE_PORT=${INSTANCE_PORT:-5672}
-INSTANCE_MANAGMENT_URL=${INSTANCE_MANAGMENT_URL:-"localhost"}
-INSTANCE_HOST_URL=${INSTANCE_HOST_URL:-"localhost"}
+# Default to remote RabbitMQ (ngrok/telebit)
+INSTANCE_PORT=${INSTANCE_PORT:-19775}
+INSTANCE_MANAGMENT_URL=${INSTANCE_MANAGMENT_URL:-"https://selfish-donkey-2.telebit.io"}
+INSTANCE_HOST_URL=${INSTANCE_HOST_URL:-"0.tcp.us-cal-1.ngrok.io"}
 DATASET_NAME=${DATASET_NAME:-"mnist"}
 MULTI_GPU_MODE=${MULTI_GPU_MODE:-true}
 
@@ -65,10 +66,14 @@ PARAM_FILE="system_parameters.py"
 echo "Patching $PARAM_FILE ..."
 
 # Use | as delimiter instead of / to handle URLs with slashes
+# Fix any empty DATASET_NAME first
+sed -i "s|^    DATASET_NAME: str = \"\"|    DATASET_NAME: str = 'mnist'  # Example dataset|" $PARAM_FILE
+
+# Then apply the actual values
 sed -i "s|^    INSTANCE_PORT:.*|    INSTANCE_PORT: int = ${INSTANCE_PORT}|" $PARAM_FILE
 sed -i "s|^    INSTANCE_MANAGMENT_URL.*|    INSTANCE_MANAGMENT_URL = \"${INSTANCE_MANAGMENT_URL}\"|" $PARAM_FILE
-sed -i "s|^    INSTANCE_HOST_URL:.*|    INSTANCE_HOST_URL: str = \"${INSTANCE_HOST_URL}\"|" $PARAM_FILE
-sed -i "s|^    DATASET_NAME:.*|    DATASET_NAME: str = \"${DATASET_NAME}\"|" $PARAM_FILE
+sed -i "s|^    INSTANCE_HOST_URL:.*|    INSTANCE_HOST_URL: str = '${INSTANCE_HOST_URL}'|" $PARAM_FILE
+sed -i "s|^    DATASET_NAME:.*# Example dataset|    DATASET_NAME: str = '${DATASET_NAME}'  # Example dataset|" $PARAM_FILE
 
 echo "✔ Patched system_parameters.py"
 echo "  - INSTANCE_PORT: ${INSTANCE_PORT}"

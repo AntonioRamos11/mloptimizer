@@ -300,7 +300,6 @@ class Model:
     	save_raw=True
     	)
 
-		import os 
 		report_path = os.path.join(metrics_dir, "hardware_report.json")
 		metrics_collector.generate_hardware_report(
 			save_path=report_path,
@@ -486,8 +485,6 @@ class Model:
 
 	def checkpoint_dataset(self, dataset, directory, name):
 		"""Save a preprocessed dataset to disk to avoid repeating preprocessing"""
-		import os
-		
 		# Create directory if it doesn't exist
 		os.makedirs(directory, exist_ok=True)
 		
@@ -506,8 +503,6 @@ class Model:
 
 	def load_checkpointed_dataset(self, directory, name):
 		"""Load a preprocessed dataset from disk if it exists"""
-		import os
-		
 		# Create the expected path
 		path = os.path.join(directory, f"{name}_{self.search_space_type.name}_{self.id}.tf_dataset")
 		

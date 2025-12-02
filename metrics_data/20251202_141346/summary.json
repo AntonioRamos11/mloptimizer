@@ -1,0 +1,143 @@
+{
+  "num_records": 11,
+  "avg_gpu_utilization": {
+    "0": 12.363636363636363
+  },
+  "avg_gpu_memory": {
+    "0": 95.08345170454544
+  },
+  "avg_cpu_utilization": 0.6363636363636365,
+  "avg_inference_latency_ms": 4.912781715393066,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "conv2d",
+        "type": "Conv2D",
+        "shape": "(None, 28, 28, 32)",
+        "params": 320,
+        "filters": 32,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization",
+        "type": "BatchNormalization",
+        "shape": "(None, 28, 28, 32)",
+        "params": 128
+      },
+      {
+        "name": "conv2d_1",
+        "type": "Conv2D",
+        "shape": "(None, 28, 28, 32)",
+        "params": 9248,
+        "filters": 32,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_1",
+        "type": "BatchNormalization",
+        "shape": "(None, 28, 28, 32)",
+        "params": 128
+      },
+      {
+        "name": "conv2d_2",
+        "type": "Conv2D",
+        "shape": "(None, 28, 28, 32)",
+        "params": 9248,
+        "filters": 32,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_2",
+        "type": "BatchNormalization",
+        "shape": "(None, 28, 28, 32)",
+        "params": 128
+      },
+      {
+        "name": "max_pooling2d",
+        "type": "MaxPooling2D",
+        "shape": "(None, 14, 14, 32)",
+        "params": 0
+      },
+      {
+        "name": "dropout",
+        "type": "Dropout",
+        "shape": "(None, 14, 14, 32)",
+        "params": 0
+      },
+      {
+        "name": "flatten",
+        "type": "Flatten",
+        "shape": "(None, 6272)",
+        "params": 0
+      },
+      {
+        "name": "dense",
+        "type": "Dense",
+        "shape": "(None, 112)",
+        "params": 702576,
+        "units": 112,
+        "activation": "relu"
+      },
+      {
+        "name": "dropout_1",
+        "type": "Dropout",
+        "shape": "(None, 112)",
+        "params": 0
+      },
+      {
+        "name": "dense_1",
+        "type": "Dense",
+        "shape": "(None, 16)",
+        "params": 1808,
+        "units": 16,
+        "activation": "relu"
+      },
+      {
+        "name": "dropout_2",
+        "type": "Dropout",
+        "shape": "(None, 16)",
+        "params": 0
+      },
+      {
+        "name": "dense_2",
+        "type": "Dense",
+        "shape": "(None, 10)",
+        "params": 170,
+        "units": 10,
+        "activation": "linear"
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 723754,
+    "trainable_params": "723562",
+    "non_trainable_params": "192",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 301.252628326416,
+    "average_seconds": 50.208771387736,
+    "max_seconds": 64.51532673835754,
+    "idle_records_count": 6,
+    "idle_periods_detected": 6,
+    "time_unit": "seconds"
+  }
+}

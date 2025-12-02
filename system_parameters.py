@@ -1,29 +1,39 @@
-class SystemParameters:
-    # Rabbit MQ Connections
-    #INSTANCE_MANAGMENT_URL = "192.168.100.89"
-    INSTANCE_PORT: int = 5672  # Port for RabbitMQ
-    INSTANCE_MANAGMENT_URL = "localhost"
-    INSTANCE_HOST_URL: str = 'localhost'
-    INSTANCE_MODEL_PARAMETER_QUEUE: str = 'parameters'
-    INSTANCE_MODEL_PERFORMANCE_QUEUE: str = 'results'
-    #if not local 
-    #~/telebit http 15672
-    #ngrok tcp 5672
-    #INSTANCE_HOST_URL: str = '0.tcp.us-cal-1.ngrok.io'
-    #INSTANCE_MANAGMENT_URL = "https://curvy-lion-61.telebit.io"
-    #INSTANCE_PORT: int = 12826   # Port for RabbitMQ
+import os
+from dataclasses import dataclass
 
-    #INSTANCE_HOST_URL: str = 'serveo.net'
-    INSTANCE_USER: str = 'guest'  # Default RabbitMQ user
-    INSTANCE_PASSWORD: str = 'guest'  # Default password
-    INSTANCE_VIRTUAL_HOST: str = '/'
+@dataclass
+class SystemParameters:
+
+    # ------------------------
+    # CLOUD / LOCAL SELECTION
+    # ------------------------
+    # Set this to 1 in the cloud:
+    #   export CLOUD_MODE=1
+    CLOUD_MODE: bool = bool(int(os.getenv("CLOUD_MODE", "0")))
+
+    # ------------------------
+    # REMOTE RABBITMQ (ngrok / telebit) - DEFAULT
+    # ------------------------
+    INSTANCE_HOST_URL: str = os.getenv("INSTANCE_HOST_URL", "0.tcp.us-cal-1.ngrok.io")
+    INSTANCE_PORT: int = int(os.getenv("INSTANCE_PORT", "19775"))
+    INSTANCE_MANAGMENT_URL: str = os.getenv("INSTANCE_MANAGMENT_URL", "https://selfish-donkey-2.telebit.io")
+
+    INSTANCE_MODEL_PARAMETER_QUEUE: str = "parameters"
+    INSTANCE_MODEL_PERFORMANCE_QUEUE: str = "results"
+    INSTANCE_USER: str = os.getenv("RABBIT_USER", "guest")
+    INSTANCE_PASSWORD: str = os.getenv("RABBIT_PASS", "guest")
+    INSTANCE_VIRTUAL_HOST: str = "/"
 
     INSTANCE_CONNECTION = [
-        INSTANCE_PORT, INSTANCE_MODEL_PARAMETER_QUEUE,
-        INSTANCE_MODEL_PERFORMANCE_QUEUE, INSTANCE_HOST_URL,
-        INSTANCE_USER, INSTANCE_PASSWORD, INSTANCE_VIRTUAL_HOST,INSTANCE_MANAGMENT_URL
+        INSTANCE_PORT,
+        INSTANCE_MODEL_PARAMETER_QUEUE,
+        INSTANCE_MODEL_PERFORMANCE_QUEUE,
+        INSTANCE_HOST_URL,
+        INSTANCE_USER,
+        INSTANCE_PASSWORD,
+        INSTANCE_VIRTUAL_HOST,
+        INSTANCE_MANAGMENT_URL,
     ]
-    
     #DATASET_NAME: str = 'mnist'  # Example datasetr
     DATASET_NAME: str = 'mnist'  # Example dataset
 

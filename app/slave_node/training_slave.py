@@ -2,6 +2,8 @@ import asyncio
 import time
 import concurrent
 import logging
+import traceback
+from datetime import datetime
 from dataclasses import asdict
 import aio_pika
 from app.common.model import Model
@@ -11,6 +13,13 @@ from app.common.search_space import *
 from app.slave_node.slave_rabbitmq_client import SlaveRabbitMQClient
 from app.common.dataset import *
 from system_parameters import SystemParameters as SP
+
+# Configure module logger
+logger = logging.getLogger(__name__)
+
+# Global dataset cache for subprocess - loaded once per subprocess
+_subprocess_dataset_cache = None
+_subprocess_dataset_id = None
 
 class TrainingSlave:
 
@@ -26,19 +35,38 @@ class TrainingSlave:
 		cad = 'Hash ' + str(self.search_space_hash) 
 		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': cad})
 		self.model_type = model_architecture_factory.get_search_space().get_type()
+		
+		# Create persistent ProcessPoolExecutor (reuses same subprocess)
+		logger.info("Creating persistent worker subprocess...")
+		self.pool = concurrent.futures.ProcessPoolExecutor(max_workers=1)
+		
+		# Pre-load dataset in the subprocess ONCE
+		logger.info("Pre-loading dataset in worker subprocess...")
+		future = self.pool.submit(self._initialize_dataset_cache, self.dataset)
+		result = future.result()  # Wait for dataset to load
+		logger.info(f"✓ {result}")
+		logger.info("Worker subprocess ready! Dataset cached and will be reused for all trainings.")
 
 	def start_slave(self):
-		#loop = asyncio.get_event_loop()
-		#loop.run_until_complete(asyncio.wait(futures))
-		#connection = asyncio.run(self._start_listening())
-		#asyncio.new_event_loop(self._start_listening())
-		#await connection = self._start_listening()
-		connection = self.loop.run_until_complete(self._start_listening())
-		print("Stop listening")
+		"""Start the slave node with error handling"""
 		try:
-			self.loop.run_forever()
-		finally:
-			self.loop.run_until_complete(connection.close())
+			logger.info("Starting slave node event loop...")
+			connection = self.loop.run_until_complete(self._start_listening())
+			logger.info("Slave node listening for tasks")
+			
+			try:
+				self.loop.run_forever()
+			finally:
+				logger.info("Closing connection...")
+				self.loop.run_until_complete(connection.close())
+				logger.info("Connection closed")
+				
+		except Exception as e:
+			logger.error("Error in start_slave:")
+			logger.error(f"  Type: {type(e).__name__}")
+			logger.error(f"  Message: {str(e)}")
+			logger.error(f"  Traceback:\n{traceback.format_exc()}")
+			raise
 
 	@staticmethod
 	def fake_blocking_training():
@@ -49,24 +77,134 @@ class TrainingSlave:
 		return 0.5
 
 	@staticmethod
-	def train_model(info_dict: dict) -> float:
-		"""if SP.DATASET_TYPE == 1:
-			dataset = ImageClassificationBenchmarkDataset(SP.DATASET_NAME, SP.DATASET_SHAPE, SP.DATASET_CLASSES, SP.DATASET_BATCH_SIZE, SP.DATASET_VALIDATION_SPLIT)
-		elif SP.DATASET_TYPE == 2:
-			dataset = RegressionBenchmarkDataset(SP.DATASET_NAME, SP.DATASET_SHAPE, SP.DATASET_FEATURES, SP.DATASET_LABELS, SP.DATASET_BATCH_SIZE, SP.DATASET_VALIDATION_SPLIT)
-		elif SP.DATASET_TYPE == 3:
-			dataset = TimeSeriesBenchmarkDataset(SP.DATASET_NAME, SP.DATASET_WINDOW_SIZE, SP.DATASET_DATA_SIZE, SP.DATASET_BATCH_SIZE, SP.DATASET_VALIDATION_SPLIT)
-		else:
-			print("Please enter a valid dataset type")
-			return"""
-		dataset = info_dict['dataset']
-		model_training_request = info_dict['model_request']
+	def _initialize_dataset_cache(dataset):
+		"""Initialize the dataset cache in the subprocess (called once at startup)"""
+		global _subprocess_dataset_cache, _subprocess_dataset_id
+		
+		import os
+		import logging
+		logging.basicConfig(level=logging.INFO)
+		subprocess_logger = logging.getLogger('dataset_cache')
+		
+		pid = os.getpid()
+		dataset_id = f"{dataset.get_tag()}_{dataset.batch_size}_{dataset.validation_split_float}"
+		
+		subprocess_logger.info(f"[PID {pid}] Initializing dataset cache in worker subprocess...")
+		subprocess_logger.info(f"[PID {pid}] Loading dataset: {dataset.get_tag()}")
+		
 		dataset.load()
-		model = Model(model_training_request, dataset)
-		if SP.TRAIN_GPU:
-			return model.build_and_train()
-		else:
-			return model.build_and_train_cpu()
+		
+		_subprocess_dataset_cache = dataset
+		_subprocess_dataset_id = dataset_id
+		
+		subprocess_logger.info(f"[PID {pid}] ✓ Dataset loaded and cached!")
+		subprocess_logger.info(f"[PID {pid}]   Cache ID: {dataset_id}")
+		
+		return f"Dataset cached in subprocess PID {pid}"
+
+	@staticmethod
+	def train_model(info_dict: dict) -> float:
+		"""Train model with comprehensive error handling and logging"""
+		global _subprocess_dataset_cache, _subprocess_dataset_id
+		model_id = "unknown"
+		
+		# Configure logging in the subprocess
+		import sys
+		import os
+		from pathlib import Path
+		
+		pid = os.getpid()
+		
+		# Create logs directory structure
+		log_dir = Path('logs/slave/training')
+		log_dir.mkdir(parents=True, exist_ok=True)
+		
+		subprocess_log_file = log_dir / f'subprocess_training_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+		subprocess_logger = logging.getLogger('subprocess_training')
+		subprocess_handler = logging.FileHandler(subprocess_log_file)
+		subprocess_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+		subprocess_logger.addHandler(subprocess_handler)
+		subprocess_logger.setLevel(logging.INFO)
+		
+		try:
+			dataset = info_dict['dataset']
+			model_training_request = info_dict['model_request']
+			model_id = model_training_request.id
+			
+			subprocess_logger.info(f"[PID {pid}] Subprocess: Starting training for model {model_id}")
+			subprocess_logger.info(f"  Dataset: {dataset.get_tag()}")
+			subprocess_logger.info(f"  Epochs: {model_training_request.epochs}")
+			subprocess_logger.info(f"  Training type: {model_training_request.training_type}")
+			
+			# Use cached dataset (should already be loaded by _initialize_dataset_cache)
+			dataset_id = f"{dataset.get_tag()}_{dataset.batch_size}_{dataset.validation_split_float}"
+			
+			if _subprocess_dataset_cache is None or _subprocess_dataset_id != dataset_id:
+				# This should NOT happen if pre-loading worked!
+				subprocess_logger.warning(f"[PID {pid}] ⚠️  Dataset NOT in cache! Loading now (this shouldn't happen)...")
+				dataset.load()
+				_subprocess_dataset_cache = dataset
+				_subprocess_dataset_id = dataset_id
+				subprocess_logger.info(f"[PID {pid}]   Dataset loaded and cached")
+			else:
+				subprocess_logger.info(f"[PID {pid}] ✓ Using CACHED dataset (already pre-loaded, no loading needed!)")
+				dataset = _subprocess_dataset_cache
+			
+			subprocess_logger.info(f"  Training samples: {dataset.get_training_steps(use_augmentation=False)} steps")
+			subprocess_logger.info(f"  Validation samples: {dataset.get_validation_steps()} steps")
+			
+			# Create and train model
+			subprocess_logger.info("Subprocess: Creating model...")
+			model = Model(model_training_request, dataset)
+			
+			subprocess_logger.info("Subprocess: Starting training...")
+			start_time = time.time()
+			
+			if SP.TRAIN_GPU:
+				subprocess_logger.info("Subprocess: Training with GPU")
+				result = model.build_and_train()
+			else:
+				subprocess_logger.info("Subprocess: Training with CPU")
+				result = model.build_and_train_cpu()
+			
+			elapsed_time = time.time() - start_time
+			subprocess_logger.info(f"Subprocess: Training completed for model {model_id}")
+			subprocess_logger.info(f"  Result: {result}")
+			subprocess_logger.info(f"  Time elapsed: {elapsed_time:.2f}s")
+			
+			return result
+			
+		except Exception as e:
+			subprocess_logger.error("=" * 60)
+			subprocess_logger.error(f"SUBPROCESS ERROR during training of model {model_id}")
+			subprocess_logger.error("=" * 60)
+			subprocess_logger.error(f"Error type: {type(e).__name__}")
+			subprocess_logger.error(f"Error message: {str(e)}")
+			subprocess_logger.error("\nFull traceback:")
+			subprocess_logger.error(traceback.format_exc())
+			subprocess_logger.error("=" * 60)
+			
+			# Log additional context
+			try:
+				subprocess_logger.error("Additional context:")
+				subprocess_logger.error(f"  Dataset: {info_dict.get('dataset', {}).get_tag() if 'dataset' in info_dict else 'N/A'}")
+				subprocess_logger.error(f"  Model ID: {model_id}")
+				if 'model_request' in info_dict:
+					req = info_dict['model_request']
+					subprocess_logger.error(f"  Epochs: {req.epochs}")
+					subprocess_logger.error(f"  Architecture: {str(req.architecture)[:200]}")
+			except Exception as ctx_error:
+				subprocess_logger.error(f"  Could not log additional context: {ctx_error}")
+			
+			subprocess_logger.error(f"Log saved to: {subprocess_log_file}")
+			subprocess_logger.error("=" * 60)
+			
+			# Print to stderr so parent process might see it
+			print(f"SUBPROCESS ERROR: {type(e).__name__}: {str(e)}", file=sys.stderr)
+			print(f"See log: {subprocess_log_file}", file=sys.stderr)
+			
+			# Re-raise the exception
+			raise
 
 	async def _start_listening(self) -> aio_pika.Connection:
 		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Worker started!"})
@@ -74,33 +212,167 @@ class TrainingSlave:
 		return await self.rabbitmq_client.listen_for_model_params(self._on_model_params_received)
 
 	async def _on_model_params_received(self, model_params):
-		SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Received model training request"})
-		#print(model_params)
-		self.model_type = int(model_params['training_type'])
-		model_training_request = ModelTrainingRequest.from_dict(model_params, self.model_type)
-		if not self.search_space_hash == model_training_request.search_space_hash:
-			raise Exception("Search space of master is different to this worker's search space")
-		info_dict = {
-			'dataset': self.dataset,
-			'model_request': model_training_request
-		}
-		with concurrent.futures.ProcessPoolExecutor() as pool:
-			training_val, did_finish_epochs = await self.loop.run_in_executor(pool, self.train_model, info_dict)
-		#training_val, did_finish_epochs = self.train_model(model_training_request)
-		model_training_response = ModelTrainingResponse(id=model_training_request.id, performance=training_val, finished_epochs=did_finish_epochs)
-		await self._send_performance_to_broker(model_training_response)
+		"""Handle received model training request with error handling"""
+		model_id = model_params.get('id', 'unknown')
+		
+		try:
+			logger.info(f"Received model training request (ID: {model_id})")
+			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Received model training request"})
+			
+			# Parse model type
+			self.model_type = int(model_params['training_type'])
+			logger.info(f"  Training type: {self.model_type}")
+			
+			# Create training request object
+			model_training_request = ModelTrainingRequest.from_dict(model_params, self.model_type)
+			
+			# Verify search space hash
+			if not self.search_space_hash == model_training_request.search_space_hash:
+				error_msg = f"Search space mismatch! Master: {model_training_request.search_space_hash}, Slave: {self.search_space_hash}"
+				logger.error(error_msg)
+				raise Exception(error_msg)
+			
+			logger.info(f"  Search space hash verified: {self.search_space_hash}")
+			
+			# Prepare training info
+			info_dict = {
+				'dataset': self.dataset,
+				'model_request': model_training_request
+			}
+			
+			# Execute training in process pool
+			logger.info(f"Submitting model {model_id} to process pool...")
+			with concurrent.futures.ProcessPoolExecutor() as pool:
+				training_val, did_finish_epochs = await self.loop.run_in_executor(
+					pool, 
+					self.train_model, 
+					info_dict
+				)
+			
+			logger.info(f"Training completed for model {model_id}")
+			logger.info(f"  Validation score: {training_val}")
+			logger.info(f"  Finished all epochs: {did_finish_epochs}")
+			
+			# Send results back
+			model_training_response = ModelTrainingResponse(
+				id=model_training_request.id, 
+				performance=training_val, 
+				finished_epochs=did_finish_epochs
+			)
+			await self._send_performance_to_broker(model_training_response)
+			
+			logger.info(f"Results sent to broker for model {model_id}")
+			SocketCommunication.decide_print_form(
+				MSGType.SLAVE_STATUS, 
+				{'node': 2, 'msg': f'Model {model_id} completed successfully'}
+			)
+			
+		except Exception as e:
+			logger.error("=" * 60)
+			logger.error(f"ERROR processing model {model_id}")
+			logger.error("=" * 60)
+			logger.error(f"Error type: {type(e).__name__}")
+			logger.error(f"Error message: {str(e)}")
+			logger.error("\nFull traceback:")
+			logger.error(traceback.format_exc())
+			logger.error("=" * 60)
+			
+			# Special handling for BrokenProcessPool
+			if isinstance(e, concurrent.futures.process.BrokenProcessPool):
+				logger.error("CRITICAL: Training subprocess crashed!")
+				logger.error("This usually indicates:")
+				logger.error("  1. Out of Memory (GPU or RAM)")
+				logger.error("  2. Segmentation fault in TensorFlow/CUDA")
+				logger.error("  3. Process killed by OS (OOM killer)")
+				logger.error("")
+				logger.error("Check subprocess logs: subprocess_training_*.log")
+				logger.error("Monitor GPU memory: nvidia-smi")
+				logger.error("Monitor system memory: free -h")
+				logger.error("")
+				logger.error("Possible solutions:")
+				logger.error("  - Reduce DATASET_BATCH_SIZE in system_parameters.py")
+				logger.error("  - Reduce image size (currently 224x224)")
+				logger.error("  - Simplify model architecture")
+				logger.error("  - Add more RAM/GPU memory")
+			
+			# Log the received parameters for debugging
+			try:
+				logger.error("Received parameters:")
+				for key, value in model_params.items():
+					if key == 'architecture':
+						logger.error(f"  {key}: {str(value)[:100]}..." if len(str(value)) > 100 else f"  {key}: {value}")
+					else:
+						logger.error(f"  {key}: {value}")
+			except Exception as log_error:
+				logger.error(f"Could not log parameters: {log_error}")
+			
+			logger.error("=" * 60)
+			
+			# Send error response back to master
+			try:
+				error_response = ModelTrainingResponse(
+					id=model_id,
+					performance=-1.0,  # Negative score indicates error
+					finished_epochs=False
+				)
+				await self._send_performance_to_broker(error_response)
+				logger.info("Error response sent to broker")
+			except Exception as send_error:
+				logger.error(f"Failed to send error response to broker: {send_error}")
+				logger.error(traceback.format_exc())
+			
+			# Notify via socket - wrap in try-except to prevent secondary errors
+			try:
+				SocketCommunication.decide_print_form(
+					MSGType.SLAVE_STATUS, 
+					{'node': 2, 'msg': f'❌ ERROR: Model {model_id} failed: {str(e)[:100]}'}
+				)
+			except Exception as socket_error:
+				logger.error(f"Failed to send socket notification: {socket_error}")
+				# Just print to console as fallback
+				print(f"❌ ERROR: Model {model_id} failed: {str(e)[:100]}")
+			
+			# Don't re-raise - we want the slave to continue processing other tasks
+			logger.warning("Slave will continue processing other tasks")
 
 	async def _send_performance_to_broker(self, model_training_response: ModelTrainingResponse):
-		print(model_training_response)
-		model_training_response_dict = asdict(model_training_response)
-		print(model_training_response_dict)
-		await self.rabbitmq_client.publish_model_performance(model_training_response_dict)
+		"""Send training results to broker with error handling"""
+		try:
+			logger.info(f"Sending performance to broker for model {model_training_response.id}")
+			logger.debug(f"Response: {model_training_response}")
+			
+			model_training_response_dict = asdict(model_training_response)
+			logger.debug(f"Response dict: {model_training_response_dict}")
+			
+			await self.rabbitmq_client.publish_model_performance(model_training_response_dict)
+			logger.info("Performance sent successfully")
+			
+		except Exception as e:
+			logger.error(f"Failed to send performance to broker: {e}")
+			logger.error(traceback.format_exc())
+			raise
 
 
 def handle_exception(loop, context):
-    # context["message"] will always be there; but context["exception"] may not
-    msg = context.get("exception", context["message"])
-    logging.error(f"Caught exception: {msg}")
-    logging.error(context["exception"])
-    logging.info("Shutting down...")
-    loop.stop()
+	"""Global exception handler for asyncio event loop"""
+	# context["message"] will always be there; but context["exception"] may not
+	msg = context.get("exception", context["message"])
+	
+	logger.error("=" * 60)
+	logger.error("Asyncio event loop exception!")
+	logger.error("=" * 60)
+	logger.error(f"Message: {msg}")
+	
+	if "exception" in context:
+		logger.error(f"Exception type: {type(context['exception']).__name__}")
+		logger.error(f"Exception: {context['exception']}")
+		
+	# Log all context keys for debugging
+	logger.error("\nFull context:")
+	for key, value in context.items():
+		if key != 'exception':  # Already logged above
+			logger.error(f"  {key}: {value}")
+	
+	logger.error("=" * 60)
+	logger.info("Shutting down event loop...")
+	loop.stop()

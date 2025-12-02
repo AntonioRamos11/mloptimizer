@@ -1,6 +1,9 @@
   #!/bin/bash
   # test.sh - With Docker installation
-
+"""INSTANCE_HOST_URL="0.tcp.us-cal-1.ngrok.io" \
+INSTANCE_PORT=19775 \
+INSTANCE_MANAGMENT_URL="https://selfish-donkey-2.telebit.io" \
+./den.sh"""
   # 1. Repository Setup
   REPO_DIR="mloptimizer"
   if [ ! -d "$REPO_DIR" ]; then
@@ -48,7 +51,33 @@
   pip install -r requirements2.txt
   conda install tensorflow-gpu -y
 
-  # 8. Start Services
+  # 8. Configure System Parameters
+  echo "Configuring system parameters..."
+  
+  # Environment variables with defaults
+  INSTANCE_PORT=${INSTANCE_PORT:-5672}
+  INSTANCE_MANAGMENT_URL=${INSTANCE_MANAGMENT_URL:-"localhost"}
+  INSTANCE_HOST_URL=${INSTANCE_HOST_URL:-"localhost"}
+  DATASET_NAME=${DATASET_NAME:-"mnist"}
+  MULTI_GPU_MODE=${MULTI_GPU_MODE:-true}
+  
+  PARAM_FILE="system_parameters.py"
+  
+  echo "Patching $PARAM_FILE ..."
+  
+  sed -i "s/^    INSTANCE_PORT:.*/    INSTANCE_PORT: int = ${INSTANCE_PORT}/" $PARAM_FILE
+  sed -i "s/^    INSTANCE_MANAGMENT_URL.*/    INSTANCE_MANAGMENT_URL = \"${INSTANCE_MANAGMENT_URL}\"/" $PARAM_FILE
+  sed -i "s/^    INSTANCE_HOST_URL:.*/    INSTANCE_HOST_URL: str = \"${INSTANCE_HOST_URL}\"/" $PARAM_FILE
+  sed -i "s/^    DATASET_NAME:.*/    DATASET_NAME: str = \"${DATASET_NAME}\"/" $PARAM_FILE
+  
+  echo "✔ Patched system_parameters.py"
+  echo "  - INSTANCE_PORT: ${INSTANCE_PORT}"
+  echo "  - INSTANCE_MANAGMENT_URL: ${INSTANCE_MANAGMENT_URL}"
+  echo "  - INSTANCE_HOST_URL: ${INSTANCE_HOST_URL}"
+  echo "  - DATASET_NAME: ${DATASET_NAME}"
+  echo ""
+
+  # 9. Start Services
 
 
 

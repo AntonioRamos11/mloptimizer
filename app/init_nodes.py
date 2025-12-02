@@ -17,14 +17,43 @@ class InitNodes:
 		self.slave()
 
 	def master(self):
-		model_architecture_factory: ModelArchitectureFactory = self.get_model_architecture()
-		
-		dataset: Dataset = self.get_dataset()
-		print(model_architecture_factory)
 		from app.master_node.optimization_job import OptimizationJob
-		SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Initilizating master node'})
-		optimization_job = OptimizationJob(dataset, model_architecture_factory)
-		optimization_job.start_optimization(trials=SP.TRIALS)
+		SocketCommunication.decide_print_form(MSGType.MASTER_STATUS,
+			{'node': 1, 'msg': 'Initializing master node'})
+		
+		print("\n==============================")
+		print("   Starting Multi-Dataset AutoML")
+		print("==============================\n")
+
+		# Iterate through schedule
+		for run_idx, dataset_name, shape, classes in SP.iter_datasets():
+			print(f"\n===== DATASET RUN {run_idx+1}/{SP.total_runs()} =====")
+			print(f"Dataset: {dataset_name}")
+			print(f"Shape:   {shape}")
+			print(f"Classes: {classes}")
+
+			# Switch dataset inside SP
+			SP.set_dataset(dataset_name)
+
+			# Build dataset + architecture fresh each run
+			dataset = self.get_dataset()
+			model_architecture_factory = self.get_model_architecture()
+
+			# Create optimization job
+			optimization_job = OptimizationJob(dataset, model_architecture_factory)
+
+			# Notify UI/slaves via socket
+			SocketCommunication.decide_print_form(
+				MSGType.MASTER_STATUS,
+				{'node': 1, 'msg': f'Starting optimization for {dataset_name}'}
+			)
+
+			# Run AutoML for this dataset
+			optimization_job.start_optimization(trials=SP.TRIALS)
+
+		print("\n==============================")
+		print("   ALL SCHEDULED DATASETS FINISHED")
+		print("==============================\n")
 
 	def slave(self):
 		model_architecture_factory: ModelArchitectureFactory = self.get_model_architecture()
@@ -47,12 +76,23 @@ class InitNodes:
 
 	def get_dataset(self) -> Dataset:
 		if SP.DATASET_TYPE == 1:
-			return ImageClassificationBenchmarkDataset(
-				SP.DATASET_NAME, 
-				SP.DATASET_SHAPE, 
-				SP.DATASET_CLASSES, 
-				SP.DATASET_BATCH_SIZE, 
-				SP.DATASET_VALIDATION_SPLIT)
+			# Check if this is the custom grietas_baches dataset
+			if SP.DATASET_NAME == 'grietas_baches':
+				return GrietasBachesDataset(
+					SP.DATASET_NAME,
+					SP.DATASET_SHAPE,
+					SP.DATASET_CLASSES,
+					SP.DATASET_BATCH_SIZE,
+					SP.DATASET_VALIDATION_SPLIT,
+					dataset_path=SP.DATASET_PATH
+				)
+			else:
+				return ImageClassificationBenchmarkDataset(
+					SP.DATASET_NAME, 
+					SP.DATASET_SHAPE, 
+					SP.DATASET_CLASSES, 
+					SP.DATASET_BATCH_SIZE, 
+					SP.DATASET_VALIDATION_SPLIT)
 		elif SP.DATASET_TYPE == 2:
 			return RegressionBenchmarkDataset(
 				SP.DATASET_NAME, 

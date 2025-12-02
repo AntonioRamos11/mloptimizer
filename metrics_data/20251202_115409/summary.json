@@ -1,0 +1,101 @@
+{
+  "num_records": 4,
+  "avg_gpu_utilization": {
+    "0": 20.75
+  },
+  "avg_gpu_memory": {
+    "0": 94.11376953125
+  },
+  "avg_cpu_utilization": 0.375,
+  "avg_inference_latency_ms": 19.1902756690979,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "conv2d",
+        "type": "Conv2D",
+        "shape": "(None, 26, 26, 64)",
+        "params": 640,
+        "filters": 64,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization",
+        "type": "BatchNormalization",
+        "shape": "(None, 26, 26, 64)",
+        "params": 256
+      },
+      {
+        "name": "max_pooling2d",
+        "type": "MaxPooling2D",
+        "shape": "(None, 8, 8, 64)",
+        "params": 0
+      },
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 212)",
+        "params": 55516
+      },
+      {
+        "name": "inception_v1_module_bn_1",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 212)",
+        "params": 77420
+      },
+      {
+        "name": "inception_v1_module_bn_2",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 212)",
+        "params": 77420
+      },
+      {
+        "name": "max_pooling2d_4",
+        "type": "MaxPooling2D",
+        "shape": "(None, 4, 4, 212)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_19",
+        "type": "Conv2D",
+        "shape": "(None, 4, 4, 10)",
+        "params": 2130,
+        "filters": 10,
+        "kernel_size": [
+          1,
+          1
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "global_average_pooling2d",
+        "type": "GlobalAveragePooling2D",
+        "shape": "(None, 10)",
+        "params": 0
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 213382,
+    "trainable_params": "211838",
+    "non_trainable_params": "1544",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 160.1492874622345,
+    "average_seconds": 160.1492874622345,
+    "max_seconds": 160.1492874622345,
+    "idle_records_count": 1,
+    "idle_periods_detected": 1,
+    "time_unit": "seconds"
+  }
+}

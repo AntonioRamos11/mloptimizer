@@ -4,6 +4,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import json
 import pandas as pd
+import os
 from sklearn import preprocessing
 from app.common.preprocessing import *
 
@@ -309,3 +310,136 @@ class TimeSeriesBenchmarkDataset(Dataset):
 
 	def get_tag(self):
 		return self.dataset_name
+
+
+class GrietasBachesDataset(Dataset):
+	"""
+	Custom Dataset class for GRIETAS (cracks) and BACHES (potholes) that integrates with MLOptimizer.
+	Loads images from local folder structure instead of tensorflow_datasets.
+	"""
+	
+	def __init__(self, dataset_name: str, shape: tuple, class_count=2, batch_size=32, validation_split=0.2, dataset_path='./dataset_grietas_baches'):
+		self.dataset_name = dataset_name
+		self.batch_size = batch_size
+		self.validation_split_float = validation_split
+		self.shuffle_cache = self.batch_size * 2
+		self.shape = shape
+		self.class_count = class_count
+		self.dataset_path = dataset_path
+		
+	def load(self):
+		"""Load GRIETAS and BACHES dataset from folder structure"""
+		try:
+			print(f"Loading {self.dataset_name} dataset from {self.dataset_path}...")
+			
+			# Import here to avoid circular dependencies
+			from load_grietas_baches_dataset import load_grietas_baches_dataset
+			
+			# Load the dataset
+			(train_data, train_labels), (val_data, val_labels), (test_data, test_labels) = \
+				load_grietas_baches_dataset(
+					dataset_path=self.dataset_path,
+					target_size=(self.shape[0], self.shape[1]),
+					validation_split=self.validation_split_float,
+					test_split=0.1
+				)
+			
+			# Convert from CHW to HWC format (TensorFlow format)
+			train_data = np.transpose(train_data, (0, 2, 3, 1))
+			val_data = np.transpose(val_data, (0, 2, 3, 1))
+			test_data = np.transpose(test_data, (0, 2, 3, 1))
+			
+			# Store counts
+			self.train_split_count = len(train_data)
+			self.validation_split_count = len(val_data)
+			self.test_split_count = len(test_data)
+			
+			# Convert to TensorFlow datasets
+			self.train_original = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
+			self.validation = tf.data.Dataset.from_tensor_slices((val_data, val_labels))
+			self.test = tf.data.Dataset.from_tensor_slices((test_data, test_labels))
+			
+			# Create augmented training data
+			train_augmented = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
+			train_augmented = train_augmented.map(self._augment, num_parallel_calls=tf.data.AUTOTUNE)
+			self.train = self.train_original.concatenate(train_augmented)
+			
+			print(f"Dataset loaded successfully:")
+			print(f"  Training: {self.train_split_count} images")
+			print(f"  Validation: {self.validation_split_count} images")
+			print(f"  Test: {self.test_split_count} images")
+			
+		except Exception as e:
+			print(f'ERROR: Failed to load GRIETAS and BACHES dataset: {e}')
+			print(f'Make sure the dataset exists at: {self.dataset_path}')
+			print('Expected structure:')
+			print('  dataset_grietas_baches/')
+			print('    ├── BACHES/')
+			print('    │   └── *.png')
+			print('    └── GRIETAS/')
+			print('        └── *.png')
+			raise
+	
+	def get_train_data(self, use_augmentation: bool = False):
+		"""Return training data with optional augmentation"""
+		if use_augmentation:
+			train_data = self.train.cache().shuffle(self.shuffle_cache).batch(self.batch_size).repeat()
+		else:
+			train_data = self.train_original.cache().shuffle(self.shuffle_cache).batch(self.batch_size).repeat()
+		return train_data
+	
+	def get_validation_data(self):
+		"""Return validation data"""
+		validation_data = self.validation.cache().batch(self.batch_size)
+		return validation_data
+	
+	def get_test_data(self):
+		"""Return test data"""
+		test_data = self.test.cache().batch(self.batch_size)
+		return test_data
+	
+	def get_training_steps(self, use_augmentation: bool = False) -> int:
+		"""Calculate training steps per epoch"""
+		if use_augmentation:
+			return int(np.ceil(self.train_split_count / self.batch_size)) * 2
+		else:
+			return int(np.ceil(self.train_split_count / self.batch_size))
+	
+	def get_validation_steps(self) -> int:
+		"""Calculate validation steps"""
+		return int(np.ceil(self.validation_split_count / self.batch_size))
+	
+	def get_testing_steps(self):
+		"""Calculate testing steps"""
+		return int(np.ceil(self.test_split_count / self.batch_size))
+	
+	def get_input_shape(self) -> tuple:
+		"""Return input shape"""
+		return self.shape
+	
+	def get_classes_count(self) -> int:
+		"""Return number of classes"""
+		return self.class_count
+	
+	def get_ranges(self):
+		"""Return normalization ranges (not used for image data)"""
+		return ""
+	
+	def get_tag(self):
+		"""Return dataset name tag"""
+		return self.dataset_name
+	
+	@staticmethod
+	def _augment(image, label):
+		"""Apply data augmentation to images"""
+		# Random flip
+		image = tf.image.random_flip_left_right(image)
+		# Random brightness/contrast (useful for road images with varying lighting)
+		image = tf.image.random_brightness(image, 0.2)
+		image = tf.image.random_contrast(image, 0.8, 1.2)
+		# Random hue/saturation for RGB images
+		image = tf.image.random_hue(image, 0.08)
+		image = tf.image.random_saturation(image, 0.6, 1.6)
+		# Clip values to [0, 1]
+		image = tf.clip_by_value(image, 0.0, 1.0)
+		return image, label

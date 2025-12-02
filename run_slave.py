@@ -1,3 +1,7 @@
+import os
+# Force single GPU visibility BEFORE importing TensorFlow
+os.environ["CUDA_VISIBLE_DEVICES"] = os.getenv("CUDA_VISIBLE_DEVICES", "0")
+
 import sys
 import logging
 import traceback

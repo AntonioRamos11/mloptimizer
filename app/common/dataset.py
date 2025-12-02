@@ -14,6 +14,48 @@ class Dataset (abc.ABC):
 	def load(self):
 		pass
 
+	def build_pipeline(self, dataset, training=False):
+		"""Optimized tf.data pipeline for maximum GPU utilization"""
+		AUTOTUNE = tf.data.AUTOTUNE
+
+		# Disable sharding for small datasets (MNIST, CIFAR)
+		options = tf.data.Options()
+		options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
+		dataset = dataset.with_options(options)
+
+		# Normalize + float16 (mixed precision friendly)
+		def _preprocess(image, label):
+			image = tf.cast(image, tf.float16) / 255.0
+
+			if training:
+				# General augmentation (MNIST, Fashion-MNIST, CIFAR)
+				image = tf.image.random_flip_left_right(image)
+
+				if image.shape[-1] == 3:
+					# CIFAR / RGB-specific aug
+					image = tf.image.random_brightness(image, 0.1)
+					image = tf.image.random_contrast(image, 0.9, 1.1)
+
+			return image, label
+
+		# Apply mapping in parallel
+		dataset = dataset.map(_preprocess, num_parallel_calls=AUTOTUNE)
+
+		# Cache in RAM after first epoch
+		dataset = dataset.cache()
+
+		# Shuffle only for training
+		if training:
+			dataset = dataset.shuffle(self.batch_size * 10)
+
+		# Batch
+		dataset = dataset.batch(self.batch_size, drop_remainder=True)
+
+		# Prefetch to overlap CPU/GPU
+		dataset = dataset.prefetch(AUTOTUNE)
+
+		return dataset
+
 	@abc.abstractclassmethod
 	def get_train_data(self):
 		pass
@@ -57,39 +99,39 @@ class ImageClassificationBenchmarkDataset(Dataset):
 		self.class_count = class_count
 
 	def load(self):
+		"""Load dataset with OPTIMIZED GPU pipeline"""
 		try:
+			print(f"Loading {self.dataset_name} with OPTIMIZED pipeline...")
 			train_split_float = float(1.0 - self.validation_split_float)
 			val_split_percent = int(self.validation_split_float * 100)
 			train_split_percent = int(train_split_float * 100)
-			#Tensorflow dataset load
+			
+			# Load raw datasets
 			self.train_original, self.info = tfds.load(self.dataset_name, with_info=True, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
-			train_augmented = tfds.load(self.dataset_name, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
-			train_augmented = train_augmented.map(self._augment)
-			self.train = self.train_original.concatenate(train_augmented)
+			self.train = self.train_original  # Same dataset, augmentation applied in build_pipeline
 			self.validation = tfds.load(self.dataset_name, as_supervised=True, split='train[-{}%:]'.format(val_split_percent))
+			self.test = tfds.load(self.dataset_name, as_supervised=True, split='test')
+			
+			# Store counts
 			self.train_split_count = self.info.splits['train'].num_examples * train_split_float
 			self.validation_split_count = self.info.splits['train'].num_examples * self.validation_split_float
-			self.test = tfds.load(self.dataset_name, as_supervised=True, split='test')
+			
+			print(f"✓ {self.dataset_name} loaded with GPU-optimized pipeline!")
 		except:
-			#InitNodes.decide_print_form(MSGType.MASTER_ERROR, {'node': 1, 'msg': 'Somethings went wrong trying to load the dataset, please check the parameters and info'})
-			print('Somethings went wrong trying to load the Image dataset, please check the parameters and info')
+			print('ERROR: Failed to load Image dataset, please check the parameters')
 			raise
 
-	def get_train_data(self, use_augmentation: False):
-		train_data = None
-		if use_augmentation:
-			train_data = self.train.map(self._scale).cache().shuffle(self.shuffle_cache).batch(self.batch_size).repeat()
-		else:
-			train_data = self.train_original.map(self._scale).cache().shuffle(self.shuffle_cache).batch(self.batch_size).repeat()
-		return train_data
+	def get_train_data(self, use_augmentation=False):
+		return self.build_pipeline(
+			self.train if use_augmentation else self.train_original,
+			training=True
+		).repeat()
 
 	def get_validation_data(self):
-		validation_data = self.validation.map(self._scale).cache().batch(self.batch_size)
-		return validation_data
+		return self.build_pipeline(self.validation, training=False)
 
 	def get_test_data(self):
-		test_data = self.test.map(self._scale).cache().batch(self.batch_size)
-		return test_data
+		return self.build_pipeline(self.test, training=False)
 
 	def get_training_steps(self, use_augmentation: False) -> int:
 		if use_augmentation:
@@ -115,22 +157,7 @@ class ImageClassificationBenchmarkDataset(Dataset):
 	def get_tag(self):
 		return self.dataset_name
 
-	@staticmethod
-	def _scale(image, label):
-		image = tf.cast(image, tf.float32)
-		image /= 255
-		return image, label
 
-	@staticmethod
-	def _augment(image, label):
-		image = tf.image.random_flip_left_right(image)
-		#RGB-only augmentations
-		if image.shape[2] == 3:
-			image = tf.image.random_hue(image, 0.08)
-			image = tf.image.random_saturation(image, 0.6, 1.6)
-		image = tf.image.random_brightness(image, 0.05)
-		image = tf.image.random_contrast(image, 0.7, 1.3)
-		return image, label
 
 class RegressionBenchmarkDataset(Dataset):
 	def __init__(self, dataset_name: str, shape:tuple, feature_size=1, n_labels=1, batch_size=128, validation_split=0.2):
@@ -328,9 +355,9 @@ class GrietasBachesDataset(Dataset):
 		self.dataset_path = dataset_path
 		
 	def load(self):
-		"""Load GRIETAS and BACHES dataset from folder structure"""
+		"""Load GRIETAS and BACHES dataset with OPTIMIZED pipeline"""
 		try:
-			print(f"Loading {self.dataset_name} dataset from {self.dataset_path}...")
+			print(f"Loading {self.dataset_name} with OPTIMIZED pipeline from {self.dataset_path}...")
 			
 			# Import here to avoid circular dependencies
 			from load_grietas_baches_dataset import load_grietas_baches_dataset
@@ -354,49 +381,33 @@ class GrietasBachesDataset(Dataset):
 			self.validation_split_count = len(val_data)
 			self.test_split_count = len(test_data)
 			
-			# Convert to TensorFlow datasets
+			print(f"Class distribution: BACHES={np.sum(train_labels==0)}, GRIETAS={np.sum(train_labels==1)}")
+			print(f"Splits: train={self.train_split_count}, val={self.validation_split_count}, test={self.test_split_count}")
+			
+			# Convert to TensorFlow datasets (raw, pipeline built in get_*_data)
 			self.train_original = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
+			self.train = self.train_original  # Same dataset, augmentation applied in build_pipeline
 			self.validation = tf.data.Dataset.from_tensor_slices((val_data, val_labels))
 			self.test = tf.data.Dataset.from_tensor_slices((test_data, test_labels))
 			
-			# Create augmented training data
-			train_augmented = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
-			train_augmented = train_augmented.map(self._augment, num_parallel_calls=tf.data.AUTOTUNE)
-			self.train = self.train_original.concatenate(train_augmented)
-			
-			print(f"Dataset loaded successfully:")
-			print(f"  Training: {self.train_split_count} images")
-			print(f"  Validation: {self.validation_split_count} images")
-			print(f"  Test: {self.test_split_count} images")
+			print(f"✓ {self.dataset_name} loaded with GPU-optimized pipeline!")
 			
 		except Exception as e:
 			print(f'ERROR: Failed to load GRIETAS and BACHES dataset: {e}')
 			print(f'Make sure the dataset exists at: {self.dataset_path}')
-			print('Expected structure:')
-			print('  dataset_grietas_baches/')
-			print('    ├── BACHES/')
-			print('    │   └── *.png')
-			print('    └── GRIETAS/')
-			print('        └── *.png')
 			raise
 	
-	def get_train_data(self, use_augmentation: bool = False):
-		"""Return training data with optional augmentation"""
-		if use_augmentation:
-			train_data = self.train.cache().shuffle(self.shuffle_cache).batch(self.batch_size).repeat()
-		else:
-			train_data = self.train_original.cache().shuffle(self.shuffle_cache).batch(self.batch_size).repeat()
-		return train_data
+	def get_train_data(self, use_augmentation=False):
+		return self.build_pipeline(
+			self.train if use_augmentation else self.train_original,
+			training=True
+		).repeat()
 	
 	def get_validation_data(self):
-		"""Return validation data"""
-		validation_data = self.validation.cache().batch(self.batch_size)
-		return validation_data
+		return self.build_pipeline(self.validation, training=False)
 	
 	def get_test_data(self):
-		"""Return test data"""
-		test_data = self.test.cache().batch(self.batch_size)
-		return test_data
+		return self.build_pipeline(self.test, training=False)
 	
 	def get_training_steps(self, use_augmentation: bool = False) -> int:
 		"""Calculate training steps per epoch"""
@@ -429,17 +440,3 @@ class GrietasBachesDataset(Dataset):
 		"""Return dataset name tag"""
 		return self.dataset_name
 	
-	@staticmethod
-	def _augment(image, label):
-		"""Apply data augmentation to images"""
-		# Random flip
-		image = tf.image.random_flip_left_right(image)
-		# Random brightness/contrast (useful for road images with varying lighting)
-		image = tf.image.random_brightness(image, 0.2)
-		image = tf.image.random_contrast(image, 0.8, 1.2)
-		# Random hue/saturation for RGB images
-		image = tf.image.random_hue(image, 0.08)
-		image = tf.image.random_saturation(image, 0.6, 1.6)
-		# Clip values to [0, 1]
-		image = tf.clip_by_value(image, 0.0, 1.0)
-		return image, label

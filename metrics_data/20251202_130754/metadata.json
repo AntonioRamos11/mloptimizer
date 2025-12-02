@@ -1,0 +1,17 @@
+{
+  "model_id": null,
+  "experiment_id": null,
+  "collection_time": "2025-12-02T13:07:54.166255",
+  "total_records": 7,
+  "framework": "tensorflow",
+  "devices": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 3080",
+      "memory_total": "10240 MiB",
+      "compute_capability": "8.6",
+      "uuid": "GPU-d8211a0d-0ca2-d9f5-0124-afa643e3f334",
+      "tf_device": "PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')"
+    }
+  ]
+}

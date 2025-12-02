@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
+import os
 import time
 import logging
 import numpy as np
@@ -112,23 +113,38 @@ class Model:
 
 		# Detect GPUs and configure strategy
 		gpus = tf.config.list_physical_devices('GPU')
+		
+		# Force TF to see only the GPU specified in CUDA_VISIBLE_DEVICES
+		if gpus:
+			visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
+			gpu_index = int(visible_devices.split(",")[0])
+			if gpu_index < len(gpus):
+				tf.config.set_visible_devices(gpus[gpu_index], 'GPU')
+				print(f"Using GPU {gpu_index}: {gpus[gpu_index].name}")
+		
+		# Re-detect after forcing visibility
+		gpus = tf.config.list_physical_devices('GPU')
 		num_gpus = len(gpus)
 		
-		if num_gpus >= 2:
+		# Disable multi-GPU for small datasets (MNIST, CIFAR, etc.)
+		USE_MULTI_GPU = False  # Set to True only for large datasets
+		
+		if USE_MULTI_GPU and num_gpus >= 2:
 			# Enable batch size scaling
 			original_batch_size = self.dataset.batch_size
-			self.dataset.batch_size *= num_gpus *32 # Critical for multi-GPU perf
+			self.dataset.batch_size *= num_gpus * 32  # Critical for multi-GPU perf
 			
-			
-					
 			strategy = tf.distribute.MirroredStrategy(
 				cross_device_ops=tf.distribute.NcclAllReduce(),  # Use NCCL for multi-GPU communication
 				devices=[f"/gpu:{i}" for i in range(num_gpus)]
 			)
+			print(f"Using MirroredStrategy with {num_gpus} GPUs")
 		elif num_gpus == 1:
 			strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+			print("Using OneDeviceStrategy with 1 GPU")
 		else:
 			strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
+			print("Using CPU")
 		
 		# Set augmentation and dataset parameters
 		if self.search_space_type == SearchSpaceType.IMAGE:
@@ -142,21 +158,12 @@ class Model:
 		input_shape = self.dataset.get_input_shape()
 		class_count = self.dataset.get_classes_count()
 		
-		# Get raw datasets
+		# Get optimized datasets (already cached, prefetched, and AutoShard disabled in build_pipeline)
 		train = self.dataset.get_train_data(use_augmentation)
 		validation = self.dataset.get_validation_data()
 		test = self.dataset.get_test_data()
 		
 		pipeline_metrics = metrics_collector._get_data_pipeline_latency(train)
-
-		# Optimize data pipeline for multi-GPU performance
-		options = tf.data.Options()
-		options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
-		
-		# Apply optimizations to training data
-		train = train.with_options(options)
-		train = train.cache()  # Cache data after first epoch if it fits in memory
-		train = train.prefetch(tf.data.AUTOTUNE)  # Prefetch next batch while current is processing
 		
 		# Apply the same to validation data
 		validation = validation.with_options(options)

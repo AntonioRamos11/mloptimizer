@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import List
 
 @dataclass
 class SystemParameters:
@@ -9,14 +10,63 @@ class SystemParameters:
     # ------------------------
     # Set this to 1 in the cloud:
     #   export CLOUD_MODE=1
+    # Set this to 0 for localhost:
+    #   export CLOUD_MODE=0 (or unset - default)
     CLOUD_MODE: bool = bool(int(os.getenv("CLOUD_MODE", "0")))
 
     # ------------------------
-    # REMOTE RABBITMQ (ngrok / telebit) - DEFAULT
+    # LOCALHOST RABBITMQ
     # ------------------------
-    INSTANCE_HOST_URL: str = os.getenv("INSTANCE_HOST_URL", "0.tcp.us-cal-1.ngrok.io")
-    INSTANCE_PORT: int = int(os.getenv("INSTANCE_PORT", "19775"))
-    INSTANCE_MANAGMENT_URL: str = os.getenv("INSTANCE_MANAGMENT_URL", "https://selfish-donkey-2.telebit.io")
+    LOCALHOST_HOST: str = "localhost"
+    LOCALHOST_PORT: int = 5672
+    LOCALHOST_MANAGEMENT_URL: str = "http://localhost:15672"
+    
+    # ------------------------
+    # REMOTE RABBITMQ (ngrok / telebit)
+    # ------------------------
+    REMOTE_HOST_URL: str = "0.tcp.us-cal-1.ngrok.io"
+    REMOTE_PORT: int = 19775
+    REMOTE_MANAGEMENT_URL: str = "https://selfish-donkey-2.telebit.io"
+    
+    # ------------------------
+    # ACTIVE CONFIGURATION (selected based on CLOUD_MODE)
+    # ------------------------
+    @classmethod
+    def _get_active_host(cls) -> str:
+        """Get active host based on CLOUD_MODE."""
+        if os.getenv("INSTANCE_HOST_URL"):
+            return os.getenv("INSTANCE_HOST_URL")
+        return cls.REMOTE_HOST_URL if cls.CLOUD_MODE else cls.LOCALHOST_HOST
+    
+    @classmethod
+    def _get_active_port(cls) -> int:
+        """Get active port based on CLOUD_MODE."""
+        if os.getenv("INSTANCE_PORT"):
+            return int(os.getenv("INSTANCE_PORT"))
+        return cls.REMOTE_PORT if cls.CLOUD_MODE else cls.LOCALHOST_PORT
+    
+    @classmethod
+    def _get_active_management_url(cls) -> str:
+        """Get active management URL based on CLOUD_MODE."""
+        if os.getenv("INSTANCE_MANAGMENT_URL"):
+            return os.getenv("INSTANCE_MANAGMENT_URL")
+        return cls.REMOTE_MANAGEMENT_URL if cls.CLOUD_MODE else cls.LOCALHOST_MANAGEMENT_URL
+
+    # Computed properties - use class methods to get current values
+    @classmethod
+    @property
+    def INSTANCE_HOST_URL(cls) -> str:
+        return cls._get_active_host()
+    
+    @classmethod
+    @property
+    def INSTANCE_PORT(cls) -> int:
+        return cls._get_active_port()
+    
+    @classmethod
+    @property
+    def INSTANCE_MANAGMENT_URL(cls) -> str:
+        return cls._get_active_management_url()
 
     INSTANCE_MODEL_PARAMETER_QUEUE: str = "parameters"
     INSTANCE_MODEL_PERFORMANCE_QUEUE: str = "results"
@@ -24,17 +74,20 @@ class SystemParameters:
     INSTANCE_PASSWORD: str = os.getenv("RABBIT_PASS", "guest")
     INSTANCE_VIRTUAL_HOST: str = "/"
 
-    INSTANCE_CONNECTION = [
-        INSTANCE_PORT,
-        INSTANCE_MODEL_PARAMETER_QUEUE,
-        INSTANCE_MODEL_PERFORMANCE_QUEUE,
-        INSTANCE_HOST_URL,
-        INSTANCE_USER,
-        INSTANCE_PASSWORD,
-        INSTANCE_VIRTUAL_HOST,
-        INSTANCE_MANAGMENT_URL,
-    ]
-    #DATASET_NAME: str = 'mnist'  # Example datasetr
+    @classmethod
+    def INSTANCE_CONNECTION(cls) -> List:
+        """Get active connection parameters based on CLOUD_MODE."""
+        return [
+            cls._get_active_port(),
+            cls.INSTANCE_MODEL_PARAMETER_QUEUE,
+            cls.INSTANCE_MODEL_PERFORMANCE_QUEUE,
+            cls._get_active_host(),
+            cls.INSTANCE_USER,
+            cls.INSTANCE_PASSWORD,
+            cls.INSTANCE_VIRTUAL_HOST,
+            cls._get_active_management_url(),
+        ]
+
     DATASET_NAME: str = 'mnist'  # Example dataset
 
     # Define specific dataset configurations
@@ -73,6 +126,7 @@ class SystemParameters:
         ('cifar10', 3),
         ('fashion_mnist', 3),
     ]
+    
     @classmethod
     def set_dataset(cls, name: str):
         """Switch active dataset and update dependent attributes."""
@@ -103,6 +157,32 @@ class SystemParameters:
     @classmethod
     def total_runs(cls) -> int:
         return sum(reps for _, reps in cls.DATASET_SCHEDULE)
+    
+    @classmethod
+    def get_connection_info(cls) -> dict:
+        """Get current connection configuration as a dictionary."""
+        return {
+            'mode': 'CLOUD' if cls.CLOUD_MODE else 'LOCALHOST',
+            'host': cls._get_active_host(),
+            'port': cls._get_active_port(),
+            'management_url': cls._get_active_management_url(),
+            'user': cls.INSTANCE_USER,
+            'virtual_host': cls.INSTANCE_VIRTUAL_HOST
+        }
+    
+    @classmethod
+    def print_connection_info(cls):
+        """Print current connection configuration."""
+        info = cls.get_connection_info()
+        print("=" * 60)
+        print(f"  RabbitMQ Connection Mode: {info['mode']}")
+        print("=" * 60)
+        print(f"  Host: {info['host']}")
+        print(f"  Port: {info['port']}")
+        print(f"  Management URL: {info['management_url']}")
+        print(f"  User: {info['user']}")
+        print(f"  Virtual Host: {info['virtual_host']}")
+        print("=" * 60)
 
     # Dataset parameters
     DATASET_TYPE: int = 1  # Image classification
@@ -115,8 +195,6 @@ class SystemParameters:
     
     # Custom dataset path (for grietas_baches and other local datasets)
     DATASET_PATH: str = './dataset_grietas_baches'
-
-    
 
     # AutoML parameters
     TRAIN_GPU: bool = True

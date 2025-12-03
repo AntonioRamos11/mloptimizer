@@ -196,8 +196,8 @@ class Model:
 			metrics_collector.register_model(model)
 			training_step_metrics = metrics_collector._get_training_step_latency(model)
 
-			#tf.config.optimizer.set_jit(True)
-			tf.function(jit_compile=True)
+			tf.config.optimizer.set_jit(True)
+			#tf.function(jit_compile=True)
 			# Set up callbacks
 			scheduler_callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 			
@@ -286,21 +286,32 @@ class Model:
 		
 
 		final_metrics = metrics_collector.collect_metrics()
-		metrics_dir = metrics_collector.save_organized_metrics(
-        model_id=str(self.id),
-        experiment_id=str(self.experiment_id),
-        base_dir="hardware_metrics",
-		clear_after_save=True,
-    	save_raw=True
-    	)
-
-		report_path = os.path.join(metrics_dir, "hardware_report.json")
-		metrics_collector.generate_hardware_report(
-			save_path=report_path,
-			model_id=str(self.id),
-			experiment_id=str(self.experiment_id)
-    )
-		# Get optimizer information
+		
+		# Save metrics with error handling
+		try:
+			metrics_dir = metrics_collector.save_organized_metrics(
+				model_id=str(self.id),
+				experiment_id=str(self.experiment_id),
+				base_dir="hardware_metrics",
+				clear_after_save=True,
+				save_raw=True
+			)
+			
+			# Only generate report if save was successful
+			if metrics_dir is not None:
+				report_path = os.path.join(metrics_dir, "hardware_report.json")
+				metrics_collector.generate_hardware_report(
+					save_path=report_path,
+					model_id=str(self.id),
+					experiment_id=str(self.experiment_id)
+				)
+				logging.info(f"Hardware metrics saved to: {metrics_dir}")
+			else:
+				logging.warning("Failed to save hardware metrics - directory path was None")
+		except Exception as e:
+			logging.error(f"Error saving hardware metrics: {e}")
+			# Continue execution even if metrics saving fails
+		
 		# Get optimizer information
 		optimizer_name = SP.OPTIMIZER
 		# Extract learning rate from the optimizer

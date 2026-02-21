@@ -5,7 +5,7 @@ import os
 import aiohttp
 import asyncio
 
-SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 async def test_slack_notification():
     """Send a test message to Slack"""

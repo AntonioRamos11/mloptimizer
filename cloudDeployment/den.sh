@@ -25,7 +25,7 @@ INSTANCE_MANAGMENT_URL="https://selfish-donkey-2.telebit.io" \
   # 3. Conda fSetup 
   export PATH="/root/miniconda/bin:$PATH"
   if ! command -v conda &>/dev/null; then
-    echo "Installing Miniconda..."
+    echo "Installing Miniconda..."F
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
     bash miniconda.sh -b -p /root/miniconda
     rm miniconda.sh

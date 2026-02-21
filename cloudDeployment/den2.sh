@@ -129,7 +129,7 @@ echo "========================================"
 
 # Default to remote RabbitMQ (ngrok/telebit)
 INSTANCE_PORT=${INSTANCE_PORT:-19775}
-INSTANCE_MANAGMENT_URL=${INSTANCE_MANAGMENT_URL:-"https://selfish-donkey-2.telebit.io"}
+INSTANCE_MANAGMENT_URL=${INSTANCE_MANAGMENT_URL:-"https://edwards-desperate-council-jpeg.trycloudflare.com"}
 INSTANCE_HOST_URL=${INSTANCE_HOST_URL:-"0.tcp.us-cal-1.ngrok.io"}
 DATASET_NAME=${DATASET_NAME:-"mnist"}
 CLOUD_MODE=${CLOUD_MODE:-1}

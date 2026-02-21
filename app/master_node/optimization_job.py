@@ -465,8 +465,60 @@ class OptimizationJob:
                 
             log_info(f"Results successfully saved to {filepath}.json")
             
+            # Upload to Google Drive if configured
+            await self._upload_to_google_drive(filepath + ".json", result_data)
+            
         except Exception as e:
             log_error(f"Error logging results", e, include_trace=True)
+
+    async def _upload_to_google_drive(self, filepath: str, result_data: dict):
+        """Upload result file to Google Drive if configured"""
+        try:
+            from google.oauth2 import service_account
+            from googleapiclient.discovery import build
+            from googleapiclient.http import MediaFileUpload
+            
+            gdrive_creds = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+            gdrive_folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
+            
+            if not gdrive_creds or not gdrive_folder_id:
+                log_info("Google Drive not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON and GOOGLE_DRIVE_FOLDER_ID env vars.")
+                return
+            
+            log_info("Uploading results to Google Drive...")
+            
+            # Create credentials from environment variable
+            import json as json_module
+            creds_dict = json_module.loads(gdrive_creds)
+            credentials = service_account.Credentials.from_service_account_info(
+                creds_dict,
+                scopes=['https://www.googleapis.com/auth/drive.file']
+            )
+            
+            # Build Drive service
+            service = build('drive', 'v3', credentials=credentials)
+            
+            # Prepare file metadata
+            filename = os.path.basename(filepath)
+            dataset_name = result_data.get("model_info", {}).get("model_training_request", {}).get("experiment_id", "unknown")
+            
+            file_metadata = {
+                'name': f"{dataset_name}_{filename}",
+                'parents': [gdrive_folder_id]
+            }
+            
+            # Upload file
+            media = MediaFileUpload(filepath, resumable=True)
+            file = service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id, webViewLink'
+            ).execute()
+            
+            log_info(f"Results uploaded to Google Drive: {file.get('webViewLink')}")
+            
+        except Exception as e:
+            log_error(f"Error uploading to Google Drive", e, include_trace=True)
 
     
 async def _send_slack_notification(self, best_model, elapsed_time, result_data):
@@ -476,7 +528,7 @@ async def _send_slack_notification(self, best_model, elapsed_time, result_data):
         import aiohttp
         
         # Get Slack webhook URL from environment or config
-        slack_webhook_url =  "https://hooks.slack.com/services/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"
+        slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/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")
         
         if not slack_webhook_url:
             log_info("Slack webhook URL not configured. Skipping notification.")

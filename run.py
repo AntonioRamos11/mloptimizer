@@ -411,7 +411,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python run.py --check              # Check requirements only
+  python run.py --checsk              # Check requirements only
   python run.py --install           # Install requirements only
   python run.py --master            # Run master only
   python run.py --slave             # Run slave only

@@ -22,6 +22,7 @@
 #   --save-config yes    : Save ngrok settings as defaults
 # =====================================================
 
+export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=cloud ./deploy.sh --host "8.tcp.us-cal-1.ngrok.io" --port 14879 --mgmt-url "https://arizona-josh-shield-locking.trycloudflare.com"
 set -e
 
 # Colors
@@ -300,11 +301,18 @@ if [ "$MODE" = "cloud" ]; then
     # Create log directories
     mkdir -p logs logs/slave/errors logs/slave/training logs/master
     
-    # Run full mode (master + slave) with log redirection
+    # Detect number of GPUs
+    NUM_GPUS=$(nvidia-smi --list-gpus 2>/dev/null | wc -l)
+    if [ "$NUM_GPUS" -eq 0 ] || [ -z "$NUM_GPUS" ]; then
+        NUM_GPUS=1
+        echo_warn "No GPUs detected, using CPU mode"
+    fi
+    echo_info "Detected $NUM_GPUS GPU(s)"
+    
+    # Export common environment variables
     export CLOUD_MODE=1
     export TF_CPP_MIN_LOG_LEVEL=1
     export PYTHONUNBUFFERED=1
-    export CUDA_VISIBLE_DEVICES="$GPU"
     
     [ -n "$HOST" ] && export INSTANCE_HOST_URL="$HOST"
     [ -n "$PORT" ] && export INSTANCE_PORT="$PORT"
@@ -325,21 +333,73 @@ if [ "$MODE" = "cloud" ]; then
     fi
     
     echo_info "Logs will be saved to logs/ directory"
-    echo_info "Use 'tail -f logs/master.log' or 'tail -f logs/slave.log' to monitor"
+    echo_info "Use 'tail -f logs/master.log' or 'tail -f logs/slave_gpu*.log' to monitor"
     
-    # Run in background with log redirection
-    python run.py --master --slave \
+    # Array to store process PIDs
+    declare -a slave_pids
+    
+    # Start master on GPU 0
+    echo_info "Starting Master on GPU 0..."
+    export CUDA_VISIBLE_DEVICES=0
+    python run.py --master \
         --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
         --dataset "$DATASET" --cloud-mode "$CLOUD_MODE" \
-        > logs/cloud_run.log 2>&1 &
+        > logs/master.log 2>&1 &
+    MASTER_PID=$!
+    echo_ok "Master started (PID: $MASTER_PID, GPU 0)"
     
-    CLOUD_PID=$!
-    echo_ok "ML training started in background (PID: $CLOUD_PID)"
-    echo_info "Log file: logs/cloud_run.log"
-    echo_info "To view logs: tail -f logs/cloud_run.log"
+    sleep 3
     
-    # Wait for the process
-    wait $CLOUD_PID
+    # Start one slave per GPU
+    for ((i=0; i<NUM_GPUS; i++)); do
+        echo_info "Starting Slave on GPU $i..."
+        export CUDA_VISIBLE_DEVICES=$i
+        python run.py --slave \
+            --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
+            --dataset "$DATASET" --cloud-mode "$CLOUD_MODE" --gpu $i \
+            > logs/slave_gpu${i}.log 2>&1 &
+        slave_pids[$i]=$!
+        echo_ok "Slave $i started (PID: ${slave_pids[$i]}, GPU $i)"
+    done
+    
+    echo ""
+    echo_ok "========================================="
+    echo_ok "  MLOptimizer Running with $NUM_GPUS GPU(s)"
+    echo_ok "========================================="
+    echo ""
+    echo_info "Process IDs:"
+    echo_info "  Master:  $MASTER_PID (GPU 0)"
+    for ((i=0; i<NUM_GPUS; i++)); do
+        echo_info "  Slave $i: ${slave_pids[$i]} (GPU $i)"
+    done
+    echo ""
+    echo_info "Log files:"
+    echo_info "  Master:  logs/master.log"
+    for ((i=0; i<NUM_GPUS; i++)); do
+        echo_info "  Slave $i: logs/slave_gpu${i}.log"
+    done
+    echo ""
+    echo_info "GPU Status:"
+    nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu --format=csv,noheader 2>/dev/null | awk -F', ' '{printf "    GPU %s: %s (%s/%s MB, Util: %s)\n", $1, $2, $3, $4, $5}' || echo "    nvidia-smi not available"
+    echo ""
+    echo_info "To monitor: tail -f logs/master.log logs/slave_gpu*.log"
+    
+    # Cleanup function to kill all processes
+    cleanup() {
+        echo ""
+        echo_warn "Shutting down MLOptimizer..."
+        kill $MASTER_PID 2>/dev/null || true
+        for pid in "${slave_pids[@]}"; do
+            kill $pid 2>/dev/null || true
+        done
+        echo_ok "All processes terminated"
+    }
+    
+    # Trap signals to cleanup on exit
+    trap cleanup SIGINT SIGTERM EXIT
+    
+    # Wait for master process
+    wait $MASTER_PID
     
     exit 0
 fi

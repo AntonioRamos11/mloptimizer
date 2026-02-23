@@ -1,7 +1,26 @@
 #!/bin/bash
-# MLOptimizer - Direct Deployment Script for Vast.ai
-# Usage: curl -sSL https://raw.githubusercontent.com/.../deploy.sh | bash -s -- --mode=full
-# Or: ./deploy.sh --mode=full
+# MLOptimizer - Direct Deployment Script for Vast.ai / Cloud Containers
+#
+# =====================================================
+# FIRST RUN IN NEW CONTAINER - RECOMMENDED COMMAND:
+# =====================================================
+# cd /workspace && rm -rf mloptimizer && \
+# REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" \
+# MODE=cloud ./deploy.sh \
+#   --host "YOUR_NGROK_HOST" --port NGROK_PORT --mgmt-url "YOUR_MGMT_URL"
+#
+# Example with current settings:
+# cd /workspace && rm -rf mloptimizer && \
+# REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" \
+# MODE=cloud ./deploy.sh \
+#   --host "8.tcp.us-cal-1.ngrok.io" --port 10147 --mgmt-url "https://rubber-friend-nose-balance.trycloudflare.com"
+#
+# Options:
+#   --mode cloud          : Clone repo, install deps, run training
+#   --mode resolve       : Only resolve and install dependencies
+#   --mode install       : Only install requirements
+#   --save-config yes    : Save ngrok settings as defaults
+# =====================================================
 
 set -e
 
@@ -217,6 +236,14 @@ fi
 if [ "$MODE" = "cloud" ]; then
     echo ""
     echo_info "Running in cloud mode..."
+    
+    # Kill existing mloptimizer processes before starting fresh
+    echo_info "Cleaning up existing processes..."
+    pkill -f "run.py" 2>/dev/null || true
+    pkill -f "run_master.py" 2>/dev/null || true
+    pkill -f "run_slave.py" 2>/dev/null || true
+    sleep 2
+    echo_ok "Processes cleaned up"
     
     # Create venv if needed
     if [ "$USE_VENV" = "yes" ] && [ ! -d "venv_mlopt" ]; then

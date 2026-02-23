@@ -238,12 +238,34 @@ if [ "$MODE" = "cloud" ]; then
     echo_info "Running in cloud mode..."
     
     # Kill existing mloptimizer processes before starting fresh
-    echo_info "Cleaning up existing processes..."
-    pkill -9 -f "python.*run.py" 2>/dev/null || true
-    pkill -9 -f "python.*run_master.py" 2>/dev/null || true
-    pkill -9 -f "python.*run_slave.py" 2>/dev/null || true
-    sleep 2
-    echo_ok "Processes cleaned up"
+    echo_info "Cleaning up existing MLOptimizer processes..."
+
+    PIDS=$(ps -eo pid,cmd | grep -E "run.py|run_master.py|run_slave.py" | grep -v grep | awk '{print $1}')
+
+    if [ -n "$PIDS" ]; then
+        echo_info "Found processes: $PIDS"
+
+        for PID in $PIDS; do
+            # kill children first
+            pkill -TERM -P $PID 2>/dev/null || true
+            kill -TERM $PID 2>/dev/null || true
+        done
+
+        sleep 3
+
+        # force kill if still alive
+        for PID in $PIDS; do
+            if ps -p $PID > /dev/null 2>&1; then
+                echo_warn "Force killing $PID"
+                pkill -KILL -P $PID 2>/dev/null || true
+                kill -KILL $PID 2>/dev/null || true
+            fi
+        done
+
+        echo_ok "Old ML processes terminated"
+    else
+        echo_info "No existing ML processes found"
+    fi
     
     # Create venv if needed
     if [ "$USE_VENV" = "yes" ] && [ ! -d "venv_mlopt" ]; then

@@ -239,9 +239,9 @@ if [ "$MODE" = "cloud" ]; then
     
     # Kill existing mloptimizer processes before starting fresh
     echo_info "Cleaning up existing processes..."
-    pkill -f "run.py" 2>/dev/null || true
-    pkill -f "run_master.py" 2>/dev/null || true
-    pkill -f "run_slave.py" 2>/dev/null || true
+    pkill -9 -f "python.*run.py" 2>/dev/null || true
+    pkill -9 -f "python.*run_master.py" 2>/dev/null || true
+    pkill -9 -f "python.*run_slave.py" 2>/dev/null || true
     sleep 2
     echo_ok "Processes cleaned up"
     

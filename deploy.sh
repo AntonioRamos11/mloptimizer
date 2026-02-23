@@ -18,7 +18,7 @@ echo_warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 echo_error() { echo -e "${RED}✗${NC} $1"; }
 
 # Default settings
-MODE="${MODE:-full}"           # full, master, slave, install, check
+MODE="${MODE:-full}"           # full, master, slave, install, check, resolve
 HOST="${HOST:-}"
 PORT="${PORT:-}"
 MGMT_URL="${MGMT_URL:-}"
@@ -26,12 +26,15 @@ DATASET="${DATASET:-mnist}"
 GPU="${GPU:-0}"
 CLOUD_MODE="${CLOUD_MODE:-1}"
 USE_VENV="${USE_VENV:-yes}"
+REPO_URL="${REPO_URL:-}"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --mode)
             MODE="$2"; shift 2 ;;
+        --repo)
+            REPO_URL="$2"; shift 2 ;;
         --host)
             HOST="$2"; shift 2 ;;
         --port)
@@ -51,6 +54,18 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Clone repo if specified and not already in project directory
+if [ -n "$REPO_URL" ]; then
+    if [ ! -f "deploy.sh" ]; then
+        echo_info "Cloning repository..."
+        git clone "$REPO_URL" /workspace/mloptimizer
+        cd /workspace/mloptimizer
+        echo_ok "Repository cloned successfully"
+    else
+        echo_info "Already in project directory, skipping clone"
+    fi
+fi
+
 echo "========================================"
 echo "  MLOptimizer - Vast.ai Deployer"
 echo "========================================"
@@ -62,10 +77,12 @@ echo_info "Cloud Mode: $CLOUD_MODE"
 echo ""
 echo_info "Finding Python..."
 PYTHON_CMD=""
-for cmd in python3.12 python3.11 python3.10 python3 python; do
+for cmd in python3.13 python3.12 python3.11 python3.10 python3 python; do
     if command -v $cmd &>/dev/null; then
         version=$($cmd --version 2>&1 | grep -oP '\d+\.\d+' || true)
-        if [ -n "$version" ] && [ "$(echo "$version >= 3.10" | bc -l 2>/dev/null || echo 0)" = "1" ]; then
+        major=$(echo "$version" | cut -d. -f1)
+        minor=$(echo "$version" | cut -d. -f2)
+        if [ -n "$version" ] && [ "$major" -ge 3 ] && [ "$minor" -ge 10 ]; then
             PYTHON_CMD=$cmd
             echo_ok "Found Python $version: $cmd"
             break
@@ -140,6 +157,43 @@ if [ "$MODE" = "check" ]; then
     exit 0
 fi
 
+# Resolve mode - generate locked requirements.txt using pip-compile
+if [ "$MODE" = "resolve" ]; then
+    echo ""
+    echo_info "Resolving dependencies with pip-compile..."
+    
+    # Create venv if needed
+    if [ "$USE_VENV" = "yes" ] && [ ! -d "venv_mlopt" ]; then
+        echo_info "Creating virtual environment..."
+        $PYTHON_CMD -m venv venv_mlopt
+    fi
+    
+    if [ -d "venv_mlopt" ]; then
+        echo_ok "Activating virtual environment..."
+        source venv_mlopt/bin/activate
+    fi
+    
+    echo_info "Upgrading pip and installing pip-tools..."
+    pip install --upgrade pip setuptools wheel
+    pip install pip-tools
+    
+    if [ ! -f "requirements.in" ]; then
+        echo_error "requirements.in not found!"
+        exit 1
+    fi
+    
+    echo_info "Running pip to resolve and install dependencies..."
+    # Install with --only-binary to avoid building from source (requires gfortran, etc.)
+    pip install --only-binary=:all: -r requirements.in || pip install -r requirements.in
+    
+    echo_info "Verifying dependencies..."
+    pip check
+    
+    echo_ok "Dependency resolution complete!"
+    echo_info "Generated requirements.txt with locked versions"
+    exit 0
+fi
+
 # Build environment
 export VIRTUAL_ENV="$SCRIPT_DIR/venv_mlopt"
 
@@ -188,7 +242,7 @@ case "$MODE" in
         ;;
     *)
         echo_error "Unknown mode: $MODE"
-        echo_info "Valid modes: full, master, slave, install, check"
+        echo_info "Valid modes: full, master, slave, install, check, resolve"
         exit 1
         ;;
 esac

@@ -63,14 +63,21 @@ if [ -n "$REPO_URL" ]; then
         echo_ok "Repository cloned successfully"
     else
         echo_info "Already in project directory, pulling latest changes..."
-        git pull origin main
+        if [ -d ".git" ]; then
+            git pull origin main || true
+        else
+            echo_warn "Not a git repository, cannot pull. Using local files."
+        fi
     fi
 fi
 
-# Always pull latest to ensure requirements.in exists
-if [ -d ".git" ]; then
-    echo_info "Pulling latest changes..."
-    git pull origin main || true
+# If no .git and REPO_URL provided, clone it
+if [ ! -d ".git" ] && [ -n "$REPO_URL" ]; then
+    echo_info "Cloning repository..."
+    rm -rf /workspace/mloptimizer 2>/dev/null || true
+    git clone "$REPO_URL" /workspace/mloptimizer
+    cd /workspace/mloptimizer
+    echo_ok "Repository cloned successfully"
 fi
 
 echo "========================================"

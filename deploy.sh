@@ -62,8 +62,15 @@ if [ -n "$REPO_URL" ]; then
         cd /workspace/mloptimizer
         echo_ok "Repository cloned successfully"
     else
-        echo_info "Already in project directory, skipping clone"
+        echo_info "Already in project directory, pulling latest changes..."
+        git pull origin main
     fi
+fi
+
+# Always pull latest to ensure requirements.in exists
+if [ -d ".git" ]; then
+    echo_info "Pulling latest changes..."
+    git pull origin main || true
 fi
 
 echo "========================================"

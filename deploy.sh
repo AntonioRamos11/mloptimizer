@@ -22,7 +22,17 @@
 #   --save-config yes    : Save ngrok settings as defaults
 # =====================================================
 
-export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=cloud ./deploy.sh --host "8.tcp.us-cal-1.ngrok.io" --port 14879 --mgmt-url "https://arizona-josh-shield-locking.trycloudflare.com"
+#export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=cloud ./deploy.sh --host "8.tcp.us-cal-1.ngrok.io" --port 14879 --mgmt-url "https://arizona-josh-shield-locking.trycloudflare.com"
+#cd /workspace
+
+curl -4 -L https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh
+chmod +x deploy.sh
+
+REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" \
+MODE=cloud \
+./deploy.sh \
+--host "8.tcp.us-cal-1.ngrok.io" \
+--port 14879 \
 set -e
 
 # Colors

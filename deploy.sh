@@ -79,30 +79,17 @@ done
 
 # Clone repo if specified and not already in project directory
 if [ -n "$REPO_URL" ]; then
-    if [ ! -f "deploy.sh" ]; then
-        echo_info "Cloning repository..."
+    if [ -d "/workspace/mloptimizer/.git" ]; then
+        echo_info "Updating repo..."
+        cd /workspace/mloptimizer
+        git pull
+    else
+        echo_info "Cloning repo..."
+        rm -rf /workspace/mloptimizer
         git clone "$REPO_URL" /workspace/mloptimizer
         cd /workspace/mloptimizer
-        SCRIPT_DIR="/workspace/mloptimizer"
-        echo_ok "Repository cloned successfully"
-    else
-        echo_info "Already in project directory, pulling latest changes..."
-        if [ -d ".git" ]; then
-            git pull origin main || true
-        else
-            echo_warn "Not a git repository, cannot pull. Using local files."
-        fi
     fi
-fi
-
-# If no .git and REPO_URL provided, clone it
-if [ ! -d ".git" ] && [ -n "$REPO_URL" ]; then
-    echo_info "Cloning repository..."
-    rm -rf /workspace/mloptimizer 2>/dev/null || true
-    git clone "$REPO_URL" /workspace/mloptimizer
-    cd /workspace/mloptimizer
     SCRIPT_DIR="/workspace/mloptimizer"
-    echo_ok "Repository cloned successfully"
 fi
 
 echo "========================================"
@@ -354,6 +341,8 @@ if [ "$MODE" = "cloud" ]; then
     for ((i=0; i<NUM_GPUS; i++)); do
         echo_info "Starting Slave on GPU $i..."
         export CUDA_VISIBLE_DEVICES=$i
+        export TF_DATA_DIR="/tmp/tensorflow_datasets_gpu${i}"
+        mkdir -p "$TF_DATA_DIR"
         python run.py --slave \
             --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
             --dataset "$DATASET" --cloud-mode "$CLOUD_MODE" --gpu $i \

@@ -208,6 +208,55 @@ if [ "$MODE" = "resolve" ]; then
     exit 0
 fi
 
+# Cloud mode - clone, resolve, and run training
+if [ "$MODE" = "cloud" ]; then
+    echo ""
+    echo_info "Running in cloud mode..."
+    
+    # Create venv if needed
+    if [ "$USE_VENV" = "yes" ] && [ ! -d "venv_mlopt" ]; then
+        echo_info "Creating virtual environment..."
+        $PYTHON_CMD -m venv venv_mlopt
+    fi
+    
+    if [ -d "venv_mlopt" ]; then
+        echo_ok "Activating virtual environment..."
+        source venv_mlopt/bin/activate
+    fi
+    
+    echo_info "Upgrading pip and installing pip-tools..."
+    pip install --upgrade pip setuptools wheel
+    pip install pip-tools
+    
+    if [ -f "requirements.in" ]; then
+        echo_info "Installing dependencies from requirements.in..."
+        pip install --only-binary=:all: -r requirements.in || pip install -r requirements.in
+        pip check
+    else
+        echo_warn "requirements.in not found, skipping dependency installation"
+    fi
+    
+    echo_ok "Dependencies ready!"
+    echo_info "Starting ML training in full mode..."
+    
+    # Run full mode (master + slave)
+    export CLOUD_MODE=1
+    export TF_CPP_MIN_LOG_LEVEL=1
+    export PYTHONUNBUFFERED=1
+    export CUDA_VISIBLE_DEVICES="$GPU"
+    
+    [ -n "$HOST" ] && export INSTANCE_HOST_URL="$HOST"
+    [ -n "$PORT" ] && export INSTANCE_PORT="$PORT"
+    [ -n "$MGMT_URL" ] && export INSTANCE_MANAGMENT_URL="$MGMT_URL"
+    [ -n "$DATASET" ] && export DATASET_NAME="$DATASET"
+    
+    python run.py --master --slave \
+        --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
+        --dataset "$DATASET" --cloud-mode "$CLOUD_MODE"
+    
+    exit 0
+fi
+
 # Build environment
 export VIRTUAL_ENV="$SCRIPT_DIR/venv_mlopt"
 
@@ -256,7 +305,7 @@ case "$MODE" in
         ;;
     *)
         echo_error "Unknown mode: $MODE"
-        echo_info "Valid modes: full, master, slave, install, check, resolve"
+        echo_info "Valid modes: full, master, slave, install, check, resolve, cloud"
         exit 1
         ;;
 esac

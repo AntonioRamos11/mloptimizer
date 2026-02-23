@@ -18,10 +18,10 @@ echo_warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 echo_error() { echo -e "${RED}✗${NC} $1"; }
 
 # Default settings
-MODE="${MODE:-full}"           # full, master, slave, install, check, resolve
-HOST="${HOST:-}"
-PORT="${PORT:-}"
-MGMT_URL="${MGMT_URL:-}"
+MODE="${MODE:-full}"           # full, master, slave, install, check, resolve, cloud
+HOST="${HOST:-localhost}"
+PORT="${PORT:-5555}"
+MGMT_URL="${MGMT_URL:-http://localhost:15672}"
 DATASET="${DATASET:-mnist}"
 GPU="${GPU:-0}"
 CLOUD_MODE="${CLOUD_MODE:-1}"

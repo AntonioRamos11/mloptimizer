@@ -60,6 +60,7 @@ if [ -n "$REPO_URL" ]; then
         echo_info "Cloning repository..."
         git clone "$REPO_URL" /workspace/mloptimizer
         cd /workspace/mloptimizer
+        SCRIPT_DIR="/workspace/mloptimizer"
         echo_ok "Repository cloned successfully"
     else
         echo_info "Already in project directory, pulling latest changes..."
@@ -77,6 +78,7 @@ if [ ! -d ".git" ] && [ -n "$REPO_URL" ]; then
     rm -rf /workspace/mloptimizer 2>/dev/null || true
     git clone "$REPO_URL" /workspace/mloptimizer
     cd /workspace/mloptimizer
+    SCRIPT_DIR="/workspace/mloptimizer"
     echo_ok "Repository cloned successfully"
 fi
 

@@ -27,6 +27,7 @@ GPU="${GPU:-0}"
 CLOUD_MODE="${CLOUD_MODE:-1}"
 USE_VENV="${USE_VENV:-yes}"
 REPO_URL="${REPO_URL:-}"
+SAVE_CONFIG="${SAVE_CONFIG:-no}"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -47,6 +48,8 @@ while [[ $# -gt 0 ]]; do
             GPU="$2"; shift 2 ;;
         --cloud-mode)
             CLOUD_MODE="$2"; shift 2 ;;
+        --save-config)
+            SAVE_CONFIG="$2"; shift 2 ;;
         --no-venv)
             USE_VENV="no"; shift ;;
         *)
@@ -245,7 +248,10 @@ if [ "$MODE" = "cloud" ]; then
     echo_ok "Dependencies ready!"
     echo_info "Starting ML training in full mode..."
     
-    # Run full mode (master + slave)
+    # Create log directories
+    mkdir -p logs logs/slave/errors logs/slave/training logs/master
+    
+    # Run full mode (master + slave) with log redirection
     export CLOUD_MODE=1
     export TF_CPP_MIN_LOG_LEVEL=1
     export PYTHONUNBUFFERED=1
@@ -256,9 +262,35 @@ if [ "$MODE" = "cloud" ]; then
     [ -n "$MGMT_URL" ] && export INSTANCE_MANAGMENT_URL="$MGMT_URL"
     [ -n "$DATASET" ] && export DATASET_NAME="$DATASET"
     
+    # Save config to system_parameters.py if requested
+    if [ "$SAVE_CONFIG" = "yes" ] || [ "$SAVE_CONFIG" = "true" ]; then
+        echo_info "Saving ngrok config to system_parameters.py..."
+        if [ -f "system_parameters.py" ]; then
+            sed -i "s|REMOTE_HOST_URL: str = \".*\"|REMOTE_HOST_URL: str = \"$HOST\"|" system_parameters.py
+            sed -i "s|REMOTE_PORT: int = .*|REMOTE_PORT: int = $PORT|" system_parameters.py
+            sed -i "s|REMOTE_MANAGEMENT_URL: str = \".*\"|REMOTE_MANAGEMENT_URL: str = \"$MGMT_URL\"|" system_parameters.py
+            echo_ok "Config saved! Default ngrok URL is now: $HOST:$PORT"
+        else
+            echo_warn "system_parameters.py not found, skipping config save"
+        fi
+    fi
+    
+    echo_info "Logs will be saved to logs/ directory"
+    echo_info "Use 'tail -f logs/master.log' or 'tail -f logs/slave.log' to monitor"
+    
+    # Run in background with log redirection
     python run.py --master --slave \
         --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
-        --dataset "$DATASET" --cloud-mode "$CLOUD_MODE"
+        --dataset "$DATASET" --cloud-mode "$CLOUD_MODE" \
+        > logs/cloud_run.log 2>&1 &
+    
+    CLOUD_PID=$!
+    echo_ok "ML training started in background (PID: $CLOUD_PID)"
+    echo_info "Log file: logs/cloud_run.log"
+    echo_info "To view logs: tail -f logs/cloud_run.log"
+    
+    # Wait for the process
+    wait $CLOUD_PID
     
     exit 0
 fi

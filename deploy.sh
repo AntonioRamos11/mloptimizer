@@ -234,6 +234,10 @@ if [ "$MODE" = "cloud" ]; then
         echo_info "Installing dependencies from requirements.in..."
         pip install --only-binary=:all: -r requirements.in || pip install -r requirements.in
         pip check
+        
+        echo_info "Generating requirements2.txt (full freeze)..."
+        pip freeze > requirements2.txt
+        echo_ok "Generated requirements2.txt"
     else
         echo_warn "requirements.in not found, skipping dependency installation"
     fi

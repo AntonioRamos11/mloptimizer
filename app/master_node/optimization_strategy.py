@@ -372,8 +372,7 @@ class OptimizationStrategy(object):
                 
             # Set trial results in storage
             try:
-                self.storage.set_trial_value(model_training_response.id, performance)
-                self.storage.set_trial_state(model_training_response.id, TrialState.COMPLETE)
+                self.storage.set_trial_state_values(model_training_response.id, TrialState.COMPLETE, (performance,))
                 debug_trace(f"Trial {model_training_response.id} marked as complete with value {performance}")
             except Exception as storage_error:
                 debug_trace(f"ERROR updating trial in storage: {str(storage_error)}", include_trace=True)
@@ -514,8 +513,7 @@ class OptimizationStrategy(object):
         
         try:
             loss = model_training_response.performance
-            self.storage.set_trial_value(model_training_response.id, model_training_response.performance)
-            self.storage.set_trial_state(model_training_response.id, TrialState.COMPLETE)
+            self.storage.set_trial_state_values(model_training_response.id, TrialState.COMPLETE, (model_training_response.performance,))
             self._register_completed_model(model_training_response)
             best_trial = self.get_best_exploration_regression_model()
             debug_trace("Best exploration trial", {

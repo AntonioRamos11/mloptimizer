@@ -22,7 +22,9 @@
 #   --save-config yes    : Save ngrok settings as defaults
 # =====================================================
 
-#export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=cloud ./deploy.sh --host "8.tcp.us-cal-1.ngrok.io" --port 14879 --mgmt-url "https://arizona-josh-shield-locking.trycloudflare.com"
+# export  &&export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=cloud ./deploy.sh --host "8.tcp.us-cal-1.ngrok.io" --port 19869 --mgmt-url "https://veterans-dimensions-binary-updated.trycloudflare.com"
+# export  &&export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=master ./deploy.sh --host "6.tcp.us-cal-1.ngrok.io" --port 18029 --mgmt-url "https://controversy-sensitivity-metro-deeply.trycloudflare.com"
+
 #cd /workspace
 
 

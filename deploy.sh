@@ -16,14 +16,13 @@
 #   --host "8.tcp.us-cal-1.ngrok.io" --port 10147 --mgmt-url "https://rubber-friend-nose-balance.trycloudflare.com"
 #
 # Options:
-#   --mode cloud          : Clone repo, install deps, run training
+#   --mode cloud          : Clone repo, install deps, run training (master + slave)
+#   --mode cloud-master  : Run only master (for separate computer)
+#   --mode cloud-slave   : Run only slave(s) (for separate computer)
 #   --mode resolve       : Only resolve and install dependencies
 #   --mode install       : Only install requirements
 #   --save-config yes    : Save ngrok settings as defaults
 # =====================================================
-
-# export  &&export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=cloud ./deploy.sh --host "8.tcp.us-cal-1.ngrok.io" --port 19869 --mgmt-url "https://veterans-dimensions-binary-updated.trycloudflare.com"
-# export  &&export TF_FORCE_GPU_ALLOW_GROWTH=true && export TF_GPU_THREAD_MODE=gpu_private && curl -sSL https://raw.githubusercontent.com/AntonioRamos11/mloptimizer/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && REPO_URL="https://github.com/AntonioRamos11/mloptimizer.git" MODE=master ./deploy.sh --host "6.tcp.us-cal-1.ngrok.io" --port 18029 --mgmt-url "https://controversy-sensitivity-metro-deeply.trycloudflare.com"
 
 #cd /workspace
 
@@ -43,7 +42,7 @@ echo_warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 echo_error() { echo -e "${RED}✗${NC} $1"; }
 
 # Default settings
-MODE="${MODE:-full}"           # full, master, slave, install, check, resolve, cloud
+MODE="${MODE:-full}"           # full, master, slave, cloud, cloud-master, cloud-slave, install, check, resolve
 HOST="${HOST:-localhost}"
 PORT="${PORT:-5555}"
 MGMT_URL="${MGMT_URL:-http://localhost:15672}"
@@ -398,6 +397,137 @@ if [ "$MODE" = "cloud" ]; then
     exit 0
 fi
 
+# Cloud Master mode - run only master (for separate computer)
+if [ "$MODE" = "cloud-master" ]; then
+    echo ""
+    echo_info "Running in cloud-master mode..."
+    
+    # Kill existing master processes
+    echo_info "Cleaning up existing master processes..."
+    PIDS=$(ps -eo pid,cmd | grep -E "run.py.*master|run_master.py" | grep -v grep | awk '{print $1}')
+    if [ -n "$PIDS" ]; then
+        for PID in $PIDS; do
+            pkill -TERM -P $PID 2>/dev/null || true
+            kill -TERM $PID 2>/dev/null || true
+        done
+        sleep 2
+    fi
+    
+    # Create venv if needed
+    if [ "$USE_VENV" = "yes" ] && [ ! -d "venv_mlopt" ]; then
+        echo_info "Creating virtual environment..."
+        $PYTHON_CMD -m venv venv_mlopt
+    fi
+    
+    if [ -d "venv_mlopt" ]; then
+        source venv_mlopt/bin/activate
+    fi
+    
+    pip install --upgrade pip setuptools wheel 2>/dev/null
+    
+    if [ -f "requirements.in" ]; then
+        pip install --only-binary=:all: -r requirements.in 2>/dev/null || pip install -r requirements.in 2>/dev/null || true
+    fi
+    
+    mkdir -p logs/master
+    
+    export CLOUD_MODE=1
+    export TF_CPP_MIN_LOG_LEVEL=1
+    export PYTHONUNBUFFERED=1
+    export CUDA_VISIBLE_DEVICES=0
+    
+    [ -n "$HOST" ] && export INSTANCE_HOST_URL="$HOST"
+    [ -n "$PORT" ] && export INSTANCE_PORT="$PORT"
+    [ -n "$MGMT_URL" ] && export INSTANCE_MANAGMENT_URL="$MGMT_URL"
+    [ -n "$DATASET" ] && export DATASET_NAME="$DATASET"
+    
+    echo_info "Starting Master only..."
+    python run.py --master \
+        --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
+        --dataset "$DATASET" --cloud-mode "$CLOUD_MODE" \
+        > logs/master.log 2>&1 &
+    MASTER_PID=$!
+    echo_ok "Master started (PID: $MASTER_PID)"
+    echo_info "Log: logs/master.log"
+    
+    wait $MASTER_PID
+    exit 0
+fi
+
+# Cloud Slave mode - run only slave (for separate computer)
+if [ "$MODE" = "cloud-slave" ]; then
+    echo ""
+    echo_info "Running in cloud-slave mode..."
+    
+    # Kill existing slave processes
+    echo_info "Cleaning up existing slave processes..."
+    PIDS=$(ps -eo pid,cmd | grep -E "run.py.*slave|run_slave.py" | grep -v grep | awk '{print $1}')
+    if [ -n "$PIDS" ]; then
+        for PID in $PIDS; do
+            pkill -TERM -P $PID 2>/dev/null || true
+            kill -TERM $PID 2>/dev/null || true
+        done
+        sleep 2
+    fi
+    
+    # Create venv if needed
+    if [ "$USE_VENV" = "yes" ] && [ ! -d "venv_mlopt" ]; then
+        echo_info "Creating virtual environment..."
+        $PYTHON_CMD -m venv venv_mlopt
+    fi
+    
+    if [ -d "venv_mlopt" ]; then
+        source venv_mlopt/bin/activate
+    fi
+    
+    pip install --upgrade pip setuptools wheel 2>/dev/null
+    
+    if [ -f "requirements.in" ]; then
+        pip install --only-binary=:all: -r requirements.in 2>/dev/null || pip install -r requirements.in 2>/dev/null || true
+    fi
+    
+    mkdir -p logs/slave/errors logs/slave/training
+    
+    NUM_GPUS=$(nvidia-smi --list-gpus 2>/dev/null | wc -l)
+    if [ "$NUM_GPUS" -eq 0 ] || [ -z "$NUM_GPUS" ]; then
+        NUM_GPUS=1
+    fi
+    echo_info "Detected $NUM_GPUS GPU(s)"
+    
+    export CLOUD_MODE=1
+    export TF_CPP_MIN_LOG_LEVEL=1
+    export PYTHONUNBUFFERED=1
+    
+    [ -n "$HOST" ] && export INSTANCE_HOST_URL="$HOST"
+    [ -n "$PORT" ] && export INSTANCE_PORT="$PORT"
+    [ -n "$MGMT_URL" ] && export INSTANCE_MANAGMENT_URL="$MGMT_URL"
+    [ -n "$DATASET" ] && export DATASET_NAME="$DATASET"
+    
+    declare -a slave_pids
+    
+    for ((i=0; i<NUM_GPUS; i++)); do
+        echo_info "Starting Slave on GPU $i..."
+        export CUDA_VISIBLE_DEVICES=$i
+        export TF_DATA_DIR="/tmp/tensorflow_datasets_gpu${i}"
+        mkdir -p "$TF_DATA_DIR"
+        python run.py --slave \
+            --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
+            --dataset "$DATASET" --cloud-mode "$CLOUD_MODE" --gpu $i \
+            > logs/slave_gpu${i}.log 2>&1 &
+        slave_pids[$i]=$!
+        echo_ok "Slave $i started (PID: ${slave_pids[$i]}, GPU $i)"
+    done
+    
+    echo_ok "All slaves started"
+    echo_info "Logs: logs/slave_gpu*.log"
+    
+    for pid in "${slave_pids[@]}"; do
+        wait $pid
+    done
+    
+    exit 0
+fi
+
 # Build environment
 export VIRTUAL_ENV="$SCRIPT_DIR/venv_mlopt"
 
@@ -446,7 +576,7 @@ case "$MODE" in
         ;;
     *)
         echo_error "Unknown mode: $MODE"
-        echo_info "Valid modes: full, master, slave, install, check, resolve, cloud"
+        echo_info "Valid modes: full, master, slave, cloud, cloud-master, cloud-slave, install, check, resolve, cloud"
         exit 1
         ;;
 esac

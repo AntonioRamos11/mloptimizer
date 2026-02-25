@@ -270,13 +270,26 @@ class OptimizationJob:
             model_training_response = ModelTrainingResponse.from_dict(response)
             self.state["models_processed"] += 1
             
-            # Track unique hardware from workers
+            # Track unique hardware from workers (dedupe by static values only)
             if model_training_response.hardware_info:
                 hw = model_training_response.hardware_info
-                hw_key = f"{hw.get('gpu_count', 0)}gpus_{hw.get('cpu_cores', 0)}cores"
-                if not any(f"{hw.get('gpu_count', 0)}gpus" in str(h) for h in self.all_worker_hardware):
+                
+                # Create static key from immutable hardware info
+                gpu_models = tuple(sorted([g.get('model', '') for g in hw.get('gpus', [])]))
+                static_key = (hw.get('cpu_cores', 0), hw.get('gpu_count', 0), gpu_models)
+                
+                # Check if we've seen this static hardware config before
+                is_new = True
+                for existing in self.all_worker_hardware:
+                    existing_gpu_models = tuple(sorted([g.get('model', '') for g in existing.get('gpus', [])]))
+                    existing_key = (existing.get('cpu_cores', 0), existing.get('gpu_count', 0), existing_gpu_models)
+                    if static_key == existing_key:
+                        is_new = False
+                        break
+                
+                if is_new:
                     self.all_worker_hardware.append(hw)
-                    log_info(f"New worker hardware detected", hw)
+                    log_info(f"New worker hardware detected", {"cpu_cores": hw.get('cpu_cores'), "gpu_count": hw.get('gpu_count'), "gpu_models": gpu_models})
             
             log_info(f"Received model training response", {
                 "id": model_training_response.id,

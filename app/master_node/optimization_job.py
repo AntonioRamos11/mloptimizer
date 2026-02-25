@@ -191,6 +191,9 @@ class OptimizationJob:
                 "last_action": None
             }
             
+            # Track hardware from all workers
+            self.all_worker_hardware = []
+            
             log_info("OptimizationJob initialized successfully")
         except Exception as e:
             log_error("Failed to initialize OptimizationJob", e, include_trace=True)
@@ -266,6 +269,14 @@ class OptimizationJob:
         try:
             model_training_response = ModelTrainingResponse.from_dict(response)
             self.state["models_processed"] += 1
+            
+            # Track unique hardware from workers
+            if model_training_response.hardware_info:
+                hw = model_training_response.hardware_info
+                hw_key = f"{hw.get('gpu_count', 0)}gpus_{hw.get('cpu_cores', 0)}cores"
+                if not any(f"{hw.get('gpu_count', 0)}gpus" in str(h) for h in self.all_worker_hardware):
+                    self.all_worker_hardware.append(hw)
+                    log_info(f"New worker hardware detected", hw)
             
             log_info(f"Received model training response", {
                 "id": model_training_response.id,
@@ -443,13 +454,22 @@ class OptimizationJob:
             
             log_info(f"Optimization completed in {elapsed_time} (hh:mm:ss) / {elapsed_seconds:.2f} seconds")
 
-            # Add hardware information
+            # Add hardware information - use best model's worker hardware
             try:
-                info = get_hardware_info()
-                result_data["hardware_info"] = info
-                log_info("Hardware information collected")
+                if best_model.hardware_info:
+                    result_data["hardware_info"] = best_model.hardware_info
+                    log_info("Using best model's worker hardware information")
+                else:
+                    info = get_hardware_info()
+                    result_data["hardware_info"] = info
+                    log_info("No worker hardware info, using master hardware")
             except Exception as e:
                 log_error(f"Error collecting hardware information", e)
+                result_data["hardware_info"] = {}
+
+            # Add all workers hardware information
+            result_data["all_workers_hardware"] = self.all_worker_hardware
+            log_info(f"Tracked {len(self.all_worker_hardware)} unique worker hardware configurations")
 
             # Add optimization statistics
             result_data["optimization_stats"] = {

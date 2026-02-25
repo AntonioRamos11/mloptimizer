@@ -386,7 +386,11 @@ class OptimizationStrategy(object):
                 # Add the model to completed models directly as fallback
                 for request in self.exploration_models_requests:
                     if request.id == model_training_response.id:
-                        completed_model = CompletedModel(request, performance)
+                        completed_model = CompletedModel(
+                            request, 
+                            performance,
+                            hardware_info=model_training_response.hardware_info
+                        )
                         self.exploration_models_completed.append(completed_model)
                         debug_trace("Added model via fallback method")
                         break
@@ -656,7 +660,11 @@ class OptimizationStrategy(object):
                 debug_trace(f"WARNING: Model {model_training_response.id} has None performance, using 0 as fallback")
                 performance = 0.0
                 
-            completed_model = CompletedModel(matching_request, performance)
+            completed_model = CompletedModel(
+                matching_request, 
+                performance,
+                hardware_info=model_training_response.hardware_info
+            )
             self.exploration_models_completed.append(completed_model)
             debug_trace(f"Successfully registered model {model_training_response.id} with performance {performance}")
             

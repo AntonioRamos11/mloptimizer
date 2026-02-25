@@ -6,6 +6,9 @@ import traceback
 from datetime import datetime
 from dataclasses import asdict
 import aio_pika
+import platform
+import subprocess
+import os
 from app.common.model import Model
 from app.common.model_communication import *
 from app.common.rabbit_connection_params import RabbitConnectionParams
@@ -16,6 +19,63 @@ from system_parameters import SystemParameters as SP
 
 # Configure module logger
 logger = logging.getLogger(__name__)
+
+def get_hardware_info():
+	"""
+	Gather hardware information about the system
+	
+	Returns:
+		dict: Dictionary containing hardware information
+	"""
+	hardware_info = {}
+	
+	hardware_info["cpu_model"] = platform.processor()
+	hardware_info["cpu_cores"] = os.cpu_count()
+	hardware_info["python_version"] = platform.python_version()
+	hardware_info["system"] = platform.system()
+	
+	try:
+		import psutil
+		ram = psutil.virtual_memory()
+		hardware_info["ram_total"] = f"{ram.total / (1024**3):.2f} GB"
+		hardware_info["ram_available"] = f"{ram.available / (1024**3):.2f} GB"
+	except ImportError:
+		hardware_info["ram_total"] = "Unknown (psutil not installed)"
+	
+	try:
+		nvidia_output = subprocess.check_output(
+			["nvidia-smi", "--query-gpu=gpu_name,memory.total,driver_version", "--format=csv,noheader"], 
+			universal_newlines=True
+		)
+		gpus = []
+		for line in nvidia_output.strip().split("\n"):
+			parts = line.split(", ")
+			if len(parts) >= 2:
+				name, memory = parts[0], parts[1]
+				driver = parts[2] if len(parts) > 2 else "Unknown"
+				gpus.append({"model": name, "memory": memory, "driver": driver})
+		
+		hardware_info["gpu_count"] = len(gpus)
+		hardware_info["gpus"] = gpus
+	except (subprocess.CalledProcessError, FileNotFoundError):
+		try:
+			import tensorflow as tf
+			physical_gpus = tf.config.list_physical_devices('GPU')
+			hardware_info["gpu_count"] = len(physical_gpus)
+			hardware_info["gpus"] = [{"device": str(gpu)} for gpu in physical_gpus]
+			
+			if len(physical_gpus) > 0:
+				for i, gpu in enumerate(physical_gpus):
+					with tf.device(f'/GPU:{i}'):
+						gpu_name = tf.test.gpu_device_name()
+						if i < len(hardware_info["gpus"]):
+							hardware_info["gpus"][i]["name"] = gpu_name
+		except Exception as e:
+			logger.error(f"Error getting GPU details via TensorFlow: {e}")
+			hardware_info["gpu_count"] = 0
+			hardware_info["gpus"] = []
+	
+	return hardware_info
 
 # Global dataset cache for subprocess - loaded once per subprocess
 _subprocess_dataset_cache = None
@@ -253,11 +313,14 @@ class TrainingSlave:
 			logger.info(f"  Validation score: {training_val}")
 			logger.info(f"  Finished all epochs: {did_finish_epochs}")
 			
-			# Send results back
+			# Send results back with hardware info
+			hw_info = get_hardware_info()
+			logger.info(f"Hardware info: {hw_info.get('gpu_count', 0)} GPUs detected")
 			model_training_response = ModelTrainingResponse(
 				id=model_training_request.id, 
 				performance=training_val, 
-				finished_epochs=did_finish_epochs
+				finished_epochs=did_finish_epochs,
+				hardware_info=hw_info
 			)
 			await self._send_performance_to_broker(model_training_response)
 			
@@ -310,10 +373,12 @@ class TrainingSlave:
 			
 			# Send error response back to master
 			try:
+				hw_info = get_hardware_info()
 				error_response = ModelTrainingResponse(
 					id=model_id,
 					performance=-1.0,  # Negative score indicates error
-					finished_epochs=False
+					finished_epochs=False,
+					hardware_info=hw_info
 				)
 				await self._send_performance_to_broker(error_response)
 				logger.info("Error response sent to broker")

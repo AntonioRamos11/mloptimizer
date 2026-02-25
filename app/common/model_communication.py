@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from app.common.search_space import *
 
@@ -40,16 +41,19 @@ class ModelTrainingResponse:
 	id: int
 	performance: float
 	finished_epochs: bool
+	hardware_info: Optional[dict] = None
 
 	@classmethod
 	def from_dict(cls, body_dict):
 		_id = body_dict['id']
 		_performance = body_dict['performance']
 		_finished_epochs = body_dict['finished_epochs']
-		return cls(_id, _performance, _finished_epochs)
+		_hardware_info = body_dict.get('hardware_info', None)
+		return cls(_id, _performance, _finished_epochs, _hardware_info)
 
 @dataclass
 class CompletedModel:
 	model_training_request: ModelTrainingRequest
 	performance: float = -1
 	performance_2: float = -1
+	hardware_info: Optional[dict] = None

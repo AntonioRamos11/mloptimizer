@@ -129,6 +129,25 @@ def deserialize_completed_model(data: Dict[str, Any]) -> Optional[CompletedModel
 
 def serialize_completed_model(model) -> Dict[str, Any]:
     """Serialize a CompletedModel for JSON storage"""
+    # Serialize architecture properly - convert to dict if it's a dataclass
+    arch = model.model_training_request.architecture
+    if arch is not None:
+        if hasattr(arch, '__dataclass_fields__'):
+            # It's a dataclass - convert to dict
+            import copy
+            arch_dict = {}
+            for field_name in arch.__dataclass_fields__:
+                value = getattr(arch, field_name)
+                # Handle lists properly
+                if isinstance(value, (list, tuple)):
+                    arch_dict[field_name] = list(value)
+                else:
+                    arch_dict[field_name] = value
+        else:
+            arch_dict = str(arch)
+    else:
+        arch_dict = None
+    
     return {
         'model_training_request': {
             'id': model.model_training_request.id,
@@ -140,7 +159,7 @@ def serialize_completed_model(model) -> Dict[str, Any]:
             'search_space_type': model.model_training_request.search_space_type,
             'search_space_hash': model.model_training_request.search_space_hash,
             'dataset_tag': model.model_training_request.dataset_tag,
-            'architecture': str(model.model_training_request.architecture) if model.model_training_request.architecture else None
+            'architecture': arch_dict
         },
         'performance': model.performance,
         'performance_2': getattr(model, 'performance_2', None),

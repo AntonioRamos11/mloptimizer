@@ -392,7 +392,8 @@ class OptimizationJob:
         except Exception as e:
             log_error("Error processing model result", e, include_trace=True)
 
-    async def generate_model(self):
+    async def generate_model(self, retry_count: int = 0):
+        MAX_RETRIES = 5
         log_info("Generating new model")
         try:
             SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Generating new model'})
@@ -413,8 +414,14 @@ class OptimizationJob:
             if model_training_request.architecture is None:
                 log_error(f"Model {model_training_request.id} has None architecture! This should not happen.")
                 SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Model architecture is None - regenerating'})
-                # Try to generate another model instead of failing
-                return await self.generate_model()
+                # Try to generate another model instead of failing, but limit retries
+                if retry_count < MAX_RETRIES:
+                    log_error(f"Retry {retry_count + 1}/{MAX_RETRIES}")
+                    return await self.generate_model(retry_count=retry_count + 1)
+                else:
+                    log_error(f"Max retries ({MAX_RETRIES}) exceeded for model generation!")
+                    SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': f'Max retries exceeded'})
+                    return
             
             # Validate model
             model = Model(model_training_request, self.dataset)

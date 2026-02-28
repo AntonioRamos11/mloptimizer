@@ -281,9 +281,28 @@ class OptimizationStrategy(object):
                     debug_trace("Using best exploration model as fallback")
                     self.hall_of_fame = [best_model]
                 else:
-                    raise RuntimeError("No models available to train in Hall of Fame")
-                    
-            hof_model: CompletedModel = self.hall_of_fame.pop(0)
+                    debug_trace("No exploration models completed yet - falling back to exploration phase")
+                    # Fall back to exploration instead of crashing
+                    self.phase = Phase.EXPLORATION
+                    return self._recommend_model_exploration()
+            
+            # Check if the HoF model has valid architecture
+            hof_model: CompletedModel = self.hall_of_fame[0]  # Peek at first model
+            if hof_model.model_training_request.architecture is None:
+                debug_trace("HoF model has None architecture - falling back to exploration", {
+                    "model_id": hof_model.model_training_request.id
+                })
+                # Remove bad model from HoF
+                self.hall_of_fame.pop(0)
+                # Try again with remaining models or fall back to exploration
+                if self.hall_of_fame:
+                    return self._recommend_model_hof()
+                else:
+                    self.phase = Phase.EXPLORATION
+                    return self._recommend_model_exploration()
+            
+            # Now pop and use the model
+            hof_model = self.hall_of_fame.pop(0)
             debug_trace(f"Popped HoF model", {"id": hof_model.model_training_request.id, "performance": hof_model.performance})
             
             model_training_request: ModelTrainingRequest = hof_model.model_training_request

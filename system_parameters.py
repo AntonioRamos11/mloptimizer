@@ -77,7 +77,7 @@ class SystemParameters:
     @classmethod
     def INSTANCE_CONNECTION(cls) -> List:
         """Get active connection parameters based on CLOUD_MODE."""
-        return [
+        return [ 
             cls._get_active_port(),
             cls.INSTANCE_MODEL_PARAMETER_QUEUE,
             cls.INSTANCE_MODEL_PERFORMANCE_QUEUE,

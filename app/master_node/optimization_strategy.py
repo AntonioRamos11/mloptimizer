@@ -214,7 +214,21 @@ class OptimizationStrategy(object):
             debug_trace(f"Created new trial: {trial.number}")
             
             params = self.model_architecture_factory.generate_model_params(trial, self.dataset.get_input_shape())
-            debug_trace("Generated model parameters", {"trial": trial.number, "params_count": len(params.__dict__ if hasattr(params, '__dict__') else {})})
+            
+            # Debug: Log the generated params
+            debug_trace("Generated model parameters", {
+                "trial": trial.number, 
+                "params": str(params)[:200] if params else "None",
+                "base_architecture": params.base_architecture if params and hasattr(params, 'base_architecture') else "MISSING"
+            })
+            
+            # Check if params or base_architecture is None
+            if params is None:
+                debug_trace("ERROR: generate_model_params returned None!", include_trace=True)
+                raise ValueError("generate_model_params returned None")
+            if not hasattr(params, 'base_architecture') or params.base_architecture is None:
+                debug_trace("ERROR: params.base_architecture is None!", include_trace=True)
+                raise ValueError("base_architecture is None in generated params")
             
             cad = 'Generated trial ' + str(trial.number)
             SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': cad})

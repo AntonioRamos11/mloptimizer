@@ -354,13 +354,29 @@ class Model:
 	def is_model_valid(self) -> bool:
 		is_valid = True
 		try:
+			# Check if model_params is None before trying to build
+			if self.model_params is None:
+				logging.error("Model parameters is None! Cannot build model.")
+				return False
+			
+			# Check if base_architecture is set
+			if not hasattr(self.model_params, 'base_architecture') or self.model_params.base_architecture is None:
+				logging.error(f"Model base_architecture is None or not set! Params: {self.model_params}")
+				return False
+			
 			strategy = tf.distribute.OneDeviceStrategy(device='/cpu:0')
 			with strategy.scope():
 				input_shape = self.dataset.get_input_shape()
 				class_count = self.dataset.get_classes_count()
 				self.build_model(input_shape, class_count)
 		except ValueError as e:
-			logging.warning(e)
+			logging.warning(f"Model validation failed with ValueError: {e}")
+			is_valid = False
+		except AttributeError as e:
+			logging.error(f"Model validation failed with AttributeError: {e}. Model params: {self.model_params}")
+			is_valid = False
+		except Exception as e:
+			logging.error(f"Model validation failed with unexpected error: {type(e).__name__}: {e}")
 			is_valid = False
 		tf.keras.backend.clear_session()
 		return is_valid

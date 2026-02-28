@@ -405,8 +405,16 @@ class OptimizationJob:
                 "id": model_training_request.id,
                 "training_type": model_training_request.training_type,
                 "epochs": model_training_request.epochs,
-                "is_partial_training": model_training_request.is_partial_training
+                "is_partial_training": model_training_request.is_partial_training,
+                "architecture": model_training_request.architecture
             })
+            
+            # Check if architecture is None
+            if model_training_request.architecture is None:
+                log_error(f"Model {model_training_request.id} has None architecture! This should not happen.")
+                SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Model architecture is None - regenerating'})
+                # Try to generate another model instead of failing
+                return await self.generate_model()
             
             # Validate model
             model = Model(model_training_request, self.dataset)

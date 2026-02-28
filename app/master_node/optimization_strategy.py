@@ -10,6 +10,7 @@ from app.common.repeat_pruner import RepeatPruner
 from app.common.dataset import Dataset
 from system_parameters import SystemParameters as SP
 from app.common.socketCommunication import *
+from app.master_node.state_manager import deserialize_completed_model
 import logging
 import traceback
 import sys
@@ -61,9 +62,9 @@ def debug_trace(msg, obj=None, include_trace=False):
 
 class OptimizationStrategy(object):
 
-    def __init__(self, model_architecture_factory: ModelArchitectureFactory, dataset: Dataset, exploration_trials: int, hall_of_fame_size: int):
+    def __init__(self, model_architecture_factory: ModelArchitectureFactory, dataset: Dataset, exploration_trials: int, hall_of_fame_size: int, resume_from: dict = None):
         debug_trace("Initializing OptimizationStrategy", 
-                   {"exploration_trials": exploration_trials, "hall_of_fame_size": hall_of_fame_size})
+                   {"exploration_trials": exploration_trials, "hall_of_fame_size": hall_of_fame_size, "resuming": resume_from is not None})
         self.model_architecture_factory:ModelArchitectureFactory = model_architecture_factory
         self.dataset: Dataset = dataset
         self.storage = optuna.storages.InMemoryStorage()
@@ -84,10 +85,20 @@ class OptimizationStrategy(object):
             raise
             
         self.study_id = 0
-        self.experiment_id = dataset.get_tag() + '-' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         
-        # Local class in the file
-        self.phase: Phase = Phase.EXPLORATION 
+        # Check if resuming from previous state
+        if resume_from:
+            self.experiment_id = resume_from.get('experiment_id', dataset.get_tag() + '-' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+            self.phase = Phase[resume_from.get('phase', 'EXPLORATION')]
+            debug_trace("Resuming from previous state", {
+                "phase": str(self.phase),
+                "exploration_completed": resume_from.get('exploration_completed', 0),
+                "deep_training_completed": resume_from.get('deep_training_completed', 0)
+            })
+        else:
+            self.experiment_id = dataset.get_tag() + '-' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            self.phase = Phase.EXPLORATION 
+        
         self.search_space_type = self.model_architecture_factory.get_search_space().get_type()
         self.search_space_hash = self.model_architecture_factory.get_search_space().get_hash()
         debug_trace("Search space configuration", {
@@ -105,6 +116,10 @@ class OptimizationStrategy(object):
         self.deep_training_models_requests: List[ModelTrainingRequest] = list()
         self.deep_training_models_completed: List[CompletedModel] = list()
         
+        # Restore from saved state if resuming
+        if resume_from:
+            self._restore_from_state(resume_from)
+        
         # Create state tracking for debugging
         self.debug_state = {
             "phase_transitions": [],
@@ -115,6 +130,65 @@ class OptimizationStrategy(object):
         }
         
         debug_trace("OptimizationStrategy initialized successfully")
+
+    def _restore_from_state(self, state: dict):
+        """Restore optimization state from saved state dictionary"""
+        debug_trace("Restoring optimization state from saved data")
+        
+        # Restore exploration models
+        exploration_models = state.get('exploration_models_completed', [])
+        for model_data in exploration_models:
+            model = deserialize_completed_model(model_data)
+            if model:
+                self.exploration_models_completed.append(model)
+                self.exploration_models_requests.append(model.model_training_request)
+                self._restore_optuna_trial(model)
+                debug_trace(f"Restored exploration model: {model.model_training_request.id}")
+        
+        # Restore deep training models
+        deep_models = state.get('deep_training_models_completed', [])
+        for model_data in deep_models:
+            model = deserialize_completed_model(model_data)
+            if model:
+                self.deep_training_models_completed.append(model)
+                self.deep_training_models_requests.append(model.model_training_request)
+                debug_trace(f"Restored deep training model: {model.model_training_request.id}")
+        
+        # Rebuild hall of fame from best models
+        if self.exploration_models_completed:
+            sorted_models = sorted(self.exploration_models_completed, key=lambda m: m.performance, reverse=True)
+            self.hall_of_fame = sorted_models[:self.hall_of_fame_size]
+            debug_trace(f"Rebuilt hall of fame with {len(self.hall_of_fame)} models")
+        
+        debug_trace("State restoration complete", {
+            "exploration_restored": len(self.exploration_models_completed),
+            "deep_training_restored": len(self.deep_training_models_completed),
+            "hof_size": len(self.hall_of_fame)
+        })
+
+    def _restore_optuna_trial(self, model: CompletedModel):
+        """Restore an Optuna trial from a completed model"""
+        try:
+            trial_id = self.storage.create_new_trial(self.study_id)
+            trial = optuna.Trial(self.main_study, trial_id)
+            
+            # Set trial params from model architecture
+            arch = model.model_training_request.architecture
+            if arch and hasattr(arch, '__dict__'):
+                for key, value in arch.__dict__.items():
+                    if not key.startswith('_'):
+                        try:
+                            trial.params[key] = value
+                        except:
+                            pass
+            
+            # Set trial value (performance)
+            self.storage.set_trial_value(trial_id, model.performance)
+            self.storage.set_trial_state(trial_id, TrialState.COMPLETE)
+            
+            debug_trace(f"Restored Optuna trial {trial_id} with performance {model.performance}")
+        except Exception as e:
+            debug_trace(f"Error restoring Optuna trial: {e}")
 
     def recommend_model(self) -> ModelTrainingRequest:
         debug_trace(f"Recommending model in phase: {self.phase}")

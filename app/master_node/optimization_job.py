@@ -14,6 +14,7 @@ from app.common.search_space import *
 from app.master_node.communication.master_rabbitmq_client import *
 from app.master_node.communication.rabbitmq_monitor import *
 from app.master_node.optimization_strategy import OptimizationStrategy, Action, Phase
+from app.master_node.state_manager import StateManager, create_state_from_strategy
 from app.common.dataset import * 
 from system_parameters import SystemParameters as SP
 from app.common.socketCommunication import *
@@ -163,17 +164,34 @@ class OptimizationJob:
             self.dataset = dataset
             self.search_space: ModelArchitectureFactory = model_architecture_factory
             
+            # Initialize state manager for resume functionality
+            self.state_manager = StateManager(results_dir='results_multi')
+            resume_state = None
+            
+            # Auto-resume check - if previous state exists, load it
+            if self.state_manager.has_previous_state():
+                log_info("Found previous optimization state - attempting to resume...")
+                resume_state = self.state_manager.load_state()
+                if resume_state:
+                    log_info("Successfully loaded previous state - will resume from where left off")
+                else:
+                    log_info("Could not load previous state - starting fresh")
+            else:
+                log_info("No previous state found - starting fresh")
+            
             log_info("Setting up optimization strategy", {
                 "dataset": dataset.get_tag(), 
                 "exploration_size": SP.EXPLORATION_SIZE, 
-                "hall_of_fame_size": SP.HALL_OF_FAME_SIZE
+                "hall_of_fame_size": SP.HALL_OF_FAME_SIZE,
+                "resuming": resume_state is not None
             })
             
             self.optimization_strategy = OptimizationStrategy(
                 self.search_space, 
                 self.dataset, 
                 SP.EXPLORATION_SIZE, 
-                SP.HALL_OF_FAME_SIZE
+                SP.HALL_OF_FAME_SIZE,
+                resume_from=resume_state
             )
             
             log_info("Setting up RabbitMQ clients")
@@ -304,6 +322,13 @@ class OptimizationJob:
             # Process the response through the optimization strategy
             log_info(f"Reporting model response to optimization strategy")
             action: Action = self.optimization_strategy.report_model_response(model_training_response)
+            
+            # Save state periodically for resume functionality
+            try:
+                state_data = create_state_from_strategy(self.optimization_strategy)
+                self.state_manager.save_state(state_data)
+            except Exception as e:
+                log_info(f"Could not save state: {e}")
             
             self.state["last_action"] = str(action)
             log_info(f"Strategy returned action: {action}")

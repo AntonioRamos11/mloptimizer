@@ -451,7 +451,11 @@ if [ "$MODE" = "cloud-master" ]; then
     echo_ok "Master started (PID: $MASTER_PID)"
     echo_info "Log: logs/master.log"
     
+    tail -n 20 -f logs/master.log &
+    TAIL_PID=$!
+    
     wait $MASTER_PID
+    kill $TAIL_PID 2>/dev/null || true
     exit 0
 fi
 
@@ -522,9 +526,13 @@ if [ "$MODE" = "cloud-slave" ]; then
     echo_ok "All slaves started"
     echo_info "Logs: logs/slave_gpu*.log"
     
+    tail -n 20 -f logs/slave_gpu*.log &
+    TAIL_PID=$!
+    
     for pid in "${slave_pids[@]}"; do
         wait $pid
     done
+    kill $TAIL_PID 2>/dev/null || true
     
     exit 0
 fi

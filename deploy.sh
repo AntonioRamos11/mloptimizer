@@ -26,7 +26,6 @@
 
 #cd /workspace
 
-curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up --auth-key=tskey-auth-k3CTJ6u17G11CNTRL-RSnJiCCEbwFvfikPQkNwwFZVp3nRpAVAa
 
 
 set -e

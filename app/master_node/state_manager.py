@@ -152,7 +152,7 @@ def create_state_from_strategy(strategy) -> Dict[str, Any]:
     """Create state dictionary from OptimizationStrategy"""
     state = {
         'experiment_id': strategy.experiment_id,
-        'phase': str(strategy.phase),
+        'phase': strategy.phase.name,
         'search_space_type': str(strategy.search_space_type),
         'search_space_hash': strategy.search_space_hash,
         'exploration_trials': strategy.exploration_trials,

@@ -89,7 +89,13 @@ class OptimizationStrategy(object):
         # Check if resuming from previous state
         if resume_from:
             self.experiment_id = resume_from.get('experiment_id', dataset.get_tag() + '-' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-            self.phase = Phase[resume_from.get('phase', 'EXPLORATION')]
+            
+            # Handle both old format ("Phase.EXPLORATION") and new format ("EXPLORATION")
+            phase_str = resume_from.get('phase', 'EXPLORATION')
+            if '.' in phase_str:
+                phase_str = phase_str.split('.')[-1]  # Extract "EXPLORATION" from "Phase.EXPLORATION"
+            self.phase = Phase[phase_str]
+            
             debug_trace("Resuming from previous state", {
                 "phase": str(self.phase),
                 "exploration_completed": resume_from.get('exploration_completed', 0),

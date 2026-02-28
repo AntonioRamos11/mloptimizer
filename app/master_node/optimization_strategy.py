@@ -485,13 +485,43 @@ class OptimizationStrategy(object):
         
         try:
             SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Received HoF model response'})
-            completed_model = next(
-                model
-                for model in self.exploration_models_completed
-                if model.model_training_request.id == model_training_response.id
+            
+            # Check if already processed (duplicate message)
+            already_processed = any(
+                model.model_training_request.id == model_training_response.id 
+                for model in self.deep_training_models_completed
             )
+            if already_processed:
+                debug_trace(f"Duplicate HoF response for model {model_training_response.id} - ignoring")
+                if self.should_generate():
+                    return Action.GENERATE_MODEL
+                elif self.should_wait():
+                    return Action.WAIT
+                elif not self._should_generate_hof() and not self._should_wait_hof():
+                    return Action.FINISH
+                return Action.WAIT
+            
+            # Find the model in exploration_models_completed
+            completed_model = next(
+                (model for model in self.exploration_models_completed 
+                 if model.model_training_request.id == model_training_response.id),
+                None
+            )
+            
+            if completed_model is None:
+                debug_trace(f"WARNING: Model {model_training_response.id} not found in exploration_models_completed", include_trace=True)
+                debug_trace(f"Available exploration models: {[m.model_training_request.id for m in self.exploration_models_completed]}")
+                debug_trace(f"Deep training completed: {[m.model_training_request.id for m in self.deep_training_models_completed]}")
+                return Action.WAIT
+            
             completed_model.performance_2 = model_training_response.performance
             self.deep_training_models_completed.append(completed_model)
+            
+            # Check if we have any completed HoF models before calling get_best
+            if not self.deep_training_models_completed:
+                debug_trace("ERROR: No completed HoF models yet", include_trace=True)
+                return Action.WAIT
+            
             best_trial = self.get_best_classification_model()
             debug_trace("Best HoF trial", {
                 "id": best_trial.model_training_request.id, 
@@ -505,6 +535,7 @@ class OptimizationStrategy(object):
                 return Action.WAIT
             elif not self._should_generate_hof() and not self._should_wait_hof():
                 return Action.FINISH
+            return Action.WAIT
         except Exception as e:
             debug_trace(f"ERROR in HoF classification handler: {str(e)}", include_trace=True)
             return Action.WAIT  # Safe default
@@ -546,13 +577,43 @@ class OptimizationStrategy(object):
         
         try:
             SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Received HoF model response'})
-            completed_model = next(
-                model
-                for model in self.exploration_models_completed
-                if model.model_training_request.id == model_training_response.id
+            
+            # Check if already processed (duplicate message)
+            already_processed = any(
+                model.model_training_request.id == model_training_response.id 
+                for model in self.deep_training_models_completed
             )
+            if already_processed:
+                debug_trace(f"Duplicate HoF response for model {model_training_response.id} - ignoring")
+                if self.should_generate():
+                    return Action.GENERATE_MODEL
+                elif self.should_wait():
+                    return Action.WAIT
+                elif not self._should_generate_hof() and not self._should_wait_hof():
+                    return Action.FINISH
+                return Action.WAIT
+            
+            # Find the model in exploration_models_completed
+            completed_model = next(
+                (model for model in self.exploration_models_completed 
+                 if model.model_training_request.id == model_training_response.id),
+                None
+            )
+            
+            if completed_model is None:
+                debug_trace(f"WARNING: Model {model_training_response.id} not found in exploration_models_completed", include_trace=True)
+                debug_trace(f"Available exploration models: {[m.model_training_request.id for m in self.exploration_models_completed]}")
+                debug_trace(f"Deep training completed: {[m.model_training_request.id for m in self.deep_training_models_completed]}")
+                return Action.WAIT
+            
             completed_model.performance_2 = model_training_response.performance
             self.deep_training_models_completed.append(completed_model)
+            
+            # Check if we have any completed HoF models before calling get_best
+            if not self.deep_training_models_completed:
+                debug_trace("ERROR: No completed HoF models yet", include_trace=True)
+                return Action.WAIT
+            
             best_trial = self.get_best_regression_model()
             debug_trace("Best HoF trial", {
                 "id": best_trial.model_training_request.id, 
@@ -566,6 +627,7 @@ class OptimizationStrategy(object):
                 return Action.WAIT
             elif (not self._should_generate_hof() and not self._should_wait_hof()):
                 return Action.FINISH
+            return Action.WAIT
         except Exception as e:
             debug_trace(f"ERROR in HoF regression handler: {str(e)}", include_trace=True)
             return Action.WAIT  # Safe default

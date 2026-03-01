@@ -340,14 +340,13 @@ class OptimizationJob:
             self.max_jobs = self.worker_count + 1
             log_info(f"Async scheduler init: workers={self.worker_count}, max_jobs={self.max_jobs}")
             
-            # If resuming from previous state, DON'T generate new jobs - just wait for workers
-            if self.is_resuming:
-                log_info("RESUMING: Not generating new jobs - waiting for existing workers to complete")
-                # Don't call fill_pipeline - just wait for results from existing jobs
-                # The dedup logic will handle any stale results
+            # If resuming AND there are active workers/messages, don't generate new jobs
+            # Otherwise (fresh start OR no active workers), generate jobs
+            if self.is_resuming and queue_status.consumer_count > 0 and queue_status.message_count > 0:
+                log_info("RESUMING with active workers: Not generating new jobs - waiting for existing workers")
             else:
-                # Fresh start - generate initial jobs
-                log_info("FRESH START: Generating initial jobs to fill pipeline")
+                # Fresh start OR no active workers - generate initial jobs
+                log_info(f"STARTUP: Generating initial jobs (workers={queue_status.consumer_count}, messages={queue_status.message_count})")
                 await self.fill_pipeline("startup")
                 
             self.state["current_phase"] = "exploration"

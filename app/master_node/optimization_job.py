@@ -311,6 +311,10 @@ class OptimizationJob:
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': '*** Running optimization startup ***'})
         
         try:
+            # Purge queues to remove stale messages from previous runs
+            log_info("Purging RabbitMQ queues for clean start")
+            await self.rabbitmq_client.purge_queues()
+            
             log_info("Preparing RabbitMQ queues")
             await self.rabbitmq_client.prepare_queues()
             
@@ -351,6 +355,16 @@ class OptimizationJob:
             model_training_response = ModelTrainingResponse.from_dict(response)
             self.state["models_processed"] += 1
             
+            # Use model_id as job_id (unique within experiment)
+            job_id = str(model_training_response.id)
+            
+            # Check if this is a stale result (from previous run)
+            is_stale = job_id not in self.inflight_jobs
+            
+            if is_stale:
+                log_error(f"STALE RESULT: Received result for job {job_id} that is not in inflight_jobs. This is from a previous run. Processing anyway to keep GPUs busy. inflight={len(self.inflight_jobs)}")
+                # Don't return - process anyway to keep pipeline full
+            
             # Track unique hardware from workers (dedupe by static values only)
             if model_training_response.hardware_info:
                 hw = model_training_response.hardware_info
@@ -388,9 +402,7 @@ class OptimizationJob:
             # Use model_id as job_id (unique within experiment)
             job_id = str(model_training_response.id)
             
-            # Remove from inflight jobs (robust to duplicates)
-            if job_id not in self.inflight_jobs:
-                log_error(f"Received result for unknown job: {job_id}, inflight={len(self.inflight_jobs)}")
+            # Remove from inflight jobs (already verified it exists above)
             self.inflight_jobs.discard(job_id)
             self.job_timestamps.pop(job_id, None)
             log_info(f"Job removed: {job_id}, inflight={len(self.inflight_jobs)}")

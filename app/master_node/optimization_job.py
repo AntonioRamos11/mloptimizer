@@ -362,8 +362,12 @@ class OptimizationJob:
             is_stale = job_id not in self.inflight_jobs
             
             if is_stale:
-                log_error(f"STALE RESULT: Received result for job {job_id} that is not in inflight_jobs. This is from a previous run. Processing anyway to keep GPUs busy. inflight={len(self.inflight_jobs)}")
-                # Don't return - process anyway to keep pipeline full
+                log_error(f"STALE RESULT: job {job_id} not in inflight_jobs - skipping strategy, filling pipeline. inflight={len(self.inflight_jobs)}")
+                # Still fill pipeline to keep GPUs busy
+                await self.fill_pipeline("stale_result")
+                return  # ← Skip strategy processing for stale results
+            
+            # Continue with normal processing for valid results
             
             # Track unique hardware from workers (dedupe by static values only)
             if model_training_response.hardware_info:
@@ -402,14 +406,15 @@ class OptimizationJob:
             # Use model_id as job_id (unique within experiment)
             job_id = str(model_training_response.id)
             
-            # Remove from inflight jobs (already verified it exists above)
+            # Remove from inflight jobs FIRST (so we can fill the slot)
             self.inflight_jobs.discard(job_id)
             self.job_timestamps.pop(job_id, None)
             log_info(f"Job removed: {job_id}, inflight={len(self.inflight_jobs)}")
             
-            # Fill pipeline to keep GPUs saturated
+            # Fill pipeline to keep GPUs saturated (after removing job)
             await self.fill_pipeline("result")
             
+            # Now process the response through strategy
             action: Action = self.optimization_strategy.report_model_response(model_training_response)
             
             # Save state periodically for resume functionality

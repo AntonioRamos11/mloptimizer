@@ -223,6 +223,7 @@ class OptimizationJob:
             self.job_timeout: int = 4 * 3600  # 4 hours
             self.job_timestamps: Dict[str, float] = {}
             self._generate_lock = asyncio.Lock()
+            self._startup_done = False  # Prevent multiple startup executions
             
             log_info("OptimizationJob initialized successfully")
         except Exception as e:

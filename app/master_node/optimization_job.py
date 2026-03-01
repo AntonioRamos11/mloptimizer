@@ -168,6 +168,7 @@ class OptimizationJob:
             # Initialize state manager for resume functionality
             self.state_manager = StateManager(results_dir='results_multi')
             resume_state = None
+            self.is_resuming = False  # Track if we're resuming
             
             # Auto-resume check - if previous state exists, load it
             if self.state_manager.has_previous_state():
@@ -175,6 +176,7 @@ class OptimizationJob:
                 resume_state = self.state_manager.load_state()
                 if resume_state:
                     log_info("Successfully loaded previous state - will resume from where left off")
+                    self.is_resuming = True
                 else:
                     log_info("Could not load previous state - starting fresh")
             else:
@@ -308,6 +310,12 @@ class OptimizationJob:
             })
 
     async def _run_optimization_startup(self):
+        # Prevent multiple startup executions
+        if self._startup_done:
+            log_info("Startup already completed, skipping")
+            return
+        self._startup_done = True
+        
         log_info("Running optimization startup")
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': '*** Running optimization startup ***'})
         
@@ -326,13 +334,20 @@ class OptimizationJob:
                 "message_count": queue_status.message_count
             })
             
-            # Initialize with queue status, but allow dynamic updates later
+            # Initialize with queue status
             self.worker_count = max(1, queue_status.consumer_count)
             self.max_jobs = self.worker_count + 1
             log_info(f"Async scheduler init: workers={self.worker_count}, max_jobs={self.max_jobs}")
             
-            # Fill pipeline to keep GPUs saturated
-            await self.fill_pipeline("startup")
+            # If resuming from previous state, DON'T generate new jobs - just wait for workers
+            if self.is_resuming:
+                log_info("RESUMING: Not generating new jobs - waiting for existing workers to complete")
+                # Don't call fill_pipeline - just wait for results from existing jobs
+                # The dedup logic will handle any stale results
+            else:
+                # Fresh start - generate initial jobs
+                log_info("FRESH START: Generating initial jobs to fill pipeline")
+                await self.fill_pipeline("startup")
                 
             self.state["current_phase"] = "exploration"
             log_info("Optimization startup completed")

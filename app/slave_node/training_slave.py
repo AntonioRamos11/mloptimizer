@@ -100,6 +100,9 @@ class TrainingSlave:
 		logger.info("Creating persistent worker subprocess...")
 		self.pool = concurrent.futures.ProcessPoolExecutor(max_workers=1)
 		
+		# Deduplication: track processed jobs to prevent duplicate processing
+		self.processed_jobs = set()
+		
 		# Pre-load dataset in the subprocess ONCE
 		logger.info("Pre-loading dataset in worker subprocess...")
 		future = self.pool.submit(self._initialize_dataset_cache, self.dataset)
@@ -275,6 +278,14 @@ class TrainingSlave:
 		"""Handle received model training request with error handling"""
 		model_id = model_params.get('id', 'unknown')
 		
+		# DEDUPLICATION: Skip if this job was already processed
+		if model_id in self.processed_jobs:
+			logger.warning(f"DUPLICATE: Job {model_id} already processed - ignoring")
+			return
+		
+		# Mark job as processing
+		self.processed_jobs.add(model_id)
+		
 		try:
 			logger.info(f"Received model training request (ID: {model_id})")
 			SocketCommunication.decide_print_form(MSGType.SLAVE_STATUS, {'node': 2, 'msg': "Received model training request"})
@@ -300,14 +311,13 @@ class TrainingSlave:
 				'model_request': model_training_request
 			}
 			
-			# Execute training in process pool
+			# Execute training in persistent process pool
 			logger.info(f"Submitting model {model_id} to process pool...")
-			with concurrent.futures.ProcessPoolExecutor() as pool:
-				training_val, did_finish_epochs = await self.loop.run_in_executor(
-					pool, 
-					self.train_model, 
-					info_dict
-				)
+			training_val, did_finish_epochs = await self.loop.run_in_executor(
+				self.pool, 
+				self.train_model, 
+				info_dict
+			)
 			
 			logger.info(f"Training completed for model {model_id}")
 			logger.info(f"  Validation score: {training_val}")

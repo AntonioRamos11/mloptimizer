@@ -238,6 +238,10 @@ class OptimizationJob:
             except Exception as e:
                 log_info(f"Could not get queue status, using cached: workers={self.worker_count}, max_jobs={self.max_jobs}")
             
+            # Protection against scheduler drift
+            if len(self.inflight_jobs) > self.max_jobs + 2:
+                log_error(f"SCHEDULER DRIFT: inflight={len(self.inflight_jobs)} > max_jobs+2={self.max_jobs + 2}")
+            
             if len(self.inflight_jobs) >= self.max_jobs:
                 log_info(f"Skip: inflight={len(self.inflight_jobs)}, max={self.max_jobs} ({reason})")
                 return False
@@ -247,11 +251,31 @@ class OptimizationJob:
                 log_error(f"generate_model failed, not adding to inflight")
                 return False
             
+            # Protection against duplicates
+            if job_id in self.inflight_jobs:
+                log_error(f"DUPLICATE JOB DETECTED: {job_id}")
+            
             self.inflight_jobs.add(job_id)
             self.job_timestamps[job_id] = time.time()
             
             log_info(f"jobs: inflight={len(self.inflight_jobs)} max={self.max_jobs} workers={self.worker_count} ({reason})")
             return True
+
+    async def fill_pipeline(self, reason: str = ""):
+        """Fill the pipeline to keep GPUs saturated (robust loop)"""
+        target = self.max_jobs
+        
+        log_info(f"fill_pipeline started: target={target}, current={len(self.inflight_jobs)}, reason={reason}")
+        
+        while len(self.inflight_jobs) < target:
+            success = await self.maybe_generate(reason)
+            
+            if not success:
+                await asyncio.sleep(0.5)  # Wait before retry
+            else:
+                await asyncio.sleep(0)  # Immediately try next
+        
+        log_info(f"fill_pipeline completed: inflight={len(self.inflight_jobs)}, target={target}")
 
     def start_optimization(self, trials: int):
         log_info(f"Starting optimization with {trials} trials")
@@ -298,18 +322,12 @@ class OptimizationJob:
             })
             
             # Initialize with queue status, but allow dynamic updates later
-            # Use at least 1 to avoid division by zero, actual value refreshed in maybe_generate
             self.worker_count = max(1, queue_status.consumer_count)
             self.max_jobs = self.worker_count + 1
             log_info(f"Async scheduler init: workers={self.worker_count}, max_jobs={self.max_jobs}")
             
-            # Generate initial models based on available workers (with concurrency control)
-            # Note: maybe_generate will dynamically update worker count
-            initial_jobs = max(1, queue_status.consumer_count + 1)
-            log_info(f"Generating {initial_jobs} initial jobs...")
-            for _ in range(initial_jobs):
-                if not await self.maybe_generate("startup"):
-                    break
+            # Fill pipeline to keep GPUs saturated
+            await self.fill_pipeline("startup")
                 
             self.state["current_phase"] = "exploration"
             log_info("Optimization startup completed")
@@ -377,7 +395,8 @@ class OptimizationJob:
             self.job_timestamps.pop(job_id, None)
             log_info(f"Job removed: {job_id}, inflight={len(self.inflight_jobs)}")
             
-            # Note: maybe_generate() will dynamically refresh worker count before generating
+            # Fill pipeline to keep GPUs saturated
+            await self.fill_pipeline("result")
             
             action: Action = self.optimization_strategy.report_model_response(model_training_response)
             
@@ -409,10 +428,11 @@ class OptimizationJob:
                 'total': self.optimization_strategy.get_training_total()
             })
             
-            # Perform action based on strategy recommendation (with concurrency control)
+            # Perform action based on strategy recommendation
+            # Note: fill_pipeline is called after job removal to keep GPUs saturated
+            
             if action == Action.GENERATE_MODEL:
-                log_info("Action: GENERATE_MODEL - Checking if we can generate new model")
-                await self.maybe_generate("on_result")
+                log_info("Action: GENERATE_MODEL - Pipeline already filled by result handler")
                 
             elif action == Action.WAIT:
                 log_info("Action: WAIT - Waiting for more model results")
@@ -422,14 +442,7 @@ class OptimizationJob:
                 log_info("Action: START_NEW_PHASE - Transitioning to deep training phase")
                 self.state["current_phase"] = "deep_training"
                 
-                # maybe_generate will dynamically update worker count
                 SocketCommunication.decide_print_form(MSGType.CHANGE_PHASE, {'node': 1, 'msg': 'New phase, deep training'})
-                
-                # Generate new models with concurrency control
-                # maybe_generate() will refresh worker count before each generation
-                for _ in range(5):  # Try to fill up to 5 slots
-                    if not await self.maybe_generate("phase_change"):
-                        break
                     
             elif action == Action.FINISH:
                 log_info("Action: FINISH - Optimization process completed")

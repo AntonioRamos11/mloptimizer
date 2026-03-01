@@ -227,8 +227,17 @@ class OptimizationJob:
             raise
 
     async def maybe_generate(self, reason: str = "") -> bool:
-        """Generate new job if there's capacity (with async lock)"""
+        """Generate new job if there's capacity (with async lock and dynamic worker count)"""
         async with self._generate_lock:
+            # Dynamically refresh worker count before each generation
+            try:
+                queue_status = await self.rabbitmq_monitor.get_queue_status()
+                self.worker_count = max(1, queue_status.consumer_count)
+                self.max_jobs = self.worker_count + 1
+                log_info(f"Dynamic worker update: workers={self.worker_count}, max_jobs={self.max_jobs}")
+            except Exception as e:
+                log_info(f"Could not get queue status, using cached: workers={self.worker_count}, max_jobs={self.max_jobs}")
+            
             if len(self.inflight_jobs) >= self.max_jobs:
                 log_info(f"Skip: inflight={len(self.inflight_jobs)}, max={self.max_jobs} ({reason})")
                 return False
@@ -288,14 +297,17 @@ class OptimizationJob:
                 "message_count": queue_status.message_count
             })
             
-            # Set worker count and max jobs for async scheduling
-            self.worker_count = queue_status.consumer_count
-            self.max_jobs = max(1, self.worker_count + 1)
-            log_info(f"Async scheduler: workers={self.worker_count}, max_jobs={self.max_jobs}")
+            # Initialize with queue status, but allow dynamic updates later
+            # Use at least 1 to avoid division by zero, actual value refreshed in maybe_generate
+            self.worker_count = max(1, queue_status.consumer_count)
+            self.max_jobs = self.worker_count + 1
+            log_info(f"Async scheduler init: workers={self.worker_count}, max_jobs={self.max_jobs}")
             
             # Generate initial models based on available workers (with concurrency control)
-            while len(self.inflight_jobs) < self.max_jobs:
-                log_info(f"Generating initial model {len(self.inflight_jobs)+1}/{self.max_jobs}")
+            # Note: maybe_generate will dynamically update worker count
+            initial_jobs = max(1, queue_status.consumer_count + 1)
+            log_info(f"Generating {initial_jobs} initial jobs...")
+            for _ in range(initial_jobs):
                 if not await self.maybe_generate("startup"):
                     break
                 
@@ -365,13 +377,7 @@ class OptimizationJob:
             self.job_timestamps.pop(job_id, None)
             log_info(f"Job removed: {job_id}, inflight={len(self.inflight_jobs)}")
             
-            # Refresh worker count dynamically
-            try:
-                queue_status = await self.rabbitmq_monitor.get_queue_status()
-                self.worker_count = queue_status.consumer_count
-                self.max_jobs = max(1, self.worker_count + 1)
-            except Exception:
-                pass  # Keep previous values if failed
+            # Note: maybe_generate() will dynamically refresh worker count before generating
             
             action: Action = self.optimization_strategy.report_model_response(model_training_response)
             
@@ -416,19 +422,12 @@ class OptimizationJob:
                 log_info("Action: START_NEW_PHASE - Transitioning to deep training phase")
                 self.state["current_phase"] = "deep_training"
                 
-                # Update max_jobs for new phase
-                try:
-                    queue_status = await self.rabbitmq_monitor.get_queue_status()
-                    self.worker_count = queue_status.consumer_count
-                    self.max_jobs = max(1, self.worker_count + 1)
-                    log_info(f"Starting deep training phase with workers={self.worker_count}, max_jobs={self.max_jobs}")
-                except Exception:
-                    pass
-                
+                # maybe_generate will dynamically update worker count
                 SocketCommunication.decide_print_form(MSGType.CHANGE_PHASE, {'node': 1, 'msg': 'New phase, deep training'})
                 
                 # Generate new models with concurrency control
-                while len(self.inflight_jobs) < self.max_jobs:
+                # maybe_generate() will refresh worker count before each generation
+                for _ in range(5):  # Try to fill up to 5 slots
                     if not await self.maybe_generate("phase_change"):
                         break
                     

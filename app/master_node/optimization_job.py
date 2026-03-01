@@ -422,15 +422,7 @@ class OptimizationJob:
                 SocketCommunication.decide_print_form(MSGType.CHANGE_PHASE, {'node': 1, 'msg': 'New phase, deep training'})
             elif action == Action.FINISH:
                 log_info("Action: FINISH")
-                self.state["current_phase"] = "finished"
-                SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': 'Finished training'})
-                best_model = self.optimization_strategy.get_best_model()
-                await self._log_results(best_model)
-                model = Model(best_model.model_training_request, self.dataset)
-                valid = model.is_model_valid()
-                log_info(f"Model validation: {valid}")
-                log_info("Stopping event loop")
-                self.loop.stop()
+                await self._finalize_and_exit()
                 return
 
             if self._is_optimization_complete():

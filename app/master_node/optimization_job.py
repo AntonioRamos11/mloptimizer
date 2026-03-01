@@ -221,8 +221,6 @@ class OptimizationJob:
             self.job_timeout: int = 4 * 3600  # 4 hours
             self.job_timestamps: Dict[str, float] = {}
             self._generate_lock = asyncio.Lock()
-            self._startup_done = False  # Prevent multiple startup executions
-            self._listener_started = False  # Prevent multiple listeners
             
             log_info("OptimizationJob initialized successfully")
         except Exception as e:
@@ -310,12 +308,6 @@ class OptimizationJob:
             })
 
     async def _run_optimization_startup(self):
-        # Prevent multiple startup executions
-        if self._startup_done:
-            log_info("Startup already completed, skipping")
-            return
-        self._startup_done = True
-        
         log_info("Running optimization startup")
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': '*** Running optimization startup ***'})
         

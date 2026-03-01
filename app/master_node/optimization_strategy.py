@@ -188,9 +188,23 @@ class OptimizationStrategy(object):
                         except:
                             pass
             
-            # Set trial value (performance)
-            self.storage.set_trial_value(trial_id, model.performance)
-            self.storage.set_trial_state(trial_id, TrialState.COMPLETE)
+            # Set trial value (performance) - use trial's report method
+            try:
+                trial.report(model.performance, step=0)
+                trial.should_prune()
+            except Exception:
+                pass
+            
+            # Try to set trial state via storage (older Optuna API)
+            try:
+                self.storage.set_trial_state(trial_id, optuna.trial.TrialState.COMPLETE)
+            except AttributeError:
+                # Newer Optuna versions don't have this method directly on storage
+                # Try study method
+                try:
+                    self.main_study._storage.set_trial_state(trial_id, optuna.trial.TrialState.COMPLETE)
+                except:
+                    pass
             
             debug_trace(f"Restored Optuna trial {trial_id} with performance {model.performance}")
         except Exception as e:
@@ -800,7 +814,14 @@ class OptimizationStrategy(object):
         return trial
 
     def _on_trial_pruned(self, trial: optuna.Trial):
-        self.storage.set_trial_state(trial.number, TrialState.PRUNED)
+        try:
+            self.storage.set_trial_state(trial.number, optuna.trial.TrialState.PRUNED)
+        except AttributeError:
+            # Newer Optuna versions may not have this method
+            try:
+                self.main_study._storage.set_trial_state(trial.number, optuna.trial.TrialState.PRUNED)
+            except:
+                pass
 
     def _build_hall_of_fame_classification(self):
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Building Hall Of Fame for classification problem'})

@@ -215,6 +215,7 @@ class OptimizationJob:
             
             # Async scheduler state variables
             self.inflight_jobs: Set[str] = set()
+            self.completed_jobs: Set[str] = set()  # For deduplication
             self.max_jobs: int = 1
             self.worker_count: int = 0
             self.job_timeout: int = 4 * 3600  # 4 hours
@@ -352,22 +353,45 @@ class OptimizationJob:
 
     async def on_model_results(self, response: dict):
         try:
+            # Get experiment_id from response
+            response_experiment_id = response.get('experiment_id', '')
+            
+            # Check if this result is from current experiment
+            current_experiment_id = getattr(self.optimization_strategy, 'experiment_id', '') if hasattr(self, 'optimization_strategy') else ''
+            if response_experiment_id and current_experiment_id and response_experiment_id != current_experiment_id:
+                log_info(f"Old experiment result ignored: got {response_experiment_id}, expected {current_experiment_id}")
+                return  # Don't fill_pipeline - no job was released
+            
             model_training_response = ModelTrainingResponse.from_dict(response)
             self.state["models_processed"] += 1
             
             # Use model_id as job_id (unique within experiment)
             job_id = str(model_training_response.id)
             
-            # Check if this is a stale result (from previous run)
-            is_stale = job_id not in self.inflight_jobs
+            # Check for duplicates first
+            if job_id in self.completed_jobs:
+                log_info(f"DUPLICATE: job {job_id} already processed - ignoring")
+                return
             
-            if is_stale:
-                log_error(f"STALE RESULT: job {job_id} not in inflight_jobs - skipping strategy, filling pipeline. inflight={len(self.inflight_jobs)}")
-                # Still fill pipeline to keep GPUs busy
-                await self.fill_pipeline("stale_result")
-                return  # ← Skip strategy processing for stale results
+            # Check if job is in our inflight list
+            if job_id not in self.inflight_jobs:
+                log_info(f"UNKNOWN JOB: job {job_id} not in inflight_jobs - ignoring. inflight={len(self.inflight_jobs)}")
+                return  # Don't fill_pipeline - job was already processed or unknown
             
-            # Continue with normal processing for valid results
+            # Valid result - process normally
+            # Remove from inflight
+            self.inflight_jobs.discard(job_id)
+            self.job_timestamps.pop(job_id, None)
+            
+            # Add to completed jobs (dedup)
+            self.completed_jobs.add(job_id)
+            
+            # Clean up completed_jobs if it gets too large
+            if len(self.completed_jobs) > 10000:
+                log_info(f"Cleaning up completed_jobs cache (size: {len(self.completed_jobs)})")
+                self.completed_jobs.clear()
+            
+            log_info(f"Job completed: {job_id}, inflight={len(self.inflight_jobs)}")
             
             # Track unique hardware from workers (dedupe by static values only)
             if model_training_response.hardware_info:
@@ -403,19 +427,11 @@ class OptimizationJob:
             # Process the response through the optimization strategy
             log_info(f"Reporting model response to optimization strategy")
             
-            # Use model_id as job_id (unique within experiment)
-            job_id = str(model_training_response.id)
-            
-            # Remove from inflight jobs FIRST (so we can fill the slot)
-            self.inflight_jobs.discard(job_id)
-            self.job_timestamps.pop(job_id, None)
-            log_info(f"Job removed: {job_id}, inflight={len(self.inflight_jobs)}")
-            
-            # Fill pipeline to keep GPUs saturated (after removing job)
-            await self.fill_pipeline("result")
-            
-            # Now process the response through strategy
+            # Report to optimizer (after adding to completed_jobs)
             action: Action = self.optimization_strategy.report_model_response(model_training_response)
+            
+            # Fill pipeline to keep GPUs saturated (after reporting)
+            await self.fill_pipeline("result")
             
             # Save state periodically for resume functionality
             try:

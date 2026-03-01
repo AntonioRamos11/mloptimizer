@@ -4,6 +4,7 @@ import json
 import os
 import GPUtil
 from dataclasses import asdict
+from typing import Set, Dict, Optional
 import aio_pika
 import logging
 import traceback
@@ -212,10 +213,36 @@ class OptimizationJob:
             # Track hardware from all workers
             self.all_worker_hardware = []
             
+            # Async scheduler state variables
+            self.inflight_jobs: Set[str] = set()
+            self.max_jobs: int = 1
+            self.worker_count: int = 0
+            self.job_timeout: int = 4 * 3600  # 4 hours
+            self.job_timestamps: Dict[str, float] = {}
+            self._generate_lock = asyncio.Lock()
+            
             log_info("OptimizationJob initialized successfully")
         except Exception as e:
             log_error("Failed to initialize OptimizationJob", e, include_trace=True)
             raise
+
+    async def maybe_generate(self, reason: str = "") -> bool:
+        """Generate new job if there's capacity (with async lock)"""
+        async with self._generate_lock:
+            if len(self.inflight_jobs) >= self.max_jobs:
+                log_info(f"Skip: inflight={len(self.inflight_jobs)}, max={self.max_jobs} ({reason})")
+                return False
+            
+            job_id = await self.generate_model()
+            if not job_id:
+                log_error(f"generate_model failed, not adding to inflight")
+                return False
+            
+            self.inflight_jobs.add(job_id)
+            self.job_timestamps[job_id] = time.time()
+            
+            log_info(f"jobs: inflight={len(self.inflight_jobs)} max={self.max_jobs} workers={self.worker_count} ({reason})")
+            return True
 
     def start_optimization(self, trials: int):
         log_info(f"Starting optimization with {trials} trials")
@@ -261,10 +288,16 @@ class OptimizationJob:
                 "message_count": queue_status.message_count
             })
             
-            # Generate initial models based on available workers
-            for i in range(0, queue_status.consumer_count + 1):
-                log_info(f"Generating initial model {i+1}/{queue_status.consumer_count+1}")
-                await self.generate_model()
+            # Set worker count and max jobs for async scheduling
+            self.worker_count = queue_status.consumer_count
+            self.max_jobs = max(1, self.worker_count + 1)
+            log_info(f"Async scheduler: workers={self.worker_count}, max_jobs={self.max_jobs}")
+            
+            # Generate initial models based on available workers (with concurrency control)
+            while len(self.inflight_jobs) < self.max_jobs:
+                log_info(f"Generating initial model {len(self.inflight_jobs)+1}/{self.max_jobs}")
+                if not await self.maybe_generate("startup"):
+                    break
                 
             self.state["current_phase"] = "exploration"
             log_info("Optimization startup completed")
@@ -321,6 +354,25 @@ class OptimizationJob:
             
             # Process the response through the optimization strategy
             log_info(f"Reporting model response to optimization strategy")
+            
+            # Use model_id as job_id (unique within experiment)
+            job_id = str(model_training_response.id)
+            
+            # Remove from inflight jobs (robust to duplicates)
+            if job_id not in self.inflight_jobs:
+                log_error(f"Received result for unknown job: {job_id}, inflight={len(self.inflight_jobs)}")
+            self.inflight_jobs.discard(job_id)
+            self.job_timestamps.pop(job_id, None)
+            log_info(f"Job removed: {job_id}, inflight={len(self.inflight_jobs)}")
+            
+            # Refresh worker count dynamically
+            try:
+                queue_status = await self.rabbitmq_monitor.get_queue_status()
+                self.worker_count = queue_status.consumer_count
+                self.max_jobs = max(1, self.worker_count + 1)
+            except Exception:
+                pass  # Keep previous values if failed
+            
             action: Action = self.optimization_strategy.report_model_response(model_training_response)
             
             # Save state periodically for resume functionality
@@ -329,6 +381,18 @@ class OptimizationJob:
                 self.state_manager.save_state(state_data)
             except Exception as e:
                 log_info(f"Could not save state: {e}")
+            
+            # NEW: Save intermediate result for this model
+            try:
+                await self._save_intermediate_result(model_training_response)
+            except Exception as e:
+                log_info(f"Could not save intermediate result: {e}")
+            
+            # NEW: Log best model after each completion
+            try:
+                self._log_best_model_info()
+            except Exception as e:
+                log_info(f"Could not log best model info: {e}")
             
             self.state["last_action"] = str(action)
             log_info(f"Strategy returned action: {action}")
@@ -339,10 +403,10 @@ class OptimizationJob:
                 'total': self.optimization_strategy.get_training_total()
             })
             
-            # Perform action based on strategy recommendation
+            # Perform action based on strategy recommendation (with concurrency control)
             if action == Action.GENERATE_MODEL:
-                log_info("Action: GENERATE_MODEL - Generating new model")
-                await self.generate_model()
+                log_info("Action: GENERATE_MODEL - Checking if we can generate new model")
+                await self.maybe_generate("on_result")
                 
             elif action == Action.WAIT:
                 log_info("Action: WAIT - Waiting for more model results")
@@ -352,15 +416,21 @@ class OptimizationJob:
                 log_info("Action: START_NEW_PHASE - Transitioning to deep training phase")
                 self.state["current_phase"] = "deep_training"
                 
-                # Generate new models for all workers
-                queue_status: QueueStatus = await self.rabbitmq_monitor.get_queue_status()
-                log_info(f"Starting deep training phase with {queue_status.consumer_count + 1} workers")
+                # Update max_jobs for new phase
+                try:
+                    queue_status = await self.rabbitmq_monitor.get_queue_status()
+                    self.worker_count = queue_status.consumer_count
+                    self.max_jobs = max(1, self.worker_count + 1)
+                    log_info(f"Starting deep training phase with workers={self.worker_count}, max_jobs={self.max_jobs}")
+                except Exception:
+                    pass
                 
                 SocketCommunication.decide_print_form(MSGType.CHANGE_PHASE, {'node': 1, 'msg': 'New phase, deep training'})
                 
-                for i in range(0, queue_status.consumer_count + 1):
-                    log_info(f"Generating deep training model {i+1}/{queue_status.consumer_count+1}")
-                    await self.generate_model()
+                # Generate new models with concurrency control
+                while len(self.inflight_jobs) < self.max_jobs:
+                    if not await self.maybe_generate("phase_change"):
+                        break
                     
             elif action == Action.FINISH:
                 log_info("Action: FINISH - Optimization process completed")
@@ -392,7 +462,8 @@ class OptimizationJob:
         except Exception as e:
             log_error("Error processing model result", e, include_trace=True)
 
-    async def generate_model(self, retry_count: int = 0):
+    async def generate_model(self, retry_count: int = 0) -> Optional[str]:
+        """Generate and send a new model. Returns job_id on success, None on failure."""
         MAX_RETRIES = 5
         log_info("Generating new model")
         try:
@@ -421,22 +492,26 @@ class OptimizationJob:
                 else:
                     log_error(f"Max retries ({MAX_RETRIES}) exceeded for model generation!")
                     SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': f'Max retries exceeded'})
-                    return
+                    return None
             
             # Validate model
             model = Model(model_training_request, self.dataset)
             if not model.is_model_valid():
                 log_error(f"Model {model_training_request.id} is not valid!")
                 SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Model is not valid'})
-                return
+                return None
                 
             # Send model to broker
             await self._send_model_to_broker(model_training_request)
             log_info(f"Model {model_training_request.id} sent to broker")
             SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Sent model to broker'})
             
+            # Return job_id for tracking (using model_id as unique identifier)
+            return str(model_training_request.id)
+            
         except Exception as e:
             log_error("Error generating model", e, include_trace=True)
+            return None
 
     async def _send_model_to_broker(self, model_training_request: ModelTrainingRequest):
         log_info(f"Sending model {model_training_request.id} to broker")
@@ -695,3 +770,166 @@ async def _send_slack_notification(self, best_model, elapsed_time, result_data):
         log_error("aiohttp package not installed. Cannot send Slack notification.")
     except Exception as e:
         log_error(f"Error sending Slack notification", e)
+
+    async def _save_intermediate_result(self, model_training_response: ModelTrainingResponse):
+        """
+        Save individual model result after each completion.
+        This allows tracking progress even before optimization finishes.
+        """
+        try:
+            # Find the completed model in exploration or deep training
+            completed_model = None
+            
+            # Search in exploration models
+            for model in self.optimization_strategy.exploration_models_completed:
+                if model.model_training_request.id == model_training_response.id:
+                    completed_model = model
+                    model_type = "exploration"
+                    break
+            
+            # If not found, search in deep training models
+            if completed_model is None:
+                for model in self.optimization_strategy.deep_training_models_completed:
+                    if model.model_training_request.id == model_training_response.id:
+                        completed_model = model
+                        model_type = "deep_training"
+                        break
+            
+            if completed_model is None:
+                log_info(f"Could not find completed model {model_training_response.id} to save")
+                return
+            
+            # Validate architecture before saving
+            if completed_model.model_training_request.architecture is None:
+                log_error(f"Model {model_training_response.id} has no architecture - skipping save")
+                return
+            
+            # Create result data (similar to _log_results but for single model)
+            result_data = {
+                "model_info": asdict(completed_model),
+                "dataset_ranges": None,
+                "performance_metrics": {
+                    "model_id": model_training_response.id,
+                    "model_type": model_type,
+                    "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
+                },
+                "hardware_info": model_training_response.hardware_info or {},
+                "optimization_stats": {
+                    "exploration_completed": len(self.optimization_strategy.exploration_models_completed),
+                    "deep_training_completed": len(self.optimization_strategy.deep_training_models_completed),
+                    "phase": self.optimization_strategy.phase.name
+                }
+            }
+            
+            # Save to results folder
+            results_path = 'results'
+            os.makedirs(results_path, exist_ok=True)
+            
+            filename = f"{self.optimization_strategy.experiment_id}_model_{model_training_response.id}.json"
+            filepath = os.path.join(results_path, filename)
+            
+            with open(filepath, "w") as f:
+                json.dump(result_data, f, indent=2, default=str)
+            
+            log_info(f"Intermediate result saved: {filepath}")
+            
+            # Also update a summary file with best models so far
+            self._update_results_summary()
+            
+        except Exception as e:
+            log_error(f"Error saving intermediate result", e)
+    
+    def _update_results_summary(self):
+        """Update a summary file with all completed models"""
+        try:
+            results_path = 'results'
+            summary_file = os.path.join(results_path, f"{self.optimization_strategy.experiment_id}_summary.json")
+            
+            # Gather all completed models
+            all_models = []
+            
+            for model in self.optimization_strategy.exploration_models_completed:
+                if model.model_training_request.architecture is not None:
+                    all_models.append({
+                        "id": model.model_training_request.id,
+                        "type": "exploration",
+                        "performance": model.performance,
+                        "performance_2": model.performance_2,
+                        "architecture": asdict(model.model_training_request.architecture)
+                    })
+            
+            for model in self.optimization_strategy.deep_training_models_completed:
+                if model.model_training_request.architecture is not None:
+                    all_models.append({
+                        "id": model.model_training_request.id,
+                        "type": "deep_training",
+                        "performance": model.performance,
+                        "performance_2": model.performance_2,
+                        "architecture": asdict(model.model_training_request.architecture)
+                    })
+            
+            # Sort by performance
+            all_models.sort(key=lambda x: x['performance'], reverse=True)
+            
+            summary = {
+                "experiment_id": self.optimization_strategy.experiment_id,
+                "total_models": len(all_models),
+                "best_model": all_models[0] if all_models else None,
+                "top_5_models": all_models[:5],
+                "phase": self.optimization_strategy.phase.name,
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            with open(summary_file, "w") as f:
+                json.dump(summary, f, indent=2, default=str)
+            
+            log_info(f"Results summary updated: {summary_file}")
+            
+        except Exception as e:
+            log_error(f"Error updating results summary", e)
+    
+    def _log_best_model_info(self):
+        """Log the current best model information after each completion"""
+        try:
+            # Find best exploration model
+            best_exploration = None
+            if self.optimization_strategy.exploration_models_completed:
+                valid_models = [m for m in self.optimization_strategy.exploration_models_completed 
+                               if m.model_training_request.architecture is not None]
+                if valid_models:
+                    best_exploration = max(valid_models, key=lambda m: m.performance)
+            
+            # Find best deep training model
+            best_deep = None
+            if self.optimization_strategy.deep_training_models_completed:
+                valid_models = [m for m in self.optimization_strategy.deep_training_models_completed 
+                               if m.model_training_request.architecture is not None]
+                if valid_models:
+                    best_deep = max(valid_models, key=lambda m: m.performance_2 if m.performance_2 > 0 else m.performance)
+            
+            log_info("=" * 50)
+            log_info("CURRENT BEST MODELS")
+            log_info("=" * 50)
+            
+            if best_exploration:
+                arch = best_exploration.model_training_request.architecture
+                log_info(f"Best Exploration: ID={best_exploration.model_training_request.id}, "
+                        f"Performance={best_exploration.performance:.4f}, "
+                        f"Base={arch.base_architecture}, Classifier={arch.classifier_layer_type}")
+            
+            if best_deep:
+                arch = best_deep.model_training_request.architecture
+                log_info(f"Best Deep Training: ID={best_deep.model_training_request.id}, "
+                        f"Performance={best_deep.performance_2:.4f}, "
+                        f"Base={arch.base_architecture}, Classifier={arch.classifier_layer_type}")
+            
+            log_info("=" * 50)
+            
+            # Send to socket for UI update
+            best_msg = ""
+            if best_exploration:
+                best_msg = f"Best: #{best_exploration.model_training_request.id} ({best_exploration.performance:.4f})"
+            SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': best_msg})
+            
+        except Exception as e:
+            log_error(f"Error logging best model info", e)

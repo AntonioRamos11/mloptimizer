@@ -1,4 +1,5 @@
 import aio_pika
+import asyncio
 
 from app.common.base_rabbitmq_client import BaseRabbitMQClient
 
@@ -12,11 +13,13 @@ class MasterRabbitMQClient(BaseRabbitMQClient):
 
 	async def purge_queues(self):
 		"""Purge all queues to clean stale messages from previous runs"""
-		print("[MasterRabbitMQClient] Purging all RabbitMQ queues to remove stale messages...")
+		print("[MasterRabbitMQClient] Purging RabbitMQ queues...")
 		try:
-			# Create connection using parent's connection logic
-			connection = await aio_pika.connect_robust(
-				f"amqp://{self.user}:{self.password}@{self.host_url}/{self.virtual_host}"
+			connection = await asyncio.wait_for(
+				aio_pika.connect_robust(
+					f"amqp://{self.user}:{self.password}@{self.host_url}/{self.virtual_host}"
+				),
+				timeout=10.0
 			)
 			channel = await connection.channel()
 			
@@ -24,19 +27,21 @@ class MasterRabbitMQClient(BaseRabbitMQClient):
 			try:
 				await channel.queue_delete(self.model_parameter_queue)
 				await channel.declare_queue(self.model_parameter_queue, durable=True)
-				print(f"[MasterRabbitMQClient] Purged queue: {self.model_parameter_queue}")
+				print(f"[MasterRabbitMQClient] Purged: {self.model_parameter_queue}")
 			except Exception as e:
-				print(f"[MasterRabbitMQClient] Could not purge {self.model_parameter_queue}: {e}")
+				print(f"[MasterRabbitMQClient] Skip {self.model_parameter_queue}: {e}")
 			
 			# Purge results queue
 			try:
 				await channel.queue_delete(self.model_performance_queue)
 				await channel.declare_queue(self.model_performance_queue, durable=True)
-				print(f"[MasterRabbitMQClient] Purged queue: {self.model_performance_queue}")
+				print(f"[MasterRabbitMQClient] Purged: {self.model_performance_queue}")
 			except Exception as e:
-				print(f"[MasterRabbitMQClient] Could not purge {self.model_performance_queue}: {e}")
+				print(f"[MasterRabbitMQClient] Skip {self.model_performance_queue}: {e}")
 			
 			await connection.close()
-			print("[MasterRabbitMQClient] Queue purge completed")
+			print("[MasterRabbitMQClient] Queue purge done")
+		except asyncio.TimeoutError:
+			print("[MasterRabbitMQClient] Queue purge TIMEOUT - continuing without purge")
 		except Exception as e:
-			print(f"[MasterRabbitMQClient] Error purging queues: {e}")
+			print(f"[MasterRabbitMQClient] Queue purge ERROR: {e} - continuing without purge")

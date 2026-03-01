@@ -1,0 +1,188 @@
+{
+  "experiment_id": "mnist-20260301-122748",
+  "total_models": 3,
+  "best_model": {
+    "id": 2,
+    "type": "exploration",
+    "performance": 0.9779000282287598,
+    "performance_2": -1,
+    "architecture": {
+      "base_architecture": "cnn",
+      "cnn_blocks_n": 1,
+      "cnn_blocks_conv_layers_n": 4,
+      "cnn_block_conv_filters": [
+        32
+      ],
+      "cnn_block_conv_filter_sizes": [
+        5
+      ],
+      "cnn_block_max_pooling_sizes": [
+        2
+      ],
+      "cnn_block_dropout_values": [
+        0.1
+      ],
+      "inception_stem_blocks_n": 0,
+      "inception_stem_block_conv_filters": [],
+      "inception_stem_block_conv_filter_sizes": [],
+      "inception_stem_block_max_pooling_sizes": [],
+      "inception_blocks_n": 0,
+      "inception_modules_n": 0,
+      "inception_modules_conv1x1_filters": [],
+      "inception_modules_conv3x3_reduce_filters": [],
+      "inception_modules_conv3x3_filters": [],
+      "inception_modules_conv5x5_reduce_filters": [],
+      "inception_modules_conv5x5_filters": [],
+      "inception_modules_pooling_conv_filters": [],
+      "classifier_layer_type": "mlp",
+      "classifier_layers_n": 2,
+      "classifier_dropouts": [
+        0,
+        0.5
+      ],
+      "classifier_layers_units": [
+        80,
+        384
+      ],
+      "learning_rate": 0.0
+    }
+  },
+  "top_5_models": [
+    {
+      "id": 2,
+      "type": "exploration",
+      "performance": 0.9779000282287598,
+      "performance_2": -1,
+      "architecture": {
+        "base_architecture": "cnn",
+        "cnn_blocks_n": 1,
+        "cnn_blocks_conv_layers_n": 4,
+        "cnn_block_conv_filters": [
+          32
+        ],
+        "cnn_block_conv_filter_sizes": [
+          5
+        ],
+        "cnn_block_max_pooling_sizes": [
+          2
+        ],
+        "cnn_block_dropout_values": [
+          0.1
+        ],
+        "inception_stem_blocks_n": 0,
+        "inception_stem_block_conv_filters": [],
+        "inception_stem_block_conv_filter_sizes": [],
+        "inception_stem_block_max_pooling_sizes": [],
+        "inception_blocks_n": 0,
+        "inception_modules_n": 0,
+        "inception_modules_conv1x1_filters": [],
+        "inception_modules_conv3x3_reduce_filters": [],
+        "inception_modules_conv3x3_filters": [],
+        "inception_modules_conv5x5_reduce_filters": [],
+        "inception_modules_conv5x5_filters": [],
+        "inception_modules_pooling_conv_filters": [],
+        "classifier_layer_type": "mlp",
+        "classifier_layers_n": 2,
+        "classifier_dropouts": [
+          0,
+          0.5
+        ],
+        "classifier_layers_units": [
+          80,
+          384
+        ],
+        "learning_rate": 0.0
+      }
+    },
+    {
+      "id": 3,
+      "type": "exploration",
+      "performance": 0.9751999974250793,
+      "performance_2": -1,
+      "architecture": {
+        "base_architecture": "cnn",
+        "cnn_blocks_n": 3,
+        "cnn_blocks_conv_layers_n": 1,
+        "cnn_block_conv_filters": [
+          64,
+          64,
+          128
+        ],
+        "cnn_block_conv_filter_sizes": [
+          3,
+          3,
+          5
+        ],
+        "cnn_block_max_pooling_sizes": [
+          2,
+          2,
+          2
+        ],
+        "cnn_block_dropout_values": [
+          0.1,
+          0.3,
+          0.5
+        ],
+        "inception_stem_blocks_n": 0,
+        "inception_stem_block_conv_filters": [],
+        "inception_stem_block_conv_filter_sizes": [],
+        "inception_stem_block_max_pooling_sizes": [],
+        "inception_blocks_n": 0,
+        "inception_modules_n": 0,
+        "inception_modules_conv1x1_filters": [],
+        "inception_modules_conv3x3_reduce_filters": [],
+        "inception_modules_conv3x3_filters": [],
+        "inception_modules_conv5x5_reduce_filters": [],
+        "inception_modules_conv5x5_filters": [],
+        "inception_modules_pooling_conv_filters": [],
+        "classifier_layer_type": "gap",
+        "classifier_layers_n": 0,
+        "classifier_dropouts": [],
+        "classifier_layers_units": [],
+        "learning_rate": 0.0
+      }
+    },
+    {
+      "id": 1,
+      "type": "exploration",
+      "performance": 0.9587000012397766,
+      "performance_2": -1,
+      "architecture": {
+        "base_architecture": "cnn",
+        "cnn_blocks_n": 1,
+        "cnn_blocks_conv_layers_n": 4,
+        "cnn_block_conv_filters": [
+          32
+        ],
+        "cnn_block_conv_filter_sizes": [
+          3
+        ],
+        "cnn_block_max_pooling_sizes": [
+          2
+        ],
+        "cnn_block_dropout_values": [
+          0.1
+        ],
+        "inception_stem_blocks_n": 0,
+        "inception_stem_block_conv_filters": [],
+        "inception_stem_block_conv_filter_sizes": [],
+        "inception_stem_block_max_pooling_sizes": [],
+        "inception_blocks_n": 0,
+        "inception_modules_n": 0,
+        "inception_modules_conv1x1_filters": [],
+        "inception_modules_conv3x3_reduce_filters": [],
+        "inception_modules_conv3x3_filters": [],
+        "inception_modules_conv5x5_reduce_filters": [],
+        "inception_modules_conv5x5_filters": [],
+        "inception_modules_pooling_conv_filters": [],
+        "classifier_layer_type": "gap",
+        "classifier_layers_n": 0,
+        "classifier_dropouts": [],
+        "classifier_layers_units": [],
+        "learning_rate": 0.0
+      }
+    }
+  ],
+  "phase": "EXPLORATION",
+  "timestamp": "2026-03-01 12:54:03"
+}

@@ -212,26 +212,29 @@ class OptimizationJob:
             return True
 
     async def fill_pipeline(self, reason: str = ""):
-        target = self.max_jobs
-        log_info(f"fill_pipeline started: target={target}, current={len(self.inflight_jobs)}, reason={reason}")
-        
-        should_continue = True
-        while len(self.inflight_jobs) < target and should_continue:
-            if not self.optimization_strategy.should_generate():
-                log_info(f"Strategy says STOP - fill_pipeline breaking early")
-                should_continue = False
-                break
-            
-            success = await self.maybe_generate(reason)
-            if not success:
-                await asyncio.sleep(0.5)
-            else:
-                await asyncio.sleep(0)
-        
-        log_info(f"fill_pipeline completed: inflight={len(self.inflight_jobs)}, target={target}, continued={should_continue}")
-        
+        async with self._pipeline_lock:
+            target = self.max_jobs
+            log_info(f"fill_pipeline started: target={target}, current={len(self.inflight_jobs)}, reason={reason}")
+
+            while True:
+                current = len(self.inflight_jobs)
+                
+                if current >= target:
+                    break
+                
+                if not self.optimization_strategy.should_generate():
+                    log_info("Strategy says STOP")
+                    break
+                
+                success = await self.maybe_generate(reason)
+                
+                if not success:
+                    await asyncio.sleep(0.05)
+
+            log_info(f"fill_pipeline completed: inflight={len(self.inflight_jobs)}, target={target}")
+
         if self._is_optimization_complete():
-            log_info("Optimization complete detected in fill_pipeline - finalizing")
+            log_info("Optimization complete detected - finalizing")
             await self._finalize_and_exit()
 
     def _is_optimization_complete(self) -> bool:

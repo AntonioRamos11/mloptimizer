@@ -175,6 +175,7 @@ class OptimizationJob:
             self._generate_lock = asyncio.Lock()
             self._pipeline_lock = asyncio.Lock()
             self._startup_done = False
+            self._optimization_finalized = False
 
             log_info("OptimizationJob initialized successfully")
         except Exception as e:
@@ -228,6 +229,45 @@ class OptimizationJob:
                 await asyncio.sleep(0)
         
         log_info(f"fill_pipeline completed: inflight={len(self.inflight_jobs)}, target={target}, continued={should_continue}")
+        
+        if self._is_optimization_complete():
+            log_info("Optimization complete detected in fill_pipeline - finalizing")
+            await self._finalize_and_exit()
+
+    def _is_optimization_complete(self) -> bool:
+        """Check if optimization is complete and should exit"""
+        if self.inflight_jobs:
+            return False
+        if self.optimization_strategy.should_generate():
+            return False
+        log_info(f"OPTIMIZATION COMPLETE: no inflight jobs, strategy says stop")
+        return True
+
+    async def _finalize_and_exit(self):
+        """Finalize optimization and shutdown"""
+        if self._optimization_finalized:
+            log_info("Already finalized - skipping")
+            return
+        
+        self._optimization_finalized = True
+        log_info("Finalizing optimization - getting best model")
+        
+        try:
+            best_model = self.optimization_strategy.get_best_model()
+            log_info(f"Best model found: {best_model.model_training_request.id}")
+            
+            await self._log_results(best_model)
+            
+            self._log_best_model_info()
+            
+            self.state["current_phase"] = "finished"
+            SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': 'Finished training'})
+            
+            log_info("Optimization complete - stopping event loop")
+            self.loop.stop()
+        except Exception as e:
+            log_error("Error in finalization", e, include_trace=True)
+            self.loop.stop()
 
     def start_optimization(self, trials: int):
         log_info(f"Starting optimization with {trials} trials")
@@ -235,6 +275,11 @@ class OptimizationJob:
         self.state["start_time"] = self.start_time
         try:
             self.loop.run_until_complete(self._run_optimization_startup())
+            
+            if self._optimization_finalized:
+                log_info("Optimization already completed during startup - skipping event loop")
+                return
+            
             connection = self.loop.run_until_complete(self._run_optimization_loop(trials))
             try:
                 log_info("Entering event loop")
@@ -271,6 +316,11 @@ class OptimizationJob:
                 log_info("RESUMING with active workers: Not generating new jobs")
             else:
                 await self.fill_pipeline("startup")
+
+            if self._is_optimization_complete():
+                log_info("OPTIMIZATION COMPLETE at startup - finalizing")
+                await self._finalize_and_exit()
+                return
 
             self.state["current_phase"] = "exploration"
             log_info("Optimization startup completed")
@@ -381,6 +431,12 @@ class OptimizationJob:
                 log_info(f"Model validation: {valid}")
                 log_info("Stopping event loop")
                 self.loop.stop()
+                return
+
+            if self._is_optimization_complete():
+                log_info("OPTIMIZATION COMPLETE detected after result - finalizing")
+                await self._finalize_and_exit()
+                return
 
         except Exception as e:
             log_error("Error processing model result", e, include_trace=True)

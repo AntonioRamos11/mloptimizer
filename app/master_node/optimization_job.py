@@ -497,7 +497,13 @@ class OptimizationJob:
                     {'node': 1, 'msg': 'Generating new model'}
                 )
 
-                model_training_request: ModelTrainingRequest = self.optimization_strategy.recommend_model()
+                model_training_request = self.optimization_strategy.recommend_model()
+
+                # Strategy returned None → nothing left to generate
+                if model_training_request is None:
+                    log_info("recommend_model returned None — no models available")
+                    return None
+
                 self.state["models_generated"] += 1
 
                 # Invalid architecture

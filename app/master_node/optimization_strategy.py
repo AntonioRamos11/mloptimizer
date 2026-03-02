@@ -337,8 +337,8 @@ class OptimizationStrategy(object):
                         debug_trace("No unsent valid exploration models left — deep training complete", {
                             "sent_ids": list(sent_ids)
                         })
-                        # Nothing left to send; signal completion by raising
-                        raise RuntimeError("Hall of Fame exhausted: no unsent models available")
+                        # Nothing left to send; return None so caller can stop gracefully
+                        return None
                 else:
                     debug_trace("No exploration models completed yet - falling back to exploration phase")
                     # Fall back to exploration instead of crashing
@@ -416,11 +416,27 @@ class OptimizationStrategy(object):
         return should_generate
 
     def _should_generate_hof(self) -> bool:
-        should_generate = len(self.deep_training_models_requests) < self.hall_of_fame_size
+        # Check there are still slots AND available models (HoF or unsent exploration)
+        slots_remaining = len(self.deep_training_models_requests) < self.hall_of_fame_size
+        if not slots_remaining:
+            should_generate = False
+        elif self.hall_of_fame:
+            should_generate = True
+        else:
+            # HoF empty — check if fallback has unsent models
+            sent_ids = {r.id for r in self.deep_training_models_requests}
+            has_unsent = any(
+                m for m in self.exploration_models_completed
+                if m.model_training_request.architecture is not None
+                and m.performance is not None
+                and m.model_training_request.id not in sent_ids
+            )
+            should_generate = has_unsent
         
         debug_trace(f"Should generate HoF?", {
             "requests": len(self.deep_training_models_requests),
             "target": self.hall_of_fame_size,
+            "hof_size": len(self.hall_of_fame),
             "result": should_generate
         })
         

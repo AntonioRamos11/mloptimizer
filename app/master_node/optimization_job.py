@@ -174,8 +174,6 @@ class OptimizationJob:
             self.job_timestamps: Dict[str, float] = {}
             self._generate_lock = asyncio.Lock()
             self._pipeline_lock = asyncio.Lock()
-            self._result_locks: Dict[str, asyncio.Lock] = {}
-            self._result_locks_lock = asyncio.Lock()
             self._startup_done = False
             self._optimization_finalized = False
 
@@ -214,29 +212,26 @@ class OptimizationJob:
             return True
 
     async def fill_pipeline(self, reason: str = ""):
-        async with self._pipeline_lock:
-            target = self.max_jobs
-            log_info(f"fill_pipeline started: target={target}, current={len(self.inflight_jobs)}, reason={reason}")
-
-            while True:
-                current = len(self.inflight_jobs)
-                
-                if current >= target:
-                    break
-                
-                if not self.optimization_strategy.should_generate():
-                    log_info("Strategy says STOP")
-                    break
-                
-                success = await self.maybe_generate(reason)
-                
-                if not success:
-                    await asyncio.sleep(0.05)
-
-            log_info(f"fill_pipeline completed: inflight={len(self.inflight_jobs)}, target={target}")
-
+        target = self.max_jobs
+        log_info(f"fill_pipeline started: target={target}, current={len(self.inflight_jobs)}, reason={reason}")
+        
+        should_continue = True
+        while len(self.inflight_jobs) < target and should_continue:
+            if not self.optimization_strategy.should_generate():
+                log_info(f"Strategy says STOP - fill_pipeline breaking early")
+                should_continue = False
+                break
+            
+            success = await self.maybe_generate(reason)
+            if not success:
+                await asyncio.sleep(0.5)
+            else:
+                await asyncio.sleep(0)
+        
+        log_info(f"fill_pipeline completed: inflight={len(self.inflight_jobs)}, target={target}, continued={should_continue}")
+        
         if self._is_optimization_complete():
-            log_info("Optimization complete detected - finalizing")
+            log_info("Optimization complete detected in fill_pipeline - finalizing")
             await self._finalize_and_exit()
 
     def _is_optimization_complete(self) -> bool:
@@ -355,58 +350,52 @@ class OptimizationJob:
             self.state["models_processed"] += 1
             job_id = str(model_training_response.id)
 
-            async with self._result_locks_lock:
-                if job_id not in self._result_locks:
-                    self._result_locks[job_id] = asyncio.Lock()
-                job_lock = self._result_locks[job_id]
+            if job_id in self.completed_jobs:
+                log_info(f"DUPLICATE: job {job_id} already processed - ignoring")
+                return
 
-            async with job_lock:
-                if job_id in self.completed_jobs:
-                    log_info(f"DUPLICATE: job {job_id} already processed - ignoring")
-                    return
+            if job_id not in self.inflight_jobs:
+                log_info(f"UNKNOWN JOB: job {job_id} not in inflight_jobs - ignoring")
+                return
 
-                if job_id not in self.inflight_jobs:
-                    log_info(f"UNKNOWN JOB: job {job_id} not in inflight_jobs - ignoring")
-                    return
+            self.inflight_jobs.discard(job_id)
+            self.job_timestamps.pop(job_id, None)
+            self.completed_jobs.add(job_id)
 
-                self.inflight_jobs.discard(job_id)
-                self.job_timestamps.pop(job_id, None)
-                self.completed_jobs.add(job_id)
+            if len(self.completed_jobs) > 10000:
+                self.completed_jobs.clear()
 
-                if len(self.completed_jobs) > 10000:
-                    self.completed_jobs.clear()
+            log_info(f"Job completed: {job_id}, inflight={len(self.inflight_jobs)}")
 
-                log_info(f"Job completed: {job_id}, inflight={len(self.inflight_jobs)}")
+            if model_training_response.hardware_info:
+                hw = model_training_response.hardware_info
+                gpu_models = tuple(sorted([g.get('model', '') for g in hw.get('gpus', [])]))
+                static_key = (hw.get('cpu_cores', 0), hw.get('gpu_count', 0), gpu_models)
+                is_new = True
+                for existing in self.all_worker_hardware:
+                    existing_gpu_models = tuple(sorted([g.get('model', '') for g in existing.get('gpus', [])]))
+                    existing_key = (existing.get('cpu_cores', 0), existing.get('gpu_count', 0), existing_gpu_models)
+                    if static_key == existing_key:
+                        is_new = False
+                        break
+                if is_new:
+                    self.all_worker_hardware.append(hw)
 
-                if model_training_response.hardware_info:
-                    hw = model_training_response.hardware_info
-                    gpu_models = tuple(sorted([g.get('model', '') for g in hw.get('gpus', [])]))
-                    static_key = (hw.get('cpu_cores', 0), hw.get('gpu_count', 0), gpu_models)
-                    is_new = True
-                    for existing in self.all_worker_hardware:
-                        existing_gpu_models = tuple(sorted([g.get('model', '') for g in existing.get('gpus', [])]))
-                        existing_key = (existing.get('cpu_cores', 0), existing.get('gpu_count', 0), existing_gpu_models)
-                        if static_key == existing_key:
-                            is_new = False
-                            break
-                    if is_new:
-                        self.all_worker_hardware.append(hw)
+            action: Action = self.optimization_strategy.report_model_response(model_training_response)
+            
+            async with self._pipeline_lock:
+                await self.fill_pipeline("result")
 
-                action: Action = self.optimization_strategy.report_model_response(model_training_response)
-                
-                async with self._pipeline_lock:
-                    await self.fill_pipeline("result")
+            try:
+                state_data = create_state_from_strategy(self.optimization_strategy)
+                self.state_manager.save_state(state_data)
+            except Exception as e:
+                log_info(f"Could not save state: {e}")
 
-                try:
-                    state_data = create_state_from_strategy(self.optimization_strategy)
-                    self.state_manager.save_state(state_data)
-                except Exception as e:
-                    log_info(f"Could not save state: {e}")
-
-                try:
-                    await self._save_intermediate_result(model_training_response)
-                except Exception as e:
-                    log_info(f"Could not save intermediate result: {e}")
+            try:
+                await self._save_intermediate_result(model_training_response)
+            except Exception as e:
+                log_info(f"Could not save intermediate result: {e}")
 
             try:
                 self._log_best_model_info()
@@ -433,7 +422,15 @@ class OptimizationJob:
                 SocketCommunication.decide_print_form(MSGType.CHANGE_PHASE, {'node': 1, 'msg': 'New phase, deep training'})
             elif action == Action.FINISH:
                 log_info("Action: FINISH")
-                await self._finalize_and_exit()
+                self.state["current_phase"] = "finished"
+                SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': 'Finished training'})
+                best_model = self.optimization_strategy.get_best_model()
+                await self._log_results(best_model)
+                model = Model(best_model.model_training_request, self.dataset)
+                valid = model.is_model_valid()
+                log_info(f"Model validation: {valid}")
+                log_info("Stopping event loop")
+                self.loop.stop()
                 return
 
             if self._is_optimization_complete():

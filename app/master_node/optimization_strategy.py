@@ -769,29 +769,19 @@ class OptimizationStrategy(object):
         return not self._should_wait_exploration() and not self._should_wait_hof()
 
     def get_best_model(self):
+        #If the value of the model is the max.
         if self.search_space_type == SearchSpaceType.IMAGE:
             return self.get_best_classification_model()
+        #If the value of the model is the min.
         return self.get_best_regression_model()
 
     def get_best_classification_model(self):
-        if self.deep_training_models_completed:
-            best_model = max(self.deep_training_models_completed, key=lambda m: m.performance_2 if m.performance_2 > 0 else m.performance)
-            return best_model
-        if self.exploration_models_completed:
-            valid_models = [m for m in self.exploration_models_completed if m.performance is not None]
-            if valid_models:
-                return max(valid_models, key=lambda m: m.performance)
-        raise ValueError("No completed models found")
+        best_model = max(self.deep_training_models_completed, key=lambda completed_model: completed_model.performance_2)
+        return best_model
 
     def get_best_regression_model(self):
-        if self.deep_training_models_completed:
-            best_model = min(self.deep_training_models_completed, key=lambda m: m.performance_2 if m.performance_2 > 0 else m.performance)
-            return best_model
-        if self.exploration_models_completed:
-            valid_models = [m for m in self.exploration_models_completed if m.performance is not None]
-            if valid_models:
-                return min(valid_models, key=lambda m: m.performance)
-        raise ValueError("No completed models found")
+        best_model = min(self.deep_training_models_completed, key=lambda completed_model: completed_model.performance_2)
+        return best_model
 
     def get_best_exploration_classification_model(self):
         """Get best exploration model with improved error handling"""
@@ -835,35 +825,17 @@ class OptimizationStrategy(object):
 
     def _build_hall_of_fame_classification(self):
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Building Hall Of Fame for classification problem'})
-        
-        valid_models = []
-        for model in self.exploration_models_completed:
-            req = model.model_training_request
-            if not req or not req.architecture:
-                debug_trace(f"Skipping HoF candidate {getattr(req, 'id', None)} - invalid architecture")
-                continue
-            valid_models.append(model)
-        
-        sorted_models = sorted(valid_models, key=lambda m: m.performance, reverse=True)
-        self.hall_of_fame = sorted_models[:self.hall_of_fame_size]
-        
-        debug_trace(f"Built HoF with {len(self.hall_of_fame)} valid models")
+        stored_completed_models = sorted(self.exploration_models_completed, key=lambda completed_model: completed_model.performance, reverse=True)
+        self.hall_of_fame = stored_completed_models[0 : self.hall_of_fame_size]
+        for model in self.hall_of_fame:
+            print(model)
 
     def _build_hall_of_fame_regression(self):
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Building Hall Of Fame for regression problem'})
-        
-        valid_models = []
-        for model in self.exploration_models_completed:
-            req = model.model_training_request
-            if not req or not req.architecture:
-                debug_trace(f"Skipping HoF candidate {getattr(req, 'id', None)} - invalid architecture")
-                continue
-            valid_models.append(model)
-        
-        sorted_models = sorted(valid_models, key=lambda m: m.performance)
-        self.hall_of_fame = sorted_models[:self.hall_of_fame_size]
-        
-        debug_trace(f"Built HoF with {len(self.hall_of_fame)} valid models")
+        stored_completed_models = sorted(self.exploration_models_completed, key=lambda completed_model: completed_model.performance)
+        self.hall_of_fame = stored_completed_models[0 : self.hall_of_fame_size]
+        for model in self.hall_of_fame:
+            print(model)
 
     def _register_completed_model(self, model_training_response: ModelTrainingResponse):
         """Register a completed model with improved error handling"""

@@ -16,6 +16,8 @@ import traceback
 import sys
 import os
 import json
+import hashlib
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +115,9 @@ class OptimizationStrategy(object):
         self.hall_of_fame: List[CompletedModel] = list()
         self.deep_training_models_requests: List[ModelTrainingRequest] = list()
         self.deep_training_models_completed: List[CompletedModel] = list()
+        
+        # Track generated architectures for deduplication
+        self.generated_architectures: set = set()
         
         # Restore from saved state if resuming
         if resume_from:
@@ -213,6 +218,17 @@ class OptimizationStrategy(object):
             debug_trace(f"Error in recommend_model: {str(e)}", include_trace=True)
             raise
 
+    def _hash_architecture(self, params) -> str:
+        """Hash architecture parameters for deduplication."""
+        try:
+            params_dict = params.to_dict()
+            serialized = json.dumps(params_dict, sort_keys=True, default=str)
+            return hashlib.sha256(serialized.encode('utf-8')).hexdigest()
+        except Exception as e:
+            debug_trace(f"Error hashing architecture: {str(e)}", include_trace=True)
+            # Return a unique string so we don't incorrectly deduplicate
+            return str(id(params))
+
     def _recommend_model_exploration(self) -> ModelTrainingRequest:
         debug_trace("Recommending exploration model")
         try:
@@ -235,6 +251,16 @@ class OptimizationStrategy(object):
             if not hasattr(params, 'base_architecture') or params.base_architecture is None:
                 debug_trace("ERROR: params.base_architecture is None!", include_trace=True)
                 raise ValueError("base_architecture is None in generated params")
+            
+            # Deduplicate: reject architectures we've already generated
+            arch_hash = self._hash_architecture(params)
+            if arch_hash in self.generated_architectures:
+                debug_trace("Duplicate architecture detected, regenerating", {
+                    "trial": trial.number,
+                    "hash": arch_hash[:16]
+                })
+                return self.recommend_model()
+            self.generated_architectures.add(arch_hash)
             
             cad = 'Generated trial ' + str(trial.number)
             SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': cad})
@@ -282,10 +308,18 @@ class OptimizationStrategy(object):
                 debug_trace("WARNING: Hall of Fame is empty!", include_trace=True)
                 # Return a fallback model if possible
                 if self.exploration_models_completed:
-                    best_model = max(self.exploration_models_completed, 
-                        key=lambda m: m.performance)
-                    debug_trace("Using best exploration model as fallback")
-                    self.hall_of_fame = [best_model]
+                    # Filter out models with None architecture or None performance
+                    valid_models = [m for m in self.exploration_models_completed
+                                    if m.model_training_request.architecture is not None
+                                    and m.performance is not None]
+                    if valid_models:
+                        best_model = max(valid_models, key=lambda m: m.performance)
+                        debug_trace("Using best exploration model as fallback")
+                        self.hall_of_fame = [best_model]
+                    else:
+                        debug_trace("No valid exploration models (all have None architecture/performance)")
+                        self.phase = Phase.EXPLORATION
+                        return self._recommend_model_exploration()
                 else:
                     debug_trace("No exploration models completed yet - falling back to exploration phase")
                     # Fall back to exploration instead of crashing
@@ -311,7 +345,8 @@ class OptimizationStrategy(object):
             hof_model = self.hall_of_fame.pop(0)
             debug_trace(f"Popped HoF model", {"id": hof_model.model_training_request.id, "performance": hof_model.performance})
             
-            model_training_request: ModelTrainingRequest = hof_model.model_training_request
+            # Deep copy to avoid mutating the original exploration record
+            model_training_request: ModelTrainingRequest = copy.deepcopy(hof_model.model_training_request)
             model_training_request.epochs = SP.HALL_OF_FAME_EPOCHS
             model_training_request.early_stopping_patience = SP.HOF_EARLY_STOPPING_PATIENCE
             model_training_request.is_partial_training = False
@@ -561,8 +596,14 @@ class OptimizationStrategy(object):
                         if len(self.exploration_models_completed) > 0:
                             try:
                                 debug_trace("Using fallback hall of fame building")
+                                # Filter out corrupted models in fallback path
+                                valid_models = [
+                                    m for m in self.exploration_models_completed
+                                    if m.model_training_request.architecture is not None
+                                    and m.performance is not None
+                                ]
                                 stored_models = sorted(
-                                    self.exploration_models_completed, 
+                                    valid_models, 
                                     key=lambda m: float(m.performance) if m.performance is not None else float('-inf'), 
                                     reverse=True
                                 )
@@ -817,14 +858,28 @@ class OptimizationStrategy(object):
 
     def _build_hall_of_fame_classification(self):
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Building Hall Of Fame for classification problem'})
-        stored_completed_models = sorted(self.exploration_models_completed, key=lambda completed_model: completed_model.performance, reverse=True)
+        # Filter out corrupted models (None architecture or None performance)
+        valid_models = [m for m in self.exploration_models_completed
+                        if m.model_training_request.architecture is not None
+                        and m.performance is not None]
+        if not valid_models:
+            debug_trace("ERROR: No valid models for Hall of Fame classification", include_trace=True)
+            raise ValueError("No valid models available for Hall of Fame")
+        stored_completed_models = sorted(valid_models, key=lambda completed_model: completed_model.performance, reverse=True)
         self.hall_of_fame = stored_completed_models[0 : self.hall_of_fame_size]
         for model in self.hall_of_fame:
             print(model)
 
     def _build_hall_of_fame_regression(self):
         SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Building Hall Of Fame for regression problem'})
-        stored_completed_models = sorted(self.exploration_models_completed, key=lambda completed_model: completed_model.performance)
+        # Filter out corrupted models (None architecture or None performance)
+        valid_models = [m for m in self.exploration_models_completed
+                        if m.model_training_request.architecture is not None
+                        and m.performance is not None]
+        if not valid_models:
+            debug_trace("ERROR: No valid models for Hall of Fame regression", include_trace=True)
+            raise ValueError("No valid models available for Hall of Fame")
+        stored_completed_models = sorted(valid_models, key=lambda completed_model: completed_model.performance)
         self.hall_of_fame = stored_completed_models[0 : self.hall_of_fame_size]
         for model in self.hall_of_fame:
             print(model)

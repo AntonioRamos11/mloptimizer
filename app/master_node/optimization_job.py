@@ -189,6 +189,9 @@ class OptimizationJob:
                 self.worker_count = max(1, queue_status.consumer_count)
                 self.max_jobs = self.worker_count + 1
             except Exception as e:
+                # Ensure we never underutilize: at least 2 jobs even if query fails
+                if self.max_jobs < 2:
+                    self.max_jobs = 2
                 log_info(f"Could not get queue status, using cached: workers={self.worker_count}, max_jobs={self.max_jobs}")
 
             if len(self.inflight_jobs) > self.max_jobs + 2:
@@ -467,35 +470,50 @@ class OptimizationJob:
         except Exception as e:
             log_error("Error processing model result", e, include_trace=True)
 
-    async def generate_model(self, retry_count: int = 0) -> Optional[str]:
+    async def generate_model(self) -> Optional[str]:
         MAX_RETRIES = 5
-        log_info("Generating new model")
-        try:
-            SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Generating new model'})
-            model_training_request: ModelTrainingRequest = self.optimization_strategy.recommend_model()
-            self.state["models_generated"] += 1
 
-            if model_training_request.architecture is None:
-                log_error(f"Model {model_training_request.id} has None architecture!")
-                if retry_count < MAX_RETRIES:
-                    return await self.generate_model(retry_count=retry_count + 1)
-                else:
-                    log_error(f"Max retries ({MAX_RETRIES}) exceeded!")
-                    return None
+        for attempt in range(MAX_RETRIES):
+            try:
+                log_info("Generating new model")
 
-            model = Model(model_training_request, self.dataset)
-            if not model.is_model_valid():
-                log_error(f"Model {model_training_request.id} is not valid!")
-                return None
+                SocketCommunication.decide_print_form(
+                    MSGType.MASTER_STATUS,
+                    {'node': 1, 'msg': 'Generating new model'}
+                )
 
-            await self._send_model_to_broker(model_training_request)
-            log_info(f"Model {model_training_request.id} sent to broker")
-            SocketCommunication.decide_print_form(MSGType.MASTER_STATUS, {'node': 1, 'msg': 'Sent model to broker'})
-            return str(model_training_request.id)
+                model_training_request: ModelTrainingRequest = self.optimization_strategy.recommend_model()
+                self.state["models_generated"] += 1
 
-        except Exception as e:
-            log_error("Error generating model", e, include_trace=True)
-            return None
+                # Invalid architecture
+                if model_training_request.architecture is None:
+                    log_error(f"Model {model_training_request.id} has None architecture!")
+                    continue
+
+                model = Model(model_training_request, self.dataset)
+
+                # Invalid model
+                if not model.is_model_valid():
+                    log_error(f"Model {model_training_request.id} is not valid!")
+                    continue
+
+                # Valid → send job
+                await self._send_model_to_broker(model_training_request)
+
+                log_info(f"Model {model_training_request.id} sent to broker")
+
+                SocketCommunication.decide_print_form(
+                    MSGType.MASTER_STATUS,
+                    {'node': 1, 'msg': 'Sent model to broker'}
+                )
+
+                return str(model_training_request.id)
+
+            except Exception as e:
+                log_error("Error generating model", e, include_trace=True)
+
+        log_error(f"Max retries ({MAX_RETRIES}) exceeded while generating model")
+        return None
 
     async def _send_model_to_broker(self, model_training_request: ModelTrainingRequest):
         log_info(f"Sending model {model_training_request.id} to broker")

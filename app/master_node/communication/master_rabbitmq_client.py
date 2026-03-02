@@ -1,12 +1,26 @@
 import aio_pika
 import asyncio
+import json
 
 from app.common.base_rabbitmq_client import BaseRabbitMQClient
 
 class MasterRabbitMQClient(BaseRabbitMQClient):
 	
+	def __init__(self, params, loop):
+		super().__init__(params, loop)
+		self._publisher_connection = None
+
+	async def _get_publisher_connection(self) -> aio_pika.RobustConnection:
+		"""Reuse a single persistent connection for all publishes."""
+		if self._publisher_connection is None or self._publisher_connection.is_closed:
+			self._publisher_connection = await self._create_connection()
+		return self._publisher_connection
+
 	async def publish_model_params(self, model_params: dict) -> aio_pika.Connection:
-		return await super().publish(self.model_parameter_queue, model_params, auto_close_connection=False)
+		connection = await self._get_publisher_connection()
+		message_body_json = json.dumps(model_params).encode()
+		await self._run_publish(connection, self.model_parameter_queue, message_body_json)
+		return connection
 
 	async def listen_for_model_results(self, callback) -> aio_pika.Connection:
 		return await super().listen(self.model_performance_queue, callback, auto_close_connection=False)

@@ -182,6 +182,11 @@ class OptimizationJob:
             log_error("Failed to initialize OptimizationJob", e, include_trace=True)
             raise
 
+    def _make_job_id(self, model_id) -> str:
+        """Create a phase-qualified job ID to prevent collisions between exploration and deep training."""
+        phase = self.optimization_strategy.phase.name
+        return f"{phase}_{model_id}"
+
     async def maybe_generate(self, reason: str = "") -> bool:
         async with self._generate_lock:
             try:
@@ -384,7 +389,17 @@ class OptimizationJob:
 
             model_training_response = ModelTrainingResponse.from_dict(response)
             self.state["models_processed"] += 1
-            job_id = str(model_training_response.id)
+            raw_id = str(model_training_response.id)
+            # Try phase-qualified ID first (exploration or deep_training),
+            # then fall back to checking both phases for the inflight match
+            job_id = None
+            for phase_prefix in ['EXPLORATION', 'DEEP_TRAINING']:
+                candidate = f"{phase_prefix}_{raw_id}"
+                if candidate in self.inflight_jobs:
+                    job_id = candidate
+                    break
+            if job_id is None:
+                job_id = f"{self.optimization_strategy.phase.name}_{raw_id}"
 
             if job_id in self.completed_jobs:
                 log_info(f"DUPLICATE: job {job_id} already processed - ignoring")
@@ -506,7 +521,7 @@ class OptimizationJob:
                     {'node': 1, 'msg': 'Sent model to broker'}
                 )
 
-                return str(model_training_request.id)
+                return self._make_job_id(model_training_request.id)
 
             except Exception as e:
                 log_error("Error generating model", e, include_trace=True)

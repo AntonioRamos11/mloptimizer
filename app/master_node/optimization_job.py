@@ -174,7 +174,6 @@ class OptimizationJob:
             self.job_timestamps: Dict[str, float] = {}
             self._generate_lock = asyncio.Lock()
             self._pipeline_lock = asyncio.Lock()
-            self._result_lock = asyncio.Lock()
             self._startup_done = False
             self._optimization_finalized = False
 
@@ -187,11 +186,7 @@ class OptimizationJob:
         async with self._generate_lock:
             try:
                 queue_status = await self.rabbitmq_monitor.get_queue_status()
-                new_count = max(1, queue_status.consumer_count)
-                if new_count != self.worker_count:
-                    log_info(f"Worker count changed: {self.worker_count} -> {new_count} "
-                             f"(raw consumer_count={queue_status.consumer_count})")
-                self.worker_count = new_count
+                self.worker_count = max(1, queue_status.consumer_count)
                 self.max_jobs = self.worker_count + 1
             except Exception as e:
                 log_info(f"Could not get queue status, using cached: workers={self.worker_count}, max_jobs={self.max_jobs}")
@@ -313,26 +308,9 @@ class OptimizationJob:
         try:
             await self.rabbitmq_client.purge_queues()
             await self.rabbitmq_client.prepare_queues()
-
-            # Wait for all workers to connect (retry up to 30s)
-            expected_workers = int(os.getenv("EXPECTED_WORKERS", "0"))
-            max_wait = 30  # seconds
-            poll_interval = 2  # seconds
-            waited = 0
-            while waited < max_wait:
-                queue_status: QueueStatus = await self.rabbitmq_monitor.get_queue_status()
-                self.worker_count = max(1, queue_status.consumer_count)
-                log_info(f"Worker discovery: consumer_count={queue_status.consumer_count}, "
-                         f"expected={expected_workers}, waited={waited}s")
-                if expected_workers > 0 and self.worker_count >= expected_workers:
-                    break
-                if expected_workers == 0 and waited >= 10:
-                    break  # No expectation set, wait at least 10s then proceed
-                await asyncio.sleep(poll_interval)
-                waited += poll_interval
-
+            queue_status: QueueStatus = await self.rabbitmq_monitor.get_queue_status()
+            self.worker_count = max(1, queue_status.consumer_count)
             self.max_jobs = self.worker_count + 1
-            log_info(f"Final worker config: workers={self.worker_count}, max_jobs={self.max_jobs}")
 
             if self.is_resuming and queue_status.consumer_count > 0 and queue_status.message_count > 0:
                 log_info("RESUMING with active workers: Not generating new jobs")
@@ -361,10 +339,6 @@ class OptimizationJob:
             raise
 
     async def on_model_results(self, response: dict):
-        async with self._result_lock:
-            await self._process_model_result(response)
-
-    async def _process_model_result(self, response: dict):
         try:
             response_experiment_id = response.get('experiment_id', '')
             current_experiment_id = getattr(self.optimization_strategy, 'experiment_id', '') if hasattr(self, 'optimization_strategy') else ''
@@ -373,6 +347,7 @@ class OptimizationJob:
                 return
 
             model_training_response = ModelTrainingResponse.from_dict(response)
+            self.state["models_processed"] += 1
             job_id = str(model_training_response.id)
 
             if job_id in self.completed_jobs:
@@ -383,7 +358,6 @@ class OptimizationJob:
                 log_info(f"UNKNOWN JOB: job {job_id} not in inflight_jobs - ignoring")
                 return
 
-            self.state["models_processed"] += 1
             self.inflight_jobs.discard(job_id)
             self.job_timestamps.pop(job_id, None)
             self.completed_jobs.add(job_id)

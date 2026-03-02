@@ -728,12 +728,11 @@ class OptimizationStrategy(object):
                 return Action.GENERATE_MODEL
             elif self.should_wait():
                 return Action.WAIT
-            elif not self._should_generate_hof() and not self._should_wait_hof():
+            else:
                 return Action.FINISH
-            return Action.WAIT
         except Exception as e:
             debug_trace(f"ERROR in HoF classification handler: {str(e)}", include_trace=True)
-            return Action.WAIT  # Safe default
+            return Action.FINISH  # Better to finish than hang indefinitely
 
     def _report_model_response_exploration_regression(self, model_training_response: ModelTrainingResponse):
         debug_trace("Processing exploration regression response", {

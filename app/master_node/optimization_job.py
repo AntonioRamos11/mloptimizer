@@ -31,7 +31,7 @@ log_file = os.path.join(log_dir, f"optimization_job_{int(time.time())}.log")
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s',
+    format='%(asctime)s %(message)s',
     handlers=[
         logging.FileHandler(log_file, mode='w'),
         logging.StreamHandler()
@@ -308,9 +308,27 @@ class OptimizationJob:
         try:
             await self.rabbitmq_client.purge_queues()
             await self.rabbitmq_client.prepare_queues()
-            queue_status: QueueStatus = await self.rabbitmq_monitor.get_queue_status()
+
+            # Retry loop: wait for slaves to reconnect after queue purge
+            # (aio_pika.connect_robust reconnects asynchronously)
+            max_wait = 30  # seconds
+            poll_interval = 2  # seconds
+            elapsed = 0
+            queue_status = None
+            while elapsed < max_wait:
+                queue_status = await self.rabbitmq_monitor.get_queue_status()
+                if queue_status.consumer_count > 0:
+                    break
+                log_info(f"Waiting for workers to reconnect... ({elapsed}s/{max_wait}s)")
+                await asyncio.sleep(poll_interval)
+                elapsed += poll_interval
+
+            if queue_status is None:
+                queue_status = await self.rabbitmq_monitor.get_queue_status()
+
             self.worker_count = max(1, queue_status.consumer_count)
             self.max_jobs = self.worker_count + 1
+            log_info(f"Worker discovery complete: workers={self.worker_count}, max_jobs={self.max_jobs}")
 
             if self.is_resuming and queue_status.consumer_count > 0 and queue_status.message_count > 0:
                 log_info("RESUMING with active workers: Not generating new jobs")

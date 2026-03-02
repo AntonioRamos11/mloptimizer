@@ -26,8 +26,8 @@ class RabbitMQMonitor(object):
 		elif(self.cp.host_url.startswith('192')):
 			url = "http://" +self.cp.host_url + ":15672/api/queues/%2F/parameters"
 		else:
-			url = self.cp.managment_url
-			# Use cp.model_parameter_queue or other appropriate attribute
+			# Cloud mode: managment_url is the base URL, append the API path
+			url = self.cp.managment_url.rstrip('/') + "/api/queues/%2F/parameters"
 		queue_name = self.cp.model_parameter_queue
 		auth = aiohttp.BasicAuth(self.cp.user, self.cp.password)
 		async with aiohttp.ClientSession(auth=auth) as session:

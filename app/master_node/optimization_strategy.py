@@ -17,15 +17,7 @@ import sys
 import os
 import json
 
-# Configure proper logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s',
-    handlers=[
-        logging.FileHandler("debug_strategy.log"),
-        logging.StreamHandler()
-    ]
-)
+logger = logging.getLogger(__name__)
 
 def debug_trace(msg, obj=None, include_trace=False):
     """Enhanced debugging function that shows code location"""

@@ -31,7 +31,6 @@ class BaseRabbitMQClient:
 
 	#Async function that prepares the queue connection
 	async def prepare_queues(self):
-		logging.basicConfig(level=logging.DEBUG)
 		logger = logging.getLogger("rabbitmq_connection")
 		
 		logger.info(f"=== CONNECTION PARAMETERS ===")
@@ -111,10 +110,15 @@ class BaseRabbitMQClient:
 		connection = await self._create_connection()
 
 		async def on_result_recieved(message: IncomingMessage):
-			body_json = message.body.decode()
-			body_dict = json.loads(body_json)
-			await callback(body_dict)
+			# Ack immediately to prevent redelivery during long-running callbacks
+			# (e.g. model training can exceed RabbitMQ's consumer_timeout of 30 min)
 			await message.ack()
+			try:
+				body_json = message.body.decode()
+				body_dict = json.loads(body_json)
+				await callback(body_dict)
+			except Exception as e:
+				logging.getLogger('rabbitmq').error(f"Callback error after ack: {e}")
 
 		if auto_close_connection:
 			async with connection:
@@ -134,6 +138,7 @@ class BaseRabbitMQClient:
 				body = message_body_json,
 				content_type = 'application/json',
 				content_encoding = 'utf-8',
+				delivery_mode = aio_pika.DeliveryMode.PERSISTENT,
 			),
 			routing_key = routing_key,
 		)

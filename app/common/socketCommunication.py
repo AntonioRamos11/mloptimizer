@@ -3,11 +3,7 @@ import time
 import logging
 import traceback
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logger = logging.getLogger(__name__)
 
 class MSGType():
     MASTER_STATUS = 'masterStatus'

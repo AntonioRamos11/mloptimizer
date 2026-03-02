@@ -259,6 +259,22 @@ class OptimizationJob:
             await self._log_results(best_model)
             
             self._log_best_model_info()
+
+            # Validate the best model
+            try:
+                model = Model(best_model.model_training_request, self.dataset)
+                valid = model.is_model_valid()
+                log_info(f"Best model validation: {valid}")
+            except Exception as ve:
+                log_error("Could not validate best model", ve)
+
+            # Save final state
+            try:
+                state_data = create_state_from_strategy(self.optimization_strategy)
+                self.state_manager.save_state(state_data)
+                log_info("Final state saved")
+            except Exception as se:
+                log_error("Could not save final state", se)
             
             self.state["current_phase"] = "finished"
             SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': 'Finished training'})
@@ -439,16 +455,8 @@ class OptimizationJob:
                 self.state["current_phase"] = "deep_training"
                 SocketCommunication.decide_print_form(MSGType.CHANGE_PHASE, {'node': 1, 'msg': 'New phase, deep training'})
             elif action == Action.FINISH:
-                log_info("Action: FINISH")
-                self.state["current_phase"] = "finished"
-                SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': 'Finished training'})
-                best_model = self.optimization_strategy.get_best_model()
-                await self._log_results(best_model)
-                model = Model(best_model.model_training_request, self.dataset)
-                valid = model.is_model_valid()
-                log_info(f"Model validation: {valid}")
-                log_info("Stopping event loop")
-                self.loop.stop()
+                log_info("Action: FINISH - delegating to _finalize_and_exit")
+                await self._finalize_and_exit()
                 return
 
             if self._is_optimization_complete():
@@ -500,8 +508,6 @@ class OptimizationJob:
             raise
 
     async def _log_results(self, best_model):
-        # ✅ FIX: await correctamente como método de instancia
-        await self._send_slack_notification(best_model, time.time() - self.start_time, {})
         log_info(f"Logging results for best model {best_model.model_training_request.id}")
         try:
             results_path = 'results_multi'
@@ -549,6 +555,9 @@ class OptimizationJob:
 
             log_info(f"Results successfully saved to {filepath}.json")
             await self._upload_to_google_drive(filepath + ".json", result_data)
+
+            # Send Slack notification with full result_data (after it's been built)
+            await self._send_slack_notification(best_model, elapsed_time, result_data)
 
         except Exception as e:
             log_error(f"Error logging results", e, include_trace=True)

@@ -212,7 +212,8 @@ class OptimizationJob:
                 return False
 
             if job_id in self.inflight_jobs:
-                log_error(f"DUPLICATE JOB DETECTED: {job_id}")
+                log_error(f"DUPLICATE JOB DETECTED: {job_id} — skipping")
+                return False
 
             self.inflight_jobs.add(job_id)
             self.job_timestamps[job_id] = time.time()

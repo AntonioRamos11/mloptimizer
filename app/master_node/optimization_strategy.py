@@ -157,11 +157,22 @@ class OptimizationStrategy(object):
                 self.deep_training_models_requests.append(model.model_training_request)
                 debug_trace(f"Restored deep training model: {model.model_training_request.id}")
         
-        # Rebuild hall of fame from best models
+        # Rebuild hall of fame from best models, excluding already-sent deep training models
         if self.exploration_models_completed:
-            sorted_models = sorted(self.exploration_models_completed, key=lambda m: m.performance, reverse=True)
-            self.hall_of_fame = sorted_models[:self.hall_of_fame_size]
-            debug_trace(f"Rebuilt hall of fame with {len(self.hall_of_fame)} models")
+            sent_ids = {r.id for r in self.deep_training_models_requests}
+            valid_for_hof = [
+                m for m in self.exploration_models_completed
+                if m.model_training_request.architecture is not None
+                and m.performance is not None
+                and m.model_training_request.id not in sent_ids
+            ]
+            sorted_models = sorted(valid_for_hof, key=lambda m: m.performance, reverse=True)
+            remaining_slots = max(0, self.hall_of_fame_size - len(self.deep_training_models_requests))
+            self.hall_of_fame = sorted_models[:remaining_slots]
+            debug_trace(f"Rebuilt hall of fame with {len(self.hall_of_fame)} models", {
+                "excluded_sent_ids": list(sent_ids),
+                "remaining_slots": remaining_slots
+            })
         
         debug_trace("State restoration complete", {
             "exploration_restored": len(self.exploration_models_completed),
@@ -308,18 +319,26 @@ class OptimizationStrategy(object):
                 debug_trace("WARNING: Hall of Fame is empty!", include_trace=True)
                 # Return a fallback model if possible
                 if self.exploration_models_completed:
-                    # Filter out models with None architecture or None performance
+                    # IDs already sent for deep training — exclude them from fallback
+                    sent_ids = {r.id for r in self.deep_training_models_requests}
+                    # Filter out models with None architecture/performance AND already-sent
                     valid_models = [m for m in self.exploration_models_completed
                                     if m.model_training_request.architecture is not None
-                                    and m.performance is not None]
+                                    and m.performance is not None
+                                    and m.model_training_request.id not in sent_ids]
                     if valid_models:
                         best_model = max(valid_models, key=lambda m: m.performance)
-                        debug_trace("Using best exploration model as fallback")
+                        debug_trace("Using best exploration model as fallback", {
+                            "id": best_model.model_training_request.id,
+                            "excluded_ids": list(sent_ids)
+                        })
                         self.hall_of_fame = [best_model]
                     else:
-                        debug_trace("No valid exploration models (all have None architecture/performance)")
-                        self.phase = Phase.EXPLORATION
-                        return self._recommend_model_exploration()
+                        debug_trace("No unsent valid exploration models left — deep training complete", {
+                            "sent_ids": list(sent_ids)
+                        })
+                        # Nothing left to send; signal completion by raising
+                        raise RuntimeError("Hall of Fame exhausted: no unsent models available")
                 else:
                     debug_trace("No exploration models completed yet - falling back to exploration phase")
                     # Fall back to exploration instead of crashing

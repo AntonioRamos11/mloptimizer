@@ -29,10 +29,19 @@ class MasterRabbitMQClient(BaseRabbitMQClient):
 		"""Purge all queues to clean stale messages from previous runs"""
 		print("[MasterRabbitMQClient] Purging RabbitMQ queues...")
 		try:
+			# Use plain connect (not connect_robust) — this is a one-shot operation
+			# and we don't want a zombie reconnection loop.
+			# Also include self.port so we hit the ngrok tunnel, not default 5672.
+			host = self.host_url
+			if '://' in host:
+				host = host.split('://', 1)[1]
+			if host.endswith('/'):
+				host = host[:-1]
+			if '?' in host:
+				host = host.split('?', 1)[0]
+			url = f"amqp://{self.user}:{self.password}@{host}:{self.port}/"
 			connection = await asyncio.wait_for(
-				aio_pika.connect_robust(
-					f"amqp://{self.user}:{self.password}@{self.host_url}/{self.virtual_host}"
-				),
+				aio_pika.connect(url),
 				timeout=10.0
 			)
 			channel = await connection.channel()

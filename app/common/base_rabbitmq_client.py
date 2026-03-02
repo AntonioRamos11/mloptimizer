@@ -70,29 +70,35 @@ class BaseRabbitMQClient:
 		except Exception as e:
 			logger.error(f"TCP connection failed: {e}")
 		
-		# Try the actual connection with timeout
+		# Test the actual AMQP connection (NON-robust: one-shot test, no zombie reconnections)
+		connection = None
 		try:
-			logger.info("Attempting RabbitMQ connection...")
-			connection_task = asyncio.create_task(self._create_connection())
-			connection = await asyncio.wait_for(connection_task, timeout=10.0)
-			
-			logger.info("Connection established successfully!")
-			logger.info(f"Connection info: {connection}")
-			
-			# Rest of your queue preparation code...
-			# ...
-
-			return connection
-			
+			logger.info("Attempting AMQP test connection...")
+			host = self.host_url
+			if '://' in host:
+				host = host.split('://', 1)[1]
+			if host.endswith('/'):
+				host = host[:-1]
+			if '?' in host:
+				host = host.split('?', 1)[0]
+			url = f"amqp://{self.user}:{self.password}@{host}:{self.port}/"
+			connection = await asyncio.wait_for(
+				aio_pika.connect(url),
+				timeout=10.0
+			)
+			logger.info(f"AMQP test connection established: {connection}")
 		except asyncio.TimeoutError:
-			logger.error("Connection timed out after 10 seconds")
+			logger.error("AMQP test connection timed out after 10 seconds")
 			raise
-			
 		except Exception as e:
-			logger.error(f"Connection failed: {str(e)}")
+			logger.error(f"AMQP test connection failed: {str(e)}")
 			logger.error(f"Exception type: {type(e).__name__}")
 			logger.error(f"Traceback: {traceback.format_exc()}")
 			raise
+		finally:
+			if connection and not connection.is_closed:
+				await connection.close()
+				logger.info("AMQP test connection closed")
 
 	async def publish(self, queue_name: str, message_body: dict, auto_close_connection=True)->aio_pika.Connection:
 		connection = await self._create_connection()

@@ -769,19 +769,29 @@ class OptimizationStrategy(object):
         return not self._should_wait_exploration() and not self._should_wait_hof()
 
     def get_best_model(self):
-        #If the value of the model is the max.
         if self.search_space_type == SearchSpaceType.IMAGE:
             return self.get_best_classification_model()
-        #If the value of the model is the min.
         return self.get_best_regression_model()
 
     def get_best_classification_model(self):
-        best_model = max(self.deep_training_models_completed, key=lambda completed_model: completed_model.performance_2)
-        return best_model
+        if self.deep_training_models_completed:
+            best_model = max(self.deep_training_models_completed, key=lambda m: m.performance_2 if m.performance_2 > 0 else m.performance)
+            return best_model
+        if self.exploration_models_completed:
+            valid_models = [m for m in self.exploration_models_completed if m.performance is not None]
+            if valid_models:
+                return max(valid_models, key=lambda m: m.performance)
+        raise ValueError("No completed models found")
 
     def get_best_regression_model(self):
-        best_model = min(self.deep_training_models_completed, key=lambda completed_model: completed_model.performance_2)
-        return best_model
+        if self.deep_training_models_completed:
+            best_model = min(self.deep_training_models_completed, key=lambda m: m.performance_2 if m.performance_2 > 0 else m.performance)
+            return best_model
+        if self.exploration_models_completed:
+            valid_models = [m for m in self.exploration_models_completed if m.performance is not None]
+            if valid_models:
+                return min(valid_models, key=lambda m: m.performance)
+        raise ValueError("No completed models found")
 
     def get_best_exploration_classification_model(self):
         """Get best exploration model with improved error handling"""

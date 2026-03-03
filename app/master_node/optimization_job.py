@@ -138,8 +138,18 @@ class OptimizationJob:
                 log_info("Found previous optimization state - attempting to resume...")
                 resume_state = self.state_manager.load_state()
                 if resume_state:
-                    log_info("Successfully loaded previous state - will resume from where left off")
-                    self.is_resuming = True
+                    # Only resume if the state belongs to the SAME experiment
+                    state_experiment_id = resume_state.get('experiment_id', '')
+                    state_dataset_tag = resume_state.get('exploration_models_completed', [{}])[0].get(
+                        'model_training_request', {}).get('dataset_tag', '') if resume_state.get('exploration_models_completed') else ''
+                    current_dataset_tag = dataset.get_tag()
+                    
+                    if state_dataset_tag and current_dataset_tag and state_dataset_tag != current_dataset_tag:
+                        log_info(f"State is from a different dataset ({state_dataset_tag} vs {current_dataset_tag}) - starting fresh")
+                        resume_state = None
+                    else:
+                        log_info("Successfully loaded previous state - will resume from where left off")
+                        self.is_resuming = True
                 else:
                     log_info("Could not load previous state - starting fresh")
             else:
@@ -283,13 +293,15 @@ class OptimizationJob:
             except Exception as ve:
                 log_error("Could not validate best model", ve)
 
-            # Save final state
+            # Delete the state file since optimization completed successfully
+            # This prevents the next dataset run from loading stale state
             try:
-                state_data = create_state_from_strategy(self.optimization_strategy)
-                self.state_manager.save_state(state_data)
-                log_info("Final state saved")
+                experiment_id = getattr(self.optimization_strategy, 'experiment_id', '')
+                if experiment_id:
+                    self.state_manager.delete_state(experiment_id)
+                    log_info(f"State file deleted for completed experiment: {experiment_id}")
             except Exception as se:
-                log_error("Could not save final state", se)
+                log_error("Could not delete state file", se)
             
             self.state["current_phase"] = "finished"
             SocketCommunication.decide_print_form(MSGType.FINISHED_TRAINING, {'node': 1, 'msg': 'Finished training'})
@@ -574,45 +586,105 @@ class OptimizationJob:
             filepath = os.path.join(results_path, filename)
 
             elapsed_seconds = time.time() - self.start_time
+            elapsed_time = time.strftime('%H:%M:%S', time.gmtime(elapsed_seconds))
+
+            # ── Best model details ──────────────────────────────────────
             result_data = {
-                "model_info": asdict(best_model),
-                "dataset_ranges": None,
-                "performance_metrics": {"elapsed_seconds": elapsed_seconds},
-                "hardware_info": {}
+                "experiment_id": best_model.model_training_request.experiment_id,
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                # Full best model (architecture, training request, scores, hw)
+                "best_model": asdict(best_model),
+                # Architecture pulled to top level for quick access
+                "architecture": asdict(best_model.model_training_request.architecture),
             }
 
+            # ── Dataset info ────────────────────────────────────────────
+            result_data["dataset"] = {
+                "name": SP.DATASET_NAME,
+                "tag": self.dataset.get_tag(),
+                "shape": list(SP.DATASET_SHAPE) if SP.DATASET_SHAPE else None,
+                "classes": SP.DATASET_CLASSES,
+                "batch_size": SP.DATASET_BATCH_SIZE,
+                "validation_split": SP.DATASET_VALIDATION_SPLIT,
+                "ranges": None,
+            }
             try:
                 self.dataset.load()
-                ranges = self.dataset.get_ranges()
-                result_data["dataset_ranges"] = ranges
+                result_data["dataset"]["ranges"] = self.dataset.get_ranges()
             except Exception as e:
-                log_error(f"Error getting dataset ranges", e)
+                log_error("Error getting dataset ranges", e)
 
-            elapsed_time = time.strftime('%H:%M:%S', time.gmtime(elapsed_seconds))
-            result_data["performance_metrics"]["elapsed_time"] = elapsed_time
+            # ── Training / search configuration ─────────────────────────
+            result_data["training_config"] = {
+                "exploration_size": SP.EXPLORATION_SIZE,
+                "hall_of_fame_size": SP.HALL_OF_FAME_SIZE,
+                "exploration_epochs": best_model.model_training_request.epochs
+                    if best_model.model_training_request.is_partial_training else None,
+                "deep_training_epochs": SP.HALL_OF_FAME_EPOCHS,
+                "hof_early_stopping_patience": SP.HOF_EARLY_STOPPING_PATIENCE,
+                "trials": SP.TRIALS,
+            }
 
+            # ── Performance metrics ─────────────────────────────────────
+            result_data["performance_metrics"] = {
+                "elapsed_seconds": elapsed_seconds,
+                "elapsed_time": elapsed_time,
+                "best_exploration_accuracy": best_model.performance,
+                "best_deep_training_accuracy": best_model.performance_2
+                    if best_model.performance_2 > 0 else None,
+            }
+
+            # ── Hardware info (worker that trained the best model) ──────
             try:
                 if best_model.hardware_info:
                     result_data["hardware_info"] = best_model.hardware_info
                 else:
                     result_data["hardware_info"] = get_hardware_info()
             except Exception as e:
-                log_error(f"Error collecting hardware information", e)
+                log_error("Error collecting hardware information", e)
                 result_data["hardware_info"] = {}
 
             result_data["all_workers_hardware"] = self.all_worker_hardware
+
+            # ── Optimization stats ──────────────────────────────────────
             result_data["optimization_stats"] = {
                 "models_generated": self.state["models_generated"],
                 "models_processed": self.state["models_processed"],
                 "exploration_models": len(self.optimization_strategy.exploration_models_completed),
-                "deep_training_models": len(self.optimization_strategy.deep_training_models_completed)
+                "deep_training_models": len(self.optimization_strategy.deep_training_models_completed),
+                "final_phase": self.optimization_strategy.phase.name,
             }
 
+            # ── Leaderboard: all explored models sorted by performance ──
+            leaderboard = []
+            for m in self.optimization_strategy.exploration_models_completed:
+                if m.model_training_request.architecture is not None:
+                    leaderboard.append({
+                        "id": m.model_training_request.id,
+                        "phase": "exploration",
+                        "performance": m.performance,
+                        "base_architecture": m.model_training_request.architecture.base_architecture,
+                        "classifier_type": m.model_training_request.architecture.classifier_layer_type,
+                    })
+            for m in self.optimization_strategy.deep_training_models_completed:
+                if m.model_training_request.architecture is not None:
+                    leaderboard.append({
+                        "id": m.model_training_request.id,
+                        "phase": "deep_training",
+                        "performance": m.performance,
+                        "performance_2": m.performance_2,
+                        "base_architecture": m.model_training_request.architecture.base_architecture,
+                        "classifier_type": m.model_training_request.architecture.classifier_layer_type,
+                    })
+            leaderboard.sort(key=lambda x: x.get("performance_2", x["performance"]), reverse=True)
+            result_data["leaderboard"] = leaderboard
+
+            # ── Write JSON ──────────────────────────────────────────────
             with open(filepath + ".json", "w") as f:
-                json.dump(result_data, f, indent=2)
+                json.dump(result_data, f, indent=2, default=str)
 
             log_info(f"Results successfully saved to {filepath}.json")
-            await self._upload_to_google_drive(filepath + ".json", result_data)
+            #await self._upload_to_google_drive(filepath + ".json", result_data)
 
             # Send Slack notification with full result_data (after it's been built)
             await self._send_slack_notification(best_model, elapsed_time, result_data)
@@ -622,9 +694,9 @@ class OptimizationJob:
 
     async def _upload_to_google_drive(self, filepath: str, result_data: dict):
         try:
-            from google.oauth2 import service_account
-            from googleapiclient.discovery import build
-            from googleapiclient.http import MediaFileUpload
+            #from google.oauth2 import service_account
+            #from googleapiclient.discovery import build
+            #from googleapiclient.http import MediaFileUpload
 
             gdrive_creds = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
             gdrive_folder_id = os.getenv("GOOGLE_DRIVE_FOLDER_ID")

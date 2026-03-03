@@ -104,6 +104,9 @@ class TrainingSlave:
 		# Uses composite key: (experiment_id, model_id, is_partial_training)
 		self.processed_jobs = set()
 		self._current_experiment_id = None
+		# Guard: track model IDs whose results have already been SENT to the broker
+		# Prevents duplicate result publishing even if the callback fires multiple times
+		self._results_sent = set()
 		
 		# Pre-load dataset in the subprocess ONCE
 		logger.info("Pre-loading dataset in worker subprocess...")
@@ -291,6 +294,7 @@ class TrainingSlave:
 			if self._current_experiment_id is not None:
 				logger.info(f"New experiment detected ({experiment_id}), resetting processed jobs set")
 			self.processed_jobs.clear()
+			self._results_sent.clear()
 			self._current_experiment_id = experiment_id
 		
 		# DEDUPLICATION: Use composite key (experiment + model_id + training phase)
@@ -340,16 +344,20 @@ class TrainingSlave:
 			logger.info(f"  Validation score: {training_val}")
 			logger.info(f"  Finished all epochs: {did_finish_epochs}")
 			
-			# Send results back with hardware info
-			hw_info = get_hardware_info()
-			logger.info(f"Hardware info: {hw_info.get('gpu_count', 0)} GPUs detected")
-			model_training_response = ModelTrainingResponse(
-				id=model_training_request.id, 
-				performance=training_val, 
-				finished_epochs=did_finish_epochs,
-				hardware_info=hw_info
-			)
-			await self._send_performance_to_broker(model_training_response)
+			# Send results back with hardware info — but only once per dedup_key
+			if dedup_key in self._results_sent:
+				logger.warning(f"Results for {dedup_key} already sent — skipping duplicate publish")
+			else:
+				hw_info = get_hardware_info()
+				logger.info(f"Hardware info: {hw_info.get('gpu_count', 0)} GPUs detected")
+				model_training_response = ModelTrainingResponse(
+					id=model_training_request.id, 
+					performance=training_val, 
+					finished_epochs=did_finish_epochs,
+					hardware_info=hw_info
+				)
+				await self._send_performance_to_broker(model_training_response)
+				self._results_sent.add(dedup_key)
 			
 			logger.info(f"Results sent to broker for model {model_id}")
 			SocketCommunication.decide_print_form(

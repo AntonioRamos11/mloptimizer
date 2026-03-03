@@ -198,13 +198,13 @@ class SystemParameters:
 
     # AutoML parameters
     TRAIN_GPU: bool = True
-    TRIALS =10     #reduced from 20 - faster runs, less memory buildup
-    EXPLORATION_SIZE: int = 5  #reduced from 10 - faster exploration, less memory buildup
-    EXPLORATION_EPOCHS: int = 5  # Reduced from 10 - faster, less memory buildup
+    TRIALS =20     #reduced from 20 - faster runs, less memory buildup
+    EXPLORATION_SIZE: int = 10  #reduced from 10 - faster exploration, less memory buildup
+    EXPLORATION_EPOCHS: int = 10  # Reduced from 10 - faster, less memory buildup
     EXPLORATION_EARLY_STOPPING_PATIENCE: int = 3
     HALL_OF_FAME_SIZE: int = 3
-    HALL_OF_FAME_EPOCHS: int = 6 # Reduced from 150 - prevent long runs
-    HOF_EARLY_STOPPING_PATIENCE: int = 5  # Reduced from 10
+    HALL_OF_FAME_EPOCHS: int = 150 # Reduced from 150 - prevent long runs
+    HOF_EARLY_STOPPING_PATIENCE: int = 10  # Reduced from 10
 
     # Model parameters
     DTYPE: str = 'float32'

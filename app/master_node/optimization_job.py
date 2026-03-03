@@ -321,6 +321,7 @@ class OptimizationJob:
         log_info(f"Starting optimization with {trials} trials")
         self.start_time = time.time()
         self.state["start_time"] = self.start_time
+        connection = None
         try:
             self.loop.run_until_complete(self._run_optimization_startup())
             
@@ -334,7 +335,8 @@ class OptimizationJob:
                 self.loop.run_forever()
             finally:
                 log_info("Closing connection")
-                self.loop.run_until_complete(connection.close())
+                if connection and not connection.is_closed:
+                    self.loop.run_until_complete(connection.close())
         except Exception as e:
             log_error("Error in optimization process", e, include_trace=True)
             raise
@@ -344,6 +346,19 @@ class OptimizationJob:
                 "models_processed": self.state["models_processed"],
                 "models_generated": self.state["models_generated"]
             })
+            # Close the event loop so the next OptimizationJob gets a clean one
+            try:
+                if not self.loop.is_closed():
+                    # Cancel any pending tasks before closing
+                    pending = asyncio.all_tasks(self.loop)
+                    for task in pending:
+                        task.cancel()
+                    if pending:
+                        self.loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                    self.loop.close()
+                    log_info("Event loop closed cleanly")
+            except Exception as e:
+                log_info(f"Event loop cleanup: {e}")
 
     async def _run_optimization_startup(self):
         if self._startup_done:
@@ -652,6 +667,23 @@ class OptimizationJob:
 
             result_data["all_workers_hardware"] = self.all_worker_hardware
 
+            # ── GPU cluster summary (for quick analysis) ───────────────
+            gpu_summary = {"total_workers": len(self.all_worker_hardware), "total_gpus": 0, "gpu_models": {}}
+            for wh in self.all_worker_hardware:
+                gpu_count = wh.get("gpu_count", 0)
+                gpu_summary["total_gpus"] += gpu_count
+                for g in wh.get("gpus", []):
+                    gname = g.get("model") or g.get("name") or "unknown"
+                    if gname in gpu_summary["gpu_models"]:
+                        gpu_summary["gpu_models"][gname]["count"] += 1
+                    else:
+                        gpu_summary["gpu_models"][gname] = {
+                            "count": 1,
+                            "memory": g.get("memory", "unknown"),
+                            "driver": g.get("driver", "unknown"),
+                        }
+            result_data["gpu_cluster_summary"] = gpu_summary
+
             # ── Optimization stats ──────────────────────────────────────
             result_data["optimization_stats"] = {
                 "models_generated": self.state["models_generated"],
@@ -663,6 +695,18 @@ class OptimizationJob:
 
             # ── Leaderboard: all explored models sorted by performance ──
             leaderboard = []
+            def _gpu_label(hw):
+                """Return a short human-readable GPU label from hardware_info."""
+                if not hw:
+                    return None
+                gpus = hw.get("gpus", [])
+                if not gpus:
+                    return f"CPU-only ({hw.get('cpu_model', 'unknown')})"
+                names = [g.get("model") or g.get("name") or "unknown" for g in gpus]
+                if len(set(names)) == 1:
+                    return f"{len(names)}x {names[0]}" if len(names) > 1 else names[0]
+                return ", ".join(names)
+
             for m in self.optimization_strategy.exploration_models_completed:
                 if m.model_training_request.architecture is not None:
                     leaderboard.append({
@@ -671,6 +715,8 @@ class OptimizationJob:
                         "performance": m.performance,
                         "base_architecture": m.model_training_request.architecture.base_architecture,
                         "classifier_type": m.model_training_request.architecture.classifier_layer_type,
+                        "trained_on_gpu": _gpu_label(m.hardware_info),
+                        "gpu_count": m.hardware_info.get("gpu_count", 0) if m.hardware_info else 0,
                     })
             for m in self.optimization_strategy.deep_training_models_completed:
                 if m.model_training_request.architecture is not None:
@@ -681,6 +727,8 @@ class OptimizationJob:
                         "performance_2": m.performance_2,
                         "base_architecture": m.model_training_request.architecture.base_architecture,
                         "classifier_type": m.model_training_request.architecture.classifier_layer_type,
+                        "trained_on_gpu": _gpu_label(m.hardware_info),
+                        "gpu_count": m.hardware_info.get("gpu_count", 0) if m.hardware_info else 0,
                     })
             leaderboard.sort(key=lambda x: x.get("performance_2", x["performance"]), reverse=True)
             result_data["leaderboard"] = leaderboard

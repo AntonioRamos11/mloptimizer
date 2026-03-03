@@ -26,33 +26,50 @@ class InitNodes:
 		print("==============================\n")
 
 		# Iterate through schedule
+		completed_runs = 0
+		failed_runs = []
+		total_runs = SP.total_runs()
+
 		for run_idx, dataset_name, shape, classes in SP.iter_datasets():
-			print(f"\n===== DATASET RUN {run_idx+1}/{SP.total_runs()} =====")
+			print(f"\n===== DATASET RUN {run_idx+1}/{total_runs} =====")
 			print(f"Dataset: {dataset_name}")
 			print(f"Shape:   {shape}")
 			print(f"Classes: {classes}")
 
-			# Switch dataset inside SP
-			SP.set_dataset(dataset_name)
+			try:
+				# Switch dataset inside SP
+				SP.set_dataset(dataset_name)
 
-			# Build dataset + architecture fresh each run
-			dataset = self.get_dataset()
-			model_architecture_factory = self.get_model_architecture()
+				# Build dataset + architecture fresh each run
+				dataset = self.get_dataset()
+				model_architecture_factory = self.get_model_architecture()
 
-			# Create optimization job
-			optimization_job = OptimizationJob(dataset, model_architecture_factory)
+				# Create optimization job
+				optimization_job = OptimizationJob(dataset, model_architecture_factory)
 
-			# Notify UI/slaves via socket
-			SocketCommunication.decide_print_form(
-				MSGType.MASTER_STATUS,
-				{'node': 1, 'msg': f'Starting optimization for {dataset_name}'}
-			)
+				# Notify UI/slaves via socket
+				SocketCommunication.decide_print_form(
+					MSGType.MASTER_STATUS,
+					{'node': 1, 'msg': f'Starting optimization for {dataset_name} (run {run_idx+1}/{total_runs})'}
+				)
 
-			# Run AutoML for this dataset
-			optimization_job.start_optimization(trials=SP.TRIALS)
+				# Run AutoML for this dataset
+				optimization_job.start_optimization(trials=SP.TRIALS)
+				completed_runs += 1
+
+			except Exception as e:
+				print(f"\n[ERROR] Run {run_idx+1} ({dataset_name}) failed: {e}")
+				import traceback
+				traceback.print_exc()
+				failed_runs.append((run_idx+1, dataset_name, str(e)))
+				print(f"Continuing with next scheduled dataset...\n")
 
 		print("\n==============================")
-		print("   ALL SCHEDULED DATASETS FINISHED")
+		print(f"   ALL SCHEDULED DATASETS FINISHED: {completed_runs}/{total_runs} succeeded")
+		if failed_runs:
+			print(f"   FAILED RUNS ({len(failed_runs)}):")
+			for idx, name, err in failed_runs:
+				print(f"     - Run {idx} ({name}): {err}")
 		print("==============================\n")
 
 	def slave(self):

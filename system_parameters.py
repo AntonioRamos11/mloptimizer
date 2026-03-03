@@ -125,6 +125,7 @@ class SystemParameters:
         ('mnist', 3),
         ('cifar10', 3),
         ('fashion_mnist', 3),
+        ('cifar100', 3)   
     ]
     
     @classmethod

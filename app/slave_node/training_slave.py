@@ -101,7 +101,9 @@ class TrainingSlave:
 		self.pool = concurrent.futures.ProcessPoolExecutor(max_workers=1)
 		
 		# Deduplication: track processed jobs to prevent duplicate processing
+		# Uses composite key: (experiment_id, model_id, is_partial_training)
 		self.processed_jobs = set()
+		self._current_experiment_id = None
 		
 		# Pre-load dataset in the subprocess ONCE
 		logger.info("Pre-loading dataset in worker subprocess...")
@@ -184,9 +186,13 @@ class TrainingSlave:
 		
 		subprocess_log_file = log_dir / f'subprocess_training_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
 		subprocess_logger = logging.getLogger('subprocess_training')
-		subprocess_handler = logging.FileHandler(subprocess_log_file)
-		subprocess_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-		subprocess_logger.addHandler(subprocess_handler)
+		# Prevent handler accumulation: the subprocess is reused by ProcessPoolExecutor,
+		# so each call would add another handler without this check
+		if not subprocess_logger.handlers:
+			subprocess_handler = logging.FileHandler(subprocess_log_file)
+			subprocess_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+			subprocess_logger.addHandler(subprocess_handler)
+			subprocess_logger.propagate = False  # Don't propagate to root logger (prevents double output)
 		subprocess_logger.setLevel(logging.INFO)
 		
 		try:
@@ -277,14 +283,25 @@ class TrainingSlave:
 	async def _on_model_params_received(self, model_params):
 		"""Handle received model training request with error handling"""
 		model_id = model_params.get('id', 'unknown')
+		experiment_id = model_params.get('experiment_id', '')
+		is_partial = model_params.get('is_partial_training', True)
 		
-		# DEDUPLICATION: Skip if this job was already processed
-		if model_id in self.processed_jobs:
-			logger.warning(f"DUPLICATE: Job {model_id} already processed - ignoring")
+		# Reset dedup set when a new experiment starts
+		if experiment_id and experiment_id != self._current_experiment_id:
+			if self._current_experiment_id is not None:
+				logger.info(f"New experiment detected ({experiment_id}), resetting processed jobs set")
+			self.processed_jobs.clear()
+			self._current_experiment_id = experiment_id
+		
+		# DEDUPLICATION: Use composite key (experiment + model_id + training phase)
+		# This allows the same model_id to be trained in both exploration and deep training
+		dedup_key = f"{experiment_id}_{model_id}_{'partial' if is_partial else 'full'}"
+		if dedup_key in self.processed_jobs:
+			logger.warning(f"DUPLICATE: Job {dedup_key} already processed - ignoring")
 			return
 		
 		# Mark job as processing
-		self.processed_jobs.add(model_id)
+		self.processed_jobs.add(dedup_key)
 		
 		try:
 			logger.info(f"Received model training request (ID: {model_id})")

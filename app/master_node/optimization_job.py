@@ -206,14 +206,21 @@ class OptimizationJob:
                 log_info(f"Skip: inflight={len(self.inflight_jobs)}, max={self.max_jobs} ({reason})")
                 return False
 
-            job_id = await self.generate_model()
-            if not job_id:
-                log_error(f"generate_model failed, not adding to inflight")
+            # Step 1: Prepare model (validate, but do NOT publish yet)
+            result = await self._prepare_model()
+            if not result:
+                log_error(f"_prepare_model failed, not adding to inflight")
                 return False
 
+            job_id, model_training_request = result
+
+            # Step 2: Check for duplicates BEFORE publishing
             if job_id in self.inflight_jobs:
-                log_error(f"DUPLICATE JOB DETECTED: {job_id} — skipping")
+                log_error(f"DUPLICATE JOB DETECTED: {job_id} — skipping (not published)")
                 return False
+
+            # Step 3: Only now publish to broker (after dedup check passes)
+            await self._send_model_to_broker(model_training_request)
 
             self.inflight_jobs.add(job_id)
             self.job_timestamps[job_id] = time.time()
@@ -485,7 +492,9 @@ class OptimizationJob:
         except Exception as e:
             log_error("Error processing model result", e, include_trace=True)
 
-    async def generate_model(self) -> Optional[str]:
+    async def _prepare_model(self) -> Optional[tuple]:
+        """Validate and prepare a model for sending. Returns (job_id, model_training_request) or None.
+        Does NOT publish to broker — caller is responsible for publishing after dedup checks."""
         MAX_RETRIES = 5
 
         for attempt in range(MAX_RETRIES):
@@ -518,17 +527,10 @@ class OptimizationJob:
                     log_error(f"Model {model_training_request.id} is not valid!")
                     continue
 
-                # Valid → send job
-                await self._send_model_to_broker(model_training_request)
+                job_id = self._make_job_id(model_training_request.id)
+                log_info(f"Model {model_training_request.id} prepared (job_id={job_id})")
 
-                log_info(f"Model {model_training_request.id} sent to broker")
-
-                SocketCommunication.decide_print_form(
-                    MSGType.MASTER_STATUS,
-                    {'node': 1, 'msg': 'Sent model to broker'}
-                )
-
-                return self._make_job_id(model_training_request.id)
+                return (job_id, model_training_request)
 
             except Exception as e:
                 log_error("Error generating model", e, include_trace=True)
@@ -536,10 +538,27 @@ class OptimizationJob:
         log_error(f"Max retries ({MAX_RETRIES}) exceeded while generating model")
         return None
 
+    async def generate_model(self) -> Optional[str]:
+        """Convenience wrapper: prepare + publish in one call (used by fill_pipeline startup)."""
+        result = await self._prepare_model()
+        if not result:
+            return None
+        job_id, model_training_request = result
+        await self._send_model_to_broker(model_training_request)
+
+        log_info(f"Model {model_training_request.id} sent to broker")
+        SocketCommunication.decide_print_form(
+            MSGType.MASTER_STATUS,
+            {'node': 1, 'msg': 'Sent model to broker'}
+        )
+        return job_id
+
     async def _send_model_to_broker(self, model_training_request: ModelTrainingRequest):
-        log_info(f"Sending model {model_training_request.id} to broker")
+        log_info(f"Sending model {model_training_request.id} to broker (phase={self.optimization_strategy.phase.name})")
         try:
             model_training_request_dict = asdict(model_training_request)
+            # Include phase in the message so slaves can differentiate exploration vs deep training
+            model_training_request_dict['phase'] = self.optimization_strategy.phase.name
             await self.rabbitmq_client.publish_model_params(model_training_request_dict)
             log_info(f"Model {model_training_request.id} published to RabbitMQ")
         except Exception as e:

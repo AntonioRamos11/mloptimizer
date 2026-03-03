@@ -31,7 +31,6 @@ class MasterRabbitMQClient(BaseRabbitMQClient):
 		try:
 			# Use plain connect (not connect_robust) — this is a one-shot operation
 			# and we don't want a zombie reconnection loop.
-			# Also include self.port so we hit the ngrok tunnel, not default 5672.
 			host = self.host_url
 			if '://' in host:
 				host = host.split('://', 1)[1]
@@ -46,21 +45,17 @@ class MasterRabbitMQClient(BaseRabbitMQClient):
 			)
 			channel = await connection.channel()
 			
-			# Purge parameters queue
-			try:
-				await channel.queue_delete(self.model_parameter_queue)
-				await channel.declare_queue(self.model_parameter_queue, durable=True)
-				print(f"[MasterRabbitMQClient] Purged: {self.model_parameter_queue}")
-			except Exception as e:
-				print(f"[MasterRabbitMQClient] Skip {self.model_parameter_queue}: {e}")
-			
-			# Purge results queue
-			try:
-				await channel.queue_delete(self.model_performance_queue)
-				await channel.declare_queue(self.model_performance_queue, durable=True)
-				print(f"[MasterRabbitMQClient] Purged: {self.model_performance_queue}")
-			except Exception as e:
-				print(f"[MasterRabbitMQClient] Skip {self.model_performance_queue}: {e}")
+			# Purge queue CONTENTS only (don't delete the queue itself).
+			# queue_delete destroys the slave's consumer binding, forcing a
+			# full reconnect through ngrok (~30 s). queue.purge() just
+			# empties the messages while keeping consumers attached.
+			for queue_name in (self.model_parameter_queue, self.model_performance_queue):
+				try:
+					queue = await channel.declare_queue(queue_name, durable=True)
+					purged = await queue.purge()
+					print(f"[MasterRabbitMQClient] Purged {purged} msgs from: {queue_name}")
+				except Exception as e:
+					print(f"[MasterRabbitMQClient] Skip {queue_name}: {e}")
 			
 			await connection.close()
 			print("[MasterRabbitMQClient] Queue purge done")

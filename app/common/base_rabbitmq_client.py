@@ -32,6 +32,14 @@ class BaseRabbitMQClient:
 	#Async function that prepares the queue connection
 	async def prepare_queues(self):
 		logger = logging.getLogger("rabbitmq_connection")
+		# Prevent this logger from propagating to root (avoids duplicate output
+		# when root also has a StreamHandler, e.g. from run_master.py)
+		logger.propagate = False
+		if not logger.handlers:
+			_h = logging.StreamHandler()
+			_h.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+			logger.addHandler(_h)
+			logger.setLevel(logging.INFO)
 		
 		logger.info(f"=== CONNECTION PARAMETERS ===")
 		logger.info(f"Host: {self.host_url}")

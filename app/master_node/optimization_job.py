@@ -29,15 +29,20 @@ log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../logs")
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f"optimization_job_{int(time.time())}.log")
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, mode='w'),
-        logging.StreamHandler()
-    ],
-    force=True
-)
+# Use a dedicated logger instead of reconfiguring the root logger.
+# logging.basicConfig(force=True) was adding duplicate StreamHandlers
+# on top of the one already created by run_master.py, causing every
+# log line to appear 2-5× on the console.
+_opt_logger = logging.getLogger('optimization_job')
+if not _opt_logger.handlers:  # guard against re-import / reload
+    _opt_logger.setLevel(logging.DEBUG)
+    _fh = logging.FileHandler(log_file, mode='w')
+    _fh.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    _sh = logging.StreamHandler()
+    _sh.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    _opt_logger.addHandler(_fh)
+    _opt_logger.addHandler(_sh)
+    _opt_logger.propagate = False  # don't bubble up to root → no duplicates
 
 def log_info(msg, obj=None):
     frame = sys._getframe(1)
@@ -56,7 +61,7 @@ def log_info(msg, obj=None):
         full_msg = f"INFO [{location_info}] {msg} | {obj_str}"
     else:
         full_msg = f"INFO [{location_info}] {msg}"
-    logging.info(full_msg)
+    _opt_logger.info(full_msg)
     return full_msg
 
 def log_error(msg, exc=None, include_trace=False):
@@ -66,12 +71,12 @@ def log_error(msg, exc=None, include_trace=False):
     function = frame.f_code.co_name
     location_info = f"{filename}:{lineno} in {function}()"
     full_msg = f"ERROR [{location_info}] {msg}"
-    logging.error(full_msg)
+    _opt_logger.error(full_msg)
     if exc:
-        logging.error(f"Exception: {str(exc)}")
+        _opt_logger.error(f"Exception: {str(exc)}")
     if include_trace:
         stack = ''.join(traceback.format_stack()[:-1])
-        logging.error(f"Stack trace:\n{stack}")
+        _opt_logger.error(f"Stack trace:\n{stack}")
     return full_msg
 
 def get_hardware_info():
@@ -352,10 +357,11 @@ class OptimizationJob:
             await self.rabbitmq_client.purge_queues()
             await self.rabbitmq_client.prepare_queues()
 
-            # Retry loop: wait for slaves to reconnect after queue purge
-            # (aio_pika.connect_robust reconnects asynchronously)
-            max_wait = 30  # seconds
-            poll_interval = 2  # seconds
+            # Retry loop: wait for slaves to appear as consumers.
+            # Since we now purge queue contents (not delete+recreate), slave
+            # consumers stay attached — this loop usually completes immediately.
+            max_wait = 15  # seconds (was 30 when we deleted queues)
+            poll_interval = 1  # seconds
             elapsed = 0
             queue_status = None
             while elapsed < max_wait:

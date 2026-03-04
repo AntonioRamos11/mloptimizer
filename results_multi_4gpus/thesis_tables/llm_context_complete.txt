@@ -1,0 +1,83 @@
+================================================================================
+CONTEXTO COMPLETO PARA LLM — TESIS: AutoML en la Nube
+Datos extraídos de experimentos con 2 GPUs (NVIDIA RTX 3080)
+================================================================================
+
+─── SECCIÓN 1: RESUMEN DE RESULTADOS ───
+
+Experimento: cifar10-20260304-035119
+  Dataset: CIFAR-10
+  Mejor Accuracy: 0.9849
+  Arquitectura ganadora: inception + mlp
+  Fase ganadora: deep_training
+  Modelos generados: 8 (Exploración: 5, Deep: 3)
+  Tiempo total: 01:14:52
+  Leaderboard completo:
+    Model 3: 0.9849 (inception+mlp) [deep_training]
+    Model 3: 0.9849 (inception+mlp) [exploration]
+    Model 1: 0.9800 (cnn+mlp) [exploration]
+    Model 2: 0.9753 (cnn+mlp) [deep_training]
+    Model 1: 0.9800 (cnn+mlp) [deep_training]
+    Model 2: 0.9753 (cnn+mlp) [exploration]
+    Model 4: 0.9698 (inception+gap) [exploration]
+    Model 0: 0.0980 (cnn+gap) [exploration]
+
+Experimento: mnist-20260304-014240
+  Dataset: MNIST
+  Mejor Accuracy: 0.9836
+  Arquitectura ganadora: cnn + mlp
+  Fase ganadora: exploration
+  Modelos generados: 8 (Exploración: 5, Deep: 3)
+  Tiempo total: 01:05:08
+  Leaderboard completo:
+    Model 0: 0.9836 (cnn+mlp) [exploration]
+    Model 2: 0.9792 (cnn+gap) [deep_training]
+    Model 3: 0.9790 (cnn+mlp) [deep_training]
+    Model 2: 0.9792 (cnn+gap) [exploration]
+    Model 3: 0.9790 (cnn+mlp) [exploration]
+    Model 0: 0.9836 (cnn+mlp) [deep_training]
+    Model 1: 0.9778 (cnn+gap) [exploration]
+    Model 4: 0.8709 (cnn+gap) [exploration]
+
+Experimento: mnist-20260304-024751
+  Dataset: MNIST
+  Mejor Accuracy: 0.9765
+  Arquitectura ganadora: cnn + mlp
+  Fase ganadora: deep_training
+  Modelos generados: 8 (Exploración: 5, Deep: 3)
+  Tiempo total: 01:03:26
+  Leaderboard completo:
+    Model 4: 0.9765 (cnn+mlp) [deep_training]
+    Model 4: 0.9765 (cnn+mlp) [exploration]
+    Model 2: 0.9668 (inception+gap) [exploration]
+    Model 2: 0.9668 (inception+gap) [deep_training]
+    Model 3: 0.9602 (cnn+gap) [deep_training]
+    Model 3: 0.9602 (cnn+gap) [exploration]
+    Model 0: 0.9508 (inception+gap) [exploration]
+    Model 1: 0.7278 (cnn+gap) [exploration]
+
+─── SECCIÓN 2: REPRODUCIBILIDAD ───
+  CIFAR-10: 1 runs, Media=0.9849, Std=0.0000, Min=0.9849, Max=0.9849
+  MNIST: 2 runs, Media=0.9800, Std=0.0036, Min=0.9765, Max=0.9836
+
+─── SECCIÓN 3: INFRAESTRUCTURA DEL CLUSTER ───
+  Worker 1 (unknown):
+    CPU: ? threads, RAM: 0.0 GB
+    GPU: 0× ?
+    VRAM: 0 MiB
+    TF: ?, CUDA: ?
+    Python: 3.10.12, OS: ?
+
+─── SECCIÓN 4: MÉTRICAS DE HARDWARE GPU (hardware_metrics) ───
+  Incluye: Utilización GPU, Memoria, Temperatura, Power draw, Idle time, Latencia
+
+─── SECCIÓN 5: RENDIMIENTO DE ENTRENAMIENTO (hardware_performance_logs) ───
+  Incluye: Build time, Train time, Epochs, Time per epoch, Accuracy final, Loss
+
+─── SECCIÓN 6: ESTADÍSTICAS AGREGADAS ───
+
+
+
+================================================================================
+FIN DEL CONTEXTO
+================================================================================

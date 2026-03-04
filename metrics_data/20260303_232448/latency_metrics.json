@@ -1,0 +1,152 @@
+[
+  {
+    "timestamp": "2026-03-03T23:18:24.836312",
+    "metrics": {
+      "inference": {
+        "status": "no model registered"
+      },
+      "training_step": {
+        "status": "no model available"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:18:27.896311",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 14.731764793395996,
+        "throughput_samples_per_sec": 67.88052986348814
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:20:03.046756",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 14.730572700500488,
+        "throughput_samples_per_sec": 67.8860231935194
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:20:05.767337",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 14.80107307434082,
+        "throughput_samples_per_sec": 67.5626689347006
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:21:35.050000",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 14.879584312438965,
+        "throughput_samples_per_sec": 67.20617854653538
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:21:37.780518",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 14.762473106384277,
+        "throughput_samples_per_sec": 67.7393274686159
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:23:08.115740",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 14.885163307189941,
+        "throughput_samples_per_sec": 67.18098951033829
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:23:10.831449",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 15.925121307373047,
+        "throughput_samples_per_sec": 62.79387018151114
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-03T23:24:46.225251",
+    "metrics": {
+      "inference": {
+        "batch_size": 1,
+        "num_runs": 10,
+        "avg_latency_ms": 15.425252914428711,
+        "throughput_samples_per_sec": 64.82875875990368
+      },
+      "training_step": {
+        "error": "in user code:\n\n    File \"/workspace/mloptimizer/app/common/GpuMetrics.py\", line 588, in train_step  *\n        loss = model.loss(y, y_pred)\n\n    TypeError: 'str' object is not callable\n"
+      },
+      "data_pipeline": {
+        "status": "no dataset provided"
+      }
+    }
+  }
+]

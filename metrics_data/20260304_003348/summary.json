@@ -1,0 +1,85 @@
+{
+  "num_records": 11,
+  "avg_gpu_utilization": {
+    "0": 7.1818181818181825
+  },
+  "avg_gpu_memory": {
+    "0": 32.94389204545455
+  },
+  "avg_cpu_utilization": 1.2727272727272725,
+  "avg_inference_latency_ms": 9.753377437591553,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "conv2d",
+        "type": "Conv2D",
+        "shape": "(None, 26, 26, 32)",
+        "params": 320,
+        "filters": 32,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization",
+        "type": "BatchNormalization",
+        "shape": "(None, 26, 26, 32)",
+        "params": 128
+      },
+      {
+        "name": "max_pooling2d",
+        "type": "MaxPooling2D",
+        "shape": "(None, 8, 8, 32)",
+        "params": 0
+      },
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 68)",
+        "params": 8264
+      },
+      {
+        "name": "max_pooling2d_2",
+        "type": "MaxPooling2D",
+        "shape": "(None, 4, 4, 68)",
+        "params": 0
+      },
+      {
+        "name": "flatten",
+        "type": "Flatten",
+        "shape": "(None, 1088)",
+        "params": 0
+      },
+      {
+        "name": "dense",
+        "type": "Dense",
+        "shape": "(None, 10)",
+        "params": 10890,
+        "units": 10,
+        "activation": "linear"
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 19602,
+    "trainable_params": "19378",
+    "non_trainable_params": "224",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 202.64634442329407,
+    "average_seconds": 50.66158610582352,
+    "max_seconds": 72.47193336486816,
+    "idle_records_count": 4,
+    "idle_periods_detected": 4,
+    "time_unit": "seconds"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "num_records": 13,
+  "avg_gpu_utilization": {
+    "0": 3.769230769230769
+  },
+  "avg_gpu_memory": {
+    "0": 35.97205528846154
+  },
+  "avg_cpu_utilization": 0.6923076923076923,
+  "avg_inference_latency_ms": 7.509887218475342,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 28, 28, 164)",
+        "params": 24524
+      },
+      {
+        "name": "max_pooling2d_1",
+        "type": "MaxPooling2D",
+        "shape": "(None, 14, 14, 164)",
+        "params": 0
+      },
+      {
+        "name": "flatten",
+        "type": "Flatten",
+        "shape": "(None, 32144)",
+        "params": 0
+      },
+      {
+        "name": "dense",
+        "type": "Dense",
+        "shape": "(None, 10)",
+        "params": 321450,
+        "units": 10,
+        "activation": "linear"
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 345974,
+    "trainable_params": "345630",
+    "non_trainable_params": "344",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 454.95610213279724,
+    "average_seconds": 56.869512766599655,
+    "max_seconds": 112.60288262367249,
+    "idle_records_count": 8,
+    "idle_periods_detected": 8,
+    "time_unit": "seconds"
+  }
+}

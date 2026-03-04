@@ -1,0 +1,340 @@
+{
+  "experiment_id": "mnist-20260304-024751",
+  "timestamp": "2026-03-04 03:51:18",
+  "best_model": {
+    "model_training_request": {
+      "id": 4,
+      "training_type": 1,
+      "experiment_id": "mnist-20260304-024751",
+      "architecture": {
+        "base_architecture": "cnn",
+        "cnn_blocks_n": 4,
+        "cnn_blocks_conv_layers_n": 2,
+        "cnn_block_conv_filters": [
+          32,
+          128,
+          256,
+          256
+        ],
+        "cnn_block_conv_filter_sizes": [
+          3,
+          5,
+          5,
+          3
+        ],
+        "cnn_block_max_pooling_sizes": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "cnn_block_dropout_values": [
+          0.5,
+          0.3,
+          0,
+          0.5
+        ],
+        "inception_stem_blocks_n": 0,
+        "inception_stem_block_conv_filters": [],
+        "inception_stem_block_conv_filter_sizes": [],
+        "inception_stem_block_max_pooling_sizes": [],
+        "inception_blocks_n": 0,
+        "inception_modules_n": 0,
+        "inception_modules_conv1x1_filters": [],
+        "inception_modules_conv3x3_reduce_filters": [],
+        "inception_modules_conv3x3_filters": [],
+        "inception_modules_conv5x5_reduce_filters": [],
+        "inception_modules_conv5x5_filters": [],
+        "inception_modules_pooling_conv_filters": [],
+        "classifier_layer_type": "mlp",
+        "classifier_layers_n": 2,
+        "classifier_dropouts": [
+          0.5,
+          0.3
+        ],
+        "classifier_layers_units": [
+          320,
+          368
+        ],
+        "learning_rate": 0.0
+      },
+      "epochs": 5,
+      "early_stopping_patience": 3,
+      "is_partial_training": true,
+      "search_space_type": "image",
+      "search_space_hash": -1710851370541997620,
+      "dataset_tag": "mnist"
+    },
+    "performance": 0.9764999747276306,
+    "performance_2": 0.9804999828338623,
+    "hardware_info": {
+      "cpu_model": "x86_64",
+      "cpu_cores": 72,
+      "python_version": "3.10.12",
+      "system": "Linux",
+      "ram_total": "125.74 GB",
+      "ram_available": "97.22 GB",
+      "gpu_count": 4,
+      "gpus": [
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        },
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        },
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        },
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        }
+      ]
+    }
+  },
+  "architecture": {
+    "base_architecture": "cnn",
+    "cnn_blocks_n": 4,
+    "cnn_blocks_conv_layers_n": 2,
+    "cnn_block_conv_filters": [
+      32,
+      128,
+      256,
+      256
+    ],
+    "cnn_block_conv_filter_sizes": [
+      3,
+      5,
+      5,
+      3
+    ],
+    "cnn_block_max_pooling_sizes": [
+      2,
+      2,
+      2,
+      2
+    ],
+    "cnn_block_dropout_values": [
+      0.5,
+      0.3,
+      0,
+      0.5
+    ],
+    "inception_stem_blocks_n": 0,
+    "inception_stem_block_conv_filters": [],
+    "inception_stem_block_conv_filter_sizes": [],
+    "inception_stem_block_max_pooling_sizes": [],
+    "inception_blocks_n": 0,
+    "inception_modules_n": 0,
+    "inception_modules_conv1x1_filters": [],
+    "inception_modules_conv3x3_reduce_filters": [],
+    "inception_modules_conv3x3_filters": [],
+    "inception_modules_conv5x5_reduce_filters": [],
+    "inception_modules_conv5x5_filters": [],
+    "inception_modules_pooling_conv_filters": [],
+    "classifier_layer_type": "mlp",
+    "classifier_layers_n": 2,
+    "classifier_dropouts": [
+      0.5,
+      0.3
+    ],
+    "classifier_layers_units": [
+      320,
+      368
+    ],
+    "learning_rate": 0.0
+  },
+  "dataset": {
+    "name": "mnist",
+    "tag": "mnist",
+    "shape": [
+      28,
+      28,
+      1
+    ],
+    "classes": 10,
+    "batch_size": 4,
+    "validation_split": 0.2,
+    "ranges": ""
+  },
+  "training_config": {
+    "exploration_size": 5,
+    "hall_of_fame_size": 3,
+    "exploration_epochs": 5,
+    "deep_training_epochs": 6,
+    "hof_early_stopping_patience": 5,
+    "trials": 10
+  },
+  "performance_metrics": {
+    "elapsed_seconds": 3806.898054599762,
+    "elapsed_time": "01:03:26",
+    "best_exploration_accuracy": 0.9764999747276306,
+    "best_deep_training_accuracy": 0.9804999828338623
+  },
+  "hardware_info": {
+    "cpu_model": "x86_64",
+    "cpu_cores": 72,
+    "python_version": "3.10.12",
+    "system": "Linux",
+    "ram_total": "125.74 GB",
+    "ram_available": "97.22 GB",
+    "gpu_count": 4,
+    "gpus": [
+      {
+        "model": "NVIDIA GeForce RTX 4070",
+        "memory": "12282 MiB",
+        "driver": "570.153.02"
+      },
+      {
+        "model": "NVIDIA GeForce RTX 4070",
+        "memory": "12282 MiB",
+        "driver": "570.153.02"
+      },
+      {
+        "model": "NVIDIA GeForce RTX 4070",
+        "memory": "12282 MiB",
+        "driver": "570.153.02"
+      },
+      {
+        "model": "NVIDIA GeForce RTX 4070",
+        "memory": "12282 MiB",
+        "driver": "570.153.02"
+      }
+    ]
+  },
+  "all_workers_hardware": [
+    {
+      "cpu_model": "x86_64",
+      "cpu_cores": 72,
+      "python_version": "3.10.12",
+      "system": "Linux",
+      "ram_total": "125.74 GB",
+      "ram_available": "97.48 GB",
+      "gpu_count": 4,
+      "gpus": [
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        },
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        },
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        },
+        {
+          "model": "NVIDIA GeForce RTX 4070",
+          "memory": "12282 MiB",
+          "driver": "570.153.02"
+        }
+      ]
+    }
+  ],
+  "gpu_cluster_summary": {
+    "total_workers": 1,
+    "total_gpus": 4,
+    "gpu_models": {
+      "NVIDIA GeForce RTX 4070": {
+        "count": 4,
+        "memory": "12282 MiB",
+        "driver": "570.153.02"
+      }
+    }
+  },
+  "optimization_stats": {
+    "models_generated": 8,
+    "models_processed": 8,
+    "exploration_models": 5,
+    "deep_training_models": 3,
+    "final_phase": "DEEP_TRAINING"
+  },
+  "leaderboard": [
+    {
+      "id": 4,
+      "phase": "deep_training",
+      "performance": 0.9764999747276306,
+      "performance_2": 0.9804999828338623,
+      "base_architecture": "cnn",
+      "classifier_type": "mlp",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    },
+    {
+      "id": 4,
+      "phase": "exploration",
+      "performance": 0.9764999747276306,
+      "base_architecture": "cnn",
+      "classifier_type": "mlp",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    },
+    {
+      "id": 2,
+      "phase": "exploration",
+      "performance": 0.9667999744415283,
+      "base_architecture": "inception",
+      "classifier_type": "gap",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    },
+    {
+      "id": 2,
+      "phase": "deep_training",
+      "performance": 0.9667999744415283,
+      "performance_2": 0.9660000205039978,
+      "base_architecture": "inception",
+      "classifier_type": "gap",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    },
+    {
+      "id": 3,
+      "phase": "deep_training",
+      "performance": 0.9602000117301941,
+      "performance_2": 0.9645000100135803,
+      "base_architecture": "cnn",
+      "classifier_type": "gap",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    },
+    {
+      "id": 3,
+      "phase": "exploration",
+      "performance": 0.9602000117301941,
+      "base_architecture": "cnn",
+      "classifier_type": "gap",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    },
+    {
+      "id": 0,
+      "phase": "exploration",
+      "performance": 0.9508000016212463,
+      "base_architecture": "inception",
+      "classifier_type": "gap",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    },
+    {
+      "id": 1,
+      "phase": "exploration",
+      "performance": 0.7278000116348267,
+      "base_architecture": "cnn",
+      "classifier_type": "gap",
+      "trained_on_gpu": "4x NVIDIA GeForce RTX 4070",
+      "gpu_count": 4
+    }
+  ]
+}

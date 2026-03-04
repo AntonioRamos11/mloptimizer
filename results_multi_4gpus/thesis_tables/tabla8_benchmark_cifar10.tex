@@ -1,0 +1,14 @@
+\begin{tabular}{lrll}
+\toprule
+Método & Accuracy & Tipo & vs Nuestro \\
+\midrule
+VGG-16 (Simonyan 2014) & 0.9340 & Manual & +0.0509 \\
+ResNet-110 (He 2015) & 0.9370 & Manual & +0.0479 \\
+DenseNet-BC (Huang 2017) & 0.9520 & Manual & +0.0329 \\
+Auto-Keras (Jin 2019) & 0.9530 & AutoML & +0.0319 \\
+NASNet-A (Zoph 2018) & 0.9720 & NAS & +0.0129 \\
+DARTS (Liu 2019) & 0.9706 & NAS & +0.0143 \\
+\midrule
+\textbf{Nuestro AutoML} & \textbf{0.9849} & AutoML (Cloud) & --- \\
+\bottomrule
+\end{tabular}

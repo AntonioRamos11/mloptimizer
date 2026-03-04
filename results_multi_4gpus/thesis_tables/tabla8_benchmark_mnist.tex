@@ -1,0 +1,14 @@
+\begin{tabular}{lrll}
+\toprule
+Método & Accuracy & Tipo & vs Nuestro \\
+\midrule
+LeNet-5 (LeCun 1998) & 0.9920 & Manual & -0.0084 \\
+VGG-16 (adaptado) & 0.9950 & Manual & -0.0114 \\
+ResNet-18 (adaptado) & 0.9960 & Manual & -0.0124 \\
+Auto-Keras (Jin 2019) & 0.9940 & AutoML & -0.0104 \\
+Google AutoML Vision & 0.9950 & AutoML (Cloud) & -0.0114 \\
+DARTS (Liu 2019) & 0.9960 & NAS & -0.0124 \\
+\midrule
+\textbf{Nuestro AutoML} & \textbf{0.9836} & AutoML (Cloud) & --- \\
+\bottomrule
+\end{tabular}

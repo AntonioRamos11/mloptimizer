@@ -1,0 +1,70 @@
+{
+  "layers": [
+    {
+      "name": "conv2d",
+      "type": "Conv2D",
+      "shape": "(None, 24, 24, 80)",
+      "params": 2080,
+      "filters": 80,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization",
+      "type": "BatchNormalization",
+      "shape": "(None, 24, 24, 80)",
+      "params": 320
+    },
+    {
+      "name": "max_pooling2d",
+      "type": "MaxPooling2D",
+      "shape": "(None, 8, 8, 80)",
+      "params": 0
+    },
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 8, 8, 100)",
+      "params": 26800
+    },
+    {
+      "name": "max_pooling2d_2",
+      "type": "MaxPooling2D",
+      "shape": "(None, 4, 4, 100)",
+      "params": 0
+    },
+    {
+      "name": "conv2d_7",
+      "type": "Conv2D",
+      "shape": "(None, 4, 4, 10)",
+      "params": 1010,
+      "filters": 10,
+      "kernel_size": [
+        1,
+        1
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "global_average_pooling2d",
+      "type": "GlobalAveragePooling2D",
+      "shape": "(None, 10)",
+      "params": 0
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 30210,
+  "trainable_params": "29778",
+  "non_trainable_params": "432",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

@@ -1,0 +1,82 @@
+{
+  "layers": [
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 28, 28, 204)",
+      "params": 29976
+    },
+    {
+      "name": "inception_v1_module_bn_1",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 28, 28, 204)",
+      "params": 54336
+    },
+    {
+      "name": "inception_v1_module_bn_2",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 28, 28, 204)",
+      "params": 54336
+    },
+    {
+      "name": "max_pooling2d_3",
+      "type": "MaxPooling2D",
+      "shape": "(None, 14, 14, 204)",
+      "params": 0
+    },
+    {
+      "name": "flatten",
+      "type": "Flatten",
+      "shape": "(None, 39984)",
+      "params": 0
+    },
+    {
+      "name": "dense",
+      "type": "Dense",
+      "shape": "(None, 64)",
+      "params": 2559040,
+      "units": 64,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout",
+      "type": "Dropout",
+      "shape": "(None, 64)",
+      "params": 0
+    },
+    {
+      "name": "dense_1",
+      "type": "Dense",
+      "shape": "(None, 16)",
+      "params": 1040,
+      "units": 16,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout_1",
+      "type": "Dropout",
+      "shape": "(None, 16)",
+      "params": 0
+    },
+    {
+      "name": "dense_2",
+      "type": "Dense",
+      "shape": "(None, 10)",
+      "params": 170,
+      "units": 10,
+      "activation": "linear"
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 2698898,
+  "trainable_params": "2697650",
+  "non_trainable_params": "1248",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

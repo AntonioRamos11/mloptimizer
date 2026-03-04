@@ -1,0 +1,322 @@
+{
+  "layers": [
+    {
+      "name": "conv2d",
+      "type": "Conv2D",
+      "shape": "(None, 28, 28, 64)",
+      "params": 1664,
+      "filters": 64,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization",
+      "type": "BatchNormalization",
+      "shape": "(None, 28, 28, 64)",
+      "params": 256
+    },
+    {
+      "name": "conv2d_1",
+      "type": "Conv2D",
+      "shape": "(None, 28, 28, 64)",
+      "params": 102464,
+      "filters": 64,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_1",
+      "type": "BatchNormalization",
+      "shape": "(None, 28, 28, 64)",
+      "params": 256
+    },
+    {
+      "name": "conv2d_2",
+      "type": "Conv2D",
+      "shape": "(None, 28, 28, 64)",
+      "params": 102464,
+      "filters": 64,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_2",
+      "type": "BatchNormalization",
+      "shape": "(None, 28, 28, 64)",
+      "params": 256
+    },
+    {
+      "name": "max_pooling2d",
+      "type": "MaxPooling2D",
+      "shape": "(None, 14, 14, 64)",
+      "params": 0
+    },
+    {
+      "name": "dropout",
+      "type": "Dropout",
+      "shape": "(None, 14, 14, 64)",
+      "params": 0
+    },
+    {
+      "name": "conv2d_3",
+      "type": "Conv2D",
+      "shape": "(None, 14, 14, 128)",
+      "params": 73856,
+      "filters": 128,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_3",
+      "type": "BatchNormalization",
+      "shape": "(None, 14, 14, 128)",
+      "params": 512
+    },
+    {
+      "name": "conv2d_4",
+      "type": "Conv2D",
+      "shape": "(None, 14, 14, 128)",
+      "params": 147584,
+      "filters": 128,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_4",
+      "type": "BatchNormalization",
+      "shape": "(None, 14, 14, 128)",
+      "params": 512
+    },
+    {
+      "name": "conv2d_5",
+      "type": "Conv2D",
+      "shape": "(None, 14, 14, 128)",
+      "params": 147584,
+      "filters": 128,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_5",
+      "type": "BatchNormalization",
+      "shape": "(None, 14, 14, 128)",
+      "params": 512
+    },
+    {
+      "name": "max_pooling2d_1",
+      "type": "MaxPooling2D",
+      "shape": "(None, 7, 7, 128)",
+      "params": 0
+    },
+    {
+      "name": "dropout_1",
+      "type": "Dropout",
+      "shape": "(None, 7, 7, 128)",
+      "params": 0
+    },
+    {
+      "name": "conv2d_6",
+      "type": "Conv2D",
+      "shape": "(None, 7, 7, 128)",
+      "params": 147584,
+      "filters": 128,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_6",
+      "type": "BatchNormalization",
+      "shape": "(None, 7, 7, 128)",
+      "params": 512
+    },
+    {
+      "name": "conv2d_7",
+      "type": "Conv2D",
+      "shape": "(None, 7, 7, 128)",
+      "params": 147584,
+      "filters": 128,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_7",
+      "type": "BatchNormalization",
+      "shape": "(None, 7, 7, 128)",
+      "params": 512
+    },
+    {
+      "name": "conv2d_8",
+      "type": "Conv2D",
+      "shape": "(None, 7, 7, 128)",
+      "params": 147584,
+      "filters": 128,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_8",
+      "type": "BatchNormalization",
+      "shape": "(None, 7, 7, 128)",
+      "params": 512
+    },
+    {
+      "name": "max_pooling2d_2",
+      "type": "MaxPooling2D",
+      "shape": "(None, 4, 4, 128)",
+      "params": 0
+    },
+    {
+      "name": "dropout_2",
+      "type": "Dropout",
+      "shape": "(None, 4, 4, 128)",
+      "params": 0
+    },
+    {
+      "name": "conv2d_9",
+      "type": "Conv2D",
+      "shape": "(None, 4, 4, 512)",
+      "params": 1638912,
+      "filters": 512,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_9",
+      "type": "BatchNormalization",
+      "shape": "(None, 4, 4, 512)",
+      "params": 2048
+    },
+    {
+      "name": "conv2d_10",
+      "type": "Conv2D",
+      "shape": "(None, 4, 4, 512)",
+      "params": 6554112,
+      "filters": 512,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_10",
+      "type": "BatchNormalization",
+      "shape": "(None, 4, 4, 512)",
+      "params": 2048
+    },
+    {
+      "name": "conv2d_11",
+      "type": "Conv2D",
+      "shape": "(None, 4, 4, 512)",
+      "params": 6554112,
+      "filters": 512,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization_11",
+      "type": "BatchNormalization",
+      "shape": "(None, 4, 4, 512)",
+      "params": 2048
+    },
+    {
+      "name": "max_pooling2d_3",
+      "type": "MaxPooling2D",
+      "shape": "(None, 2, 2, 512)",
+      "params": 0
+    },
+    {
+      "name": "dropout_3",
+      "type": "Dropout",
+      "shape": "(None, 2, 2, 512)",
+      "params": 0
+    },
+    {
+      "name": "flatten",
+      "type": "Flatten",
+      "shape": "(None, 2048)",
+      "params": 0
+    },
+    {
+      "name": "dense",
+      "type": "Dense",
+      "shape": "(None, 64)",
+      "params": 131136,
+      "units": 64,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout_4",
+      "type": "Dropout",
+      "shape": "(None, 64)",
+      "params": 0
+    },
+    {
+      "name": "dense_1",
+      "type": "Dense",
+      "shape": "(None, 160)",
+      "params": 10400,
+      "units": 160,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout_5",
+      "type": "Dropout",
+      "shape": "(None, 160)",
+      "params": 0
+    },
+    {
+      "name": "dense_2",
+      "type": "Dense",
+      "shape": "(None, 10)",
+      "params": 1610,
+      "units": 10,
+      "activation": "linear"
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 15918634,
+  "trainable_params": "15913642",
+  "non_trainable_params": "4992",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

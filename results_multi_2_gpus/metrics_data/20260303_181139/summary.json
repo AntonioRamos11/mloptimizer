@@ -1,0 +1,77 @@
+{
+  "num_records": 7,
+  "avg_gpu_utilization": {
+    "0": 4.428571428571429
+  },
+  "avg_gpu_memory": {
+    "0": 43.60630580357143
+  },
+  "avg_cpu_utilization": 0.9285714285714285,
+  "avg_inference_latency_ms": 20.487260818481445,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 28, 28, 136)",
+        "params": 12728
+      },
+      {
+        "name": "inception_v1_module_bn_1",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 28, 28, 136)",
+        "params": 28388
+      },
+      {
+        "name": "inception_v1_module_bn_2",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 28, 28, 136)",
+        "params": 28388
+      },
+      {
+        "name": "max_pooling2d_3",
+        "type": "MaxPooling2D",
+        "shape": "(None, 14, 14, 136)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_18",
+        "type": "Conv2D",
+        "shape": "(None, 14, 14, 10)",
+        "params": 1370,
+        "filters": 10,
+        "kernel_size": [
+          1,
+          1
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "global_average_pooling2d",
+        "type": "GlobalAveragePooling2D",
+        "shape": "(None, 10)",
+        "params": 0
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 70874,
+    "trainable_params": "70058",
+    "non_trainable_params": "816",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 546.1969864368439,
+    "average_seconds": 109.23939728736877,
+    "max_seconds": 213.2920925617218,
+    "idle_records_count": 5,
+    "idle_periods_detected": 5,
+    "time_unit": "seconds"
+  }
+}

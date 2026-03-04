@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\caption{Comparación con benchmarks publicados — MNIST}
+\label{tab:benchmark_mnist}
+\begin{tabular}{llcc}
+\toprule
+\textbf{Método} & \textbf{Tipo} & \textbf{Accuracy} & \textbf{$\Delta$ vs Nuestro} \\
+\midrule
+  LeNet-5 (LeCun 1998) & Manual & 0.9920 & -0.0063 \\
+  VGG-16 (adaptado) & Manual & 0.9950 & -0.0093 \\
+  ResNet-18 (adaptado) & Manual & 0.9960 & -0.0103 \\
+  Auto-Keras (Jin 2019) & AutoML & 0.9940 & -0.0083 \\
+  Google AutoML Vision & AutoML (Cloud) & 0.9950 & -0.0093 \\
+  DARTS (Liu 2019) & NAS & 0.9960 & -0.0103 \\
+\midrule
+  \textbf{Nuestro AutoML} & \textbf{AutoML (Cloud)} & \textbf{0.9857} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

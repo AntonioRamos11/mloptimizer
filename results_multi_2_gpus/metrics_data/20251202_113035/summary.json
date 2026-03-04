@@ -1,0 +1,317 @@
+{
+  "num_records": 7,
+  "avg_gpu_utilization": {
+    "0": 22.57142857142857
+  },
+  "avg_gpu_memory": {
+    "0": 93.74162946428571
+  },
+  "avg_cpu_utilization": 0.21428571428571427,
+  "avg_inference_latency_ms": 13.16069761912028,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "conv2d",
+        "type": "Conv2D",
+        "shape": "(None, 28, 28, 32)",
+        "params": 832,
+        "filters": 32,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization",
+        "type": "BatchNormalization",
+        "shape": "(None, 28, 28, 32)",
+        "params": 128
+      },
+      {
+        "name": "conv2d_1",
+        "type": "Conv2D",
+        "shape": "(None, 28, 28, 32)",
+        "params": 25632,
+        "filters": 32,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_1",
+        "type": "BatchNormalization",
+        "shape": "(None, 28, 28, 32)",
+        "params": 128
+      },
+      {
+        "name": "conv2d_2",
+        "type": "Conv2D",
+        "shape": "(None, 28, 28, 32)",
+        "params": 25632,
+        "filters": 32,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_2",
+        "type": "BatchNormalization",
+        "shape": "(None, 28, 28, 32)",
+        "params": 128
+      },
+      {
+        "name": "max_pooling2d",
+        "type": "MaxPooling2D",
+        "shape": "(None, 14, 14, 32)",
+        "params": 0
+      },
+      {
+        "name": "dropout",
+        "type": "Dropout",
+        "shape": "(None, 14, 14, 32)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_3",
+        "type": "Conv2D",
+        "shape": "(None, 14, 14, 128)",
+        "params": 36992,
+        "filters": 128,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_3",
+        "type": "BatchNormalization",
+        "shape": "(None, 14, 14, 128)",
+        "params": 512
+      },
+      {
+        "name": "conv2d_4",
+        "type": "Conv2D",
+        "shape": "(None, 14, 14, 128)",
+        "params": 147584,
+        "filters": 128,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_4",
+        "type": "BatchNormalization",
+        "shape": "(None, 14, 14, 128)",
+        "params": 512
+      },
+      {
+        "name": "conv2d_5",
+        "type": "Conv2D",
+        "shape": "(None, 14, 14, 128)",
+        "params": 147584,
+        "filters": 128,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_5",
+        "type": "BatchNormalization",
+        "shape": "(None, 14, 14, 128)",
+        "params": 512
+      },
+      {
+        "name": "max_pooling2d_1",
+        "type": "MaxPooling2D",
+        "shape": "(None, 7, 7, 128)",
+        "params": 0
+      },
+      {
+        "name": "dropout_1",
+        "type": "Dropout",
+        "shape": "(None, 7, 7, 128)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_6",
+        "type": "Conv2D",
+        "shape": "(None, 7, 7, 128)",
+        "params": 409728,
+        "filters": 128,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_6",
+        "type": "BatchNormalization",
+        "shape": "(None, 7, 7, 128)",
+        "params": 512
+      },
+      {
+        "name": "conv2d_7",
+        "type": "Conv2D",
+        "shape": "(None, 7, 7, 128)",
+        "params": 409728,
+        "filters": 128,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_7",
+        "type": "BatchNormalization",
+        "shape": "(None, 7, 7, 128)",
+        "params": 512
+      },
+      {
+        "name": "conv2d_8",
+        "type": "Conv2D",
+        "shape": "(None, 7, 7, 128)",
+        "params": 409728,
+        "filters": 128,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_8",
+        "type": "BatchNormalization",
+        "shape": "(None, 7, 7, 128)",
+        "params": 512
+      },
+      {
+        "name": "max_pooling2d_2",
+        "type": "MaxPooling2D",
+        "shape": "(None, 4, 4, 128)",
+        "params": 0
+      },
+      {
+        "name": "dropout_2",
+        "type": "Dropout",
+        "shape": "(None, 4, 4, 128)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_9",
+        "type": "Conv2D",
+        "shape": "(None, 4, 4, 256)",
+        "params": 295168,
+        "filters": 256,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_9",
+        "type": "BatchNormalization",
+        "shape": "(None, 4, 4, 256)",
+        "params": 1024
+      },
+      {
+        "name": "conv2d_10",
+        "type": "Conv2D",
+        "shape": "(None, 4, 4, 256)",
+        "params": 590080,
+        "filters": 256,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_10",
+        "type": "BatchNormalization",
+        "shape": "(None, 4, 4, 256)",
+        "params": 1024
+      },
+      {
+        "name": "conv2d_11",
+        "type": "Conv2D",
+        "shape": "(None, 4, 4, 256)",
+        "params": 590080,
+        "filters": 256,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization_11",
+        "type": "BatchNormalization",
+        "shape": "(None, 4, 4, 256)",
+        "params": 1024
+      },
+      {
+        "name": "max_pooling2d_3",
+        "type": "MaxPooling2D",
+        "shape": "(None, 2, 2, 256)",
+        "params": 0
+      },
+      {
+        "name": "dropout_3",
+        "type": "Dropout",
+        "shape": "(None, 2, 2, 256)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_12",
+        "type": "Conv2D",
+        "shape": "(None, 2, 2, 10)",
+        "params": 2570,
+        "filters": 10,
+        "kernel_size": [
+          1,
+          1
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "global_average_pooling2d",
+        "type": "GlobalAveragePooling2D",
+        "shape": "(None, 10)",
+        "params": 0
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 3097866,
+    "trainable_params": "3094602",
+    "non_trainable_params": "3264",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 394.4591956138611,
+    "average_seconds": 131.4863985379537,
+    "max_seconds": 136.3761487007141,
+    "idle_records_count": 3,
+    "idle_periods_detected": 3,
+    "time_unit": "seconds"
+  }
+}

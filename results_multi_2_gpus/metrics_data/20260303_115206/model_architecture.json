@@ -1,0 +1,92 @@
+{
+  "layers": [
+    {
+      "name": "conv2d",
+      "type": "Conv2D",
+      "shape": "(None, 24, 24, 72)",
+      "params": 1872,
+      "filters": 72,
+      "kernel_size": [
+        5,
+        5
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization",
+      "type": "BatchNormalization",
+      "shape": "(None, 24, 24, 72)",
+      "params": 288
+    },
+    {
+      "name": "max_pooling2d",
+      "type": "MaxPooling2D",
+      "shape": "(None, 12, 12, 72)",
+      "params": 0
+    },
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 12, 12, 100)",
+      "params": 28612
+    },
+    {
+      "name": "inception_v1_module_bn_1",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 12, 12, 100)",
+      "params": 30852
+    },
+    {
+      "name": "inception_v1_module_bn_2",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 12, 12, 100)",
+      "params": 30852
+    },
+    {
+      "name": "max_pooling2d_4",
+      "type": "MaxPooling2D",
+      "shape": "(None, 6, 6, 100)",
+      "params": 0
+    },
+    {
+      "name": "flatten",
+      "type": "Flatten",
+      "shape": "(None, 3600)",
+      "params": 0
+    },
+    {
+      "name": "dense",
+      "type": "Dense",
+      "shape": "(None, 80)",
+      "params": 288080,
+      "units": 80,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout",
+      "type": "Dropout",
+      "shape": "(None, 80)",
+      "params": 0
+    },
+    {
+      "name": "dense_1",
+      "type": "Dense",
+      "shape": "(None, 10)",
+      "params": 810,
+      "units": 10,
+      "activation": "linear"
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 381366,
+  "trainable_params": "380454",
+  "non_trainable_params": "912",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

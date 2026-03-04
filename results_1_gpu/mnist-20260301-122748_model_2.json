@@ -1,0 +1,100 @@
+{
+  "model_info": {
+    "model_training_request": {
+      "id": 2,
+      "training_type": 1,
+      "experiment_id": "mnist-20260301-122748",
+      "architecture": {
+        "base_architecture": "cnn",
+        "cnn_blocks_n": 1,
+        "cnn_blocks_conv_layers_n": 4,
+        "cnn_block_conv_filters": [
+          32
+        ],
+        "cnn_block_conv_filter_sizes": [
+          5
+        ],
+        "cnn_block_max_pooling_sizes": [
+          2
+        ],
+        "cnn_block_dropout_values": [
+          0.1
+        ],
+        "inception_stem_blocks_n": 0,
+        "inception_stem_block_conv_filters": [],
+        "inception_stem_block_conv_filter_sizes": [],
+        "inception_stem_block_max_pooling_sizes": [],
+        "inception_blocks_n": 0,
+        "inception_modules_n": 0,
+        "inception_modules_conv1x1_filters": [],
+        "inception_modules_conv3x3_reduce_filters": [],
+        "inception_modules_conv3x3_filters": [],
+        "inception_modules_conv5x5_reduce_filters": [],
+        "inception_modules_conv5x5_filters": [],
+        "inception_modules_pooling_conv_filters": [],
+        "classifier_layer_type": "mlp",
+        "classifier_layers_n": 2,
+        "classifier_dropouts": [
+          0,
+          0.5
+        ],
+        "classifier_layers_units": [
+          80,
+          384
+        ],
+        "learning_rate": 0.0
+      },
+      "epochs": 5,
+      "early_stopping_patience": 3,
+      "is_partial_training": true,
+      "search_space_type": "image",
+      "search_space_hash": -1710851370541997620,
+      "dataset_tag": "mnist"
+    },
+    "performance": 0.9779000282287598,
+    "performance_2": -1,
+    "hardware_info": {
+      "cpu_model": "",
+      "cpu_cores": 20,
+      "python_version": "3.13.11",
+      "system": "Linux",
+      "ram_total": "31.13 GB",
+      "ram_available": "20.20 GB",
+      "gpu_count": 1,
+      "gpus": [
+        {
+          "model": "NVIDIA GeForce RTX 3080",
+          "memory": "10240 MiB",
+          "driver": "590.48.01"
+        }
+      ]
+    }
+  },
+  "dataset_ranges": null,
+  "performance_metrics": {
+    "model_id": 2,
+    "model_type": "exploration",
+    "timestamp": "2026-03-01 12:50:41"
+  },
+  "hardware_info": {
+    "cpu_model": "",
+    "cpu_cores": 20,
+    "python_version": "3.13.11",
+    "system": "Linux",
+    "ram_total": "31.13 GB",
+    "ram_available": "20.20 GB",
+    "gpu_count": 1,
+    "gpus": [
+      {
+        "model": "NVIDIA GeForce RTX 3080",
+        "memory": "10240 MiB",
+        "driver": "590.48.01"
+      }
+    ]
+  },
+  "optimization_stats": {
+    "exploration_completed": 3,
+    "deep_training_completed": 0,
+    "phase": "EXPLORATION"
+  }
+}

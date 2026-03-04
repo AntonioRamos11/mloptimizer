@@ -1,0 +1,65 @@
+{
+  "num_records": 21,
+  "avg_gpu_utilization": {
+    "0": 4.476190476190476
+  },
+  "avg_gpu_memory": {
+    "0": 18.73046875
+  },
+  "avg_cpu_utilization": 0.45238095238095233,
+  "avg_inference_latency_ms": 7.675936222076416,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 28, 28, 136)",
+        "params": 16192
+      },
+      {
+        "name": "max_pooling2d_1",
+        "type": "MaxPooling2D",
+        "shape": "(None, 14, 14, 136)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_6",
+        "type": "Conv2D",
+        "shape": "(None, 14, 14, 10)",
+        "params": 1370,
+        "filters": 10,
+        "kernel_size": [
+          1,
+          1
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "global_average_pooling2d",
+        "type": "GlobalAveragePooling2D",
+        "shape": "(None, 10)",
+        "params": 0
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 17562,
+    "trainable_params": "17274",
+    "non_trainable_params": "288",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 309.4203841686249,
+    "average_seconds": 28.129125833511353,
+    "max_seconds": 36.31328845024109,
+    "idle_records_count": 11,
+    "idle_periods_detected": 11,
+    "time_unit": "seconds"
+  }
+}

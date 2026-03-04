@@ -1,0 +1,170 @@
+[
+  {
+    "timestamp": "2025-12-02T12:35:00.292761",
+    "metrics": {
+      "utilization": {
+        "0": 1
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9735,
+          "total_mb": 10240,
+          "percentage": 95.068359375
+        }
+      },
+      "temperature": {
+        "0": 43
+      },
+      "power": {
+        "0": {
+          "draw_watts": 117.92,
+          "limit_watts": 370.0,
+          "percentage": 31.870270270270275
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 0.3333333333333333,
+          "estimated_usage_GBps": 0.05253333333333333
+        }
+      },
+      "idle_time": 0,
+      "is_currently_idle": true
+    }
+  },
+  {
+    "timestamp": "2025-12-02T12:37:43.904708",
+    "metrics": {
+      "utilization": {
+        "0": 2
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9693,
+          "total_mb": 10240,
+          "percentage": 94.658203125
+        }
+      },
+      "temperature": {
+        "0": 44
+      },
+      "power": {
+        "0": {
+          "draw_watts": 124.42,
+          "limit_watts": 370.0,
+          "percentage": 33.627027027027026
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 0.6666666666666666,
+          "estimated_usage_GBps": 0.10506666666666666
+        }
+      },
+      "idle_time": 163.61260437965393,
+      "is_currently_idle": true
+    }
+  },
+  {
+    "timestamp": "2025-12-02T12:37:46.735375",
+    "metrics": {
+      "utilization": {
+        "0": 2
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9701,
+          "total_mb": 10240,
+          "percentage": 94.736328125
+        }
+      },
+      "temperature": {
+        "0": 43
+      },
+      "power": {
+        "0": {
+          "draw_watts": 119.13,
+          "limit_watts": 370.0,
+          "percentage": 32.1972972972973
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 0.6666666666666666,
+          "estimated_usage_GBps": 0.10506666666666666
+        }
+      },
+      "idle_time": 166.44316816329956,
+      "is_currently_idle": true
+    }
+  },
+  {
+    "timestamp": "2025-12-02T12:40:31.355994",
+    "metrics": {
+      "utilization": {
+        "0": 29
+      },
+      "memory": {
+        "0": {
+          "used_mb": 9708,
+          "total_mb": 10240,
+          "percentage": 94.8046875
+        }
+      },
+      "temperature": {
+        "0": 44
+      },
+      "power": {
+        "0": {
+          "draw_watts": 124.44,
+          "limit_watts": 370.0,
+          "percentage": 33.63243243243243
+        }
+      },
+      "clock_speeds": {
+        "0": {
+          "graphics_mhz": 1905,
+          "memory_mhz": 9251
+        }
+      },
+      "pcie_throughput": {
+        "0": {
+          "link_gen": "4",
+          "link_width": "8",
+          "max_bandwidth_GBps": 15.76,
+          "mem_controller_util": 1.0,
+          "estimated_usage_GBps": 0.1576
+        }
+      },
+      "idle_time": 331.06338357925415,
+      "is_currently_idle": false
+    }
+  }
+]

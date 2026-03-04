@@ -1,0 +1,52 @@
+{
+  "layers": [
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 28, 28, 184)",
+      "params": 46780
+    },
+    {
+      "name": "inception_v1_module_bn_1",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 28, 28, 184)",
+      "params": 69472
+    },
+    {
+      "name": "max_pooling2d_2",
+      "type": "MaxPooling2D",
+      "shape": "(None, 14, 14, 184)",
+      "params": 0
+    },
+    {
+      "name": "conv2d_12",
+      "type": "Conv2D",
+      "shape": "(None, 14, 14, 10)",
+      "params": 1850,
+      "filters": 10,
+      "kernel_size": [
+        1,
+        1
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "global_average_pooling2d",
+      "type": "GlobalAveragePooling2D",
+      "shape": "(None, 10)",
+      "params": 0
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 118102,
+  "trainable_params": "117158",
+  "non_trainable_params": "944",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

@@ -1,0 +1,13 @@
+\begin{tabular}{lrll}
+\toprule
+Método & Accuracy & Tipo & vs Nuestro \\
+\midrule
+CNN simple (2 conv) & 0.9200 & Manual & +0.0700 \\
+VGG-16 (adaptado) & 0.9350 & Manual & +0.0550 \\
+ResNet-18 (adaptado) & 0.9460 & Manual & +0.0440 \\
+Auto-Keras (Jin 2019) & 0.9460 & AutoML & +0.0440 \\
+Google AutoML Tables & 0.9500 & AutoML (Cloud) & +0.0400 \\
+\midrule
+\textbf{Nuestro AutoML} & \textbf{0.9900} & AutoML (Cloud) & --- \\
+\bottomrule
+\end{tabular}

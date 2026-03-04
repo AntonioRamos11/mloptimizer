@@ -1,0 +1,75 @@
+{
+  "num_records": 9,
+  "avg_gpu_utilization": {
+    "0": 21.111111111111114
+  },
+  "avg_gpu_memory": {
+    "0": 94.26106770833333
+  },
+  "avg_cpu_utilization": 3.666666666666667,
+  "avg_inference_latency_ms": 8.089134097099304,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 28, 28, 180)",
+        "params": 45360
+      },
+      {
+        "name": "max_pooling2d_1",
+        "type": "MaxPooling2D",
+        "shape": "(None, 14, 14, 180)",
+        "params": 0
+      },
+      {
+        "name": "flatten",
+        "type": "Flatten",
+        "shape": "(None, 35280)",
+        "params": 0
+      },
+      {
+        "name": "dense",
+        "type": "Dense",
+        "shape": "(None, 16)",
+        "params": 564496,
+        "units": 16,
+        "activation": "relu"
+      },
+      {
+        "name": "dropout",
+        "type": "Dropout",
+        "shape": "(None, 16)",
+        "params": 0
+      },
+      {
+        "name": "dense_1",
+        "type": "Dense",
+        "shape": "(None, 10)",
+        "params": 170,
+        "units": 10,
+        "activation": "linear"
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 610026,
+    "trainable_params": "609610",
+    "non_trainable_params": "416",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 144.11476254463196,
+    "average_seconds": 72.05738127231598,
+    "max_seconds": 73.44465827941895,
+    "idle_records_count": 2,
+    "idle_periods_detected": 2,
+    "time_unit": "seconds"
+  }
+}

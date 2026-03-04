@@ -1,0 +1,92 @@
+{
+  "layers": [
+    {
+      "name": "conv2d",
+      "type": "Conv2D",
+      "shape": "(None, 26, 26, 120)",
+      "params": 1200,
+      "filters": 120,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization",
+      "type": "BatchNormalization",
+      "shape": "(None, 26, 26, 120)",
+      "params": 480
+    },
+    {
+      "name": "max_pooling2d",
+      "type": "MaxPooling2D",
+      "shape": "(None, 8, 8, 120)",
+      "params": 0
+    },
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 8, 8, 156)",
+      "params": 35380
+    },
+    {
+      "name": "inception_v1_module_bn_1",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 8, 8, 156)",
+      "params": 39700
+    },
+    {
+      "name": "inception_v1_module_bn_2",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 8, 8, 156)",
+      "params": 39700
+    },
+    {
+      "name": "max_pooling2d_4",
+      "type": "MaxPooling2D",
+      "shape": "(None, 4, 4, 156)",
+      "params": 0
+    },
+    {
+      "name": "flatten",
+      "type": "Flatten",
+      "shape": "(None, 2496)",
+      "params": 0
+    },
+    {
+      "name": "dense",
+      "type": "Dense",
+      "shape": "(None, 32)",
+      "params": 79904,
+      "units": 32,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout",
+      "type": "Dropout",
+      "shape": "(None, 32)",
+      "params": 0
+    },
+    {
+      "name": "dense_1",
+      "type": "Dense",
+      "shape": "(None, 10)",
+      "params": 330,
+      "units": 10,
+      "activation": "linear"
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 196694,
+  "trainable_params": "195446",
+  "non_trainable_params": "1248",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

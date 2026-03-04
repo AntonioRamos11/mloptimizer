@@ -1,0 +1,21 @@
+\begin{table}[htbp]
+\centering
+\caption{Eficiencia del pipeline de optimización distribuido (2 GPUs)}
+\label{tab:eficiencia_pipeline}
+\small
+\begin{tabular}{llccccc}
+\toprule
+\textbf{Dataset} & \textbf{Experimento} & \textbf{Modelos} & \textbf{Exploración} & \textbf{Deep Training} & \textbf{T/Modelo (s)} & \textbf{Throughput (mod/h)} \\
+\midrule
+  CIFAR-10 & 20260303-154551 & 8 & 5 & 3 & 292 & 12.3 \\
+   & 20260303-162453 & 8 & 5 & 3 & 322 & 11.2 \\
+\midrule
+  Fashion-MNIST & 20260303-170752 & 8 & 5 & 3 & 334 & 10.8 \\
+   & 20260303-175226 & 8 & 5 & 3 & 247 & 14.6 \\
+\midrule
+  MNIST & 20260303-091826 & 13 & 10 & 3 & 557 & 6.5 \\
+   & 20260303-142219 & 8 & 5 & 3 & 269 & 13.4 \\
+   & 20260303-145817 & 8 & 5 & 3 & 357 & 10.1 \\
+\bottomrule
+\end{tabular}
+\end{table}

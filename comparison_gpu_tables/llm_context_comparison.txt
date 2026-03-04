@@ -1,0 +1,141 @@
+================================================================================
+  CONTEXTO PARA ANÁLISIS LLM
+  Comparación de Configuraciones GPU: 1 GPU vs 2 GPU vs 4 GPU
+  AutoML en la Nube — Tesis
+================================================================================
+
+─── SECCIÓN 1: INVENTARIO DE EXPERIMENTOS ───
+
+  1 GPU:
+    Total experimentos válidos: 8
+    Datasets: cifar10, cifar100, fashion_mnist, mnist
+    cifar10-20260304-175741                  ds=cifar10         acc=0.9630 time=     45:50 models=8
+    cifar10-20260304-184354                  ds=cifar10         acc=0.9772 time=     35:08 models=8
+    cifar100-20260304-203943                 ds=cifar100        acc=0.9815 time=     41:41 models=8
+    cifar100-20260304-212148                 ds=cifar100        acc=0.9775 time=     47:31 models=8
+    fashion_mnist-20260304-191904            ds=fashion_mnist   acc=0.9791 time=     40:14 models=8
+    fashion_mnist-20260304-195936            ds=fashion_mnist   acc=0.9745 time=     40:06 models=8
+    mnist-20260301-122748                    ds=mnist           acc=0.9733 time=     12:34 models=2
+    mnist-20260304-170924                    ds=mnist           acc=0.9819 time=     48:15 models=8
+
+  2 GPU:
+    Total experimentos válidos: 7
+    Datasets: cifar10, fashion_mnist, mnist
+    cifar10-20260303-154551                  ds=cifar10         acc=0.9753 time=     38:59 models=8
+    cifar10-20260303-162453                  ds=cifar10         acc=0.9808 time=     42:58 models=8
+    fashion_mnist-20260303-170752            ds=fashion_mnist   acc=0.9695 time=     44:31 models=8
+    fashion_mnist-20260303-175226            ds=fashion_mnist   acc=0.9825 time=     32:56 models=8
+    mnist-20260303-091826                    ds=mnist           acc=0.9797 time=  02:00:37 models=13
+    mnist-20260303-142219                    ds=mnist           acc=0.9824 time=     35:55 models=8
+    mnist-20260303-145817                    ds=mnist           acc=0.9820 time=     47:32 models=8
+
+  4 GPU:
+    Total experimentos válidos: 3
+    Datasets: cifar10, mnist
+    cifar10-20260304-035119                  ds=cifar10         acc=0.9849 time=  01:14:52 models=8
+    mnist-20260304-014240                    ds=mnist           acc=0.9836 time=  01:05:08 models=8
+    mnist-20260304-024751                    ds=mnist           acc=0.9765 time=  01:03:26 models=8
+
+─── SECCIÓN 2: COMPARACIÓN DE ACCURACY ───
+
+  Dataset: CIFAR-10
+    1 GPU: best=0.9772  mean=0.9701  std=0.0071  runs=2
+    2 GPU: best=0.9808  mean=0.9780  std=0.0027  runs=2
+    4 GPU: best=0.9849  mean=0.9849  std=0.0000  runs=1
+
+  Dataset: CIFAR-100
+    1 GPU: best=0.9815  mean=0.9795  std=0.0020  runs=2
+    2 GPU: sin datos
+    4 GPU: sin datos
+
+  Dataset: Fashion-MNIST
+    1 GPU: best=0.9791  mean=0.9768  std=0.0023  runs=2
+    2 GPU: best=0.9825  mean=0.9760  std=0.0065  runs=2
+    4 GPU: sin datos
+
+  Dataset: MNIST
+    1 GPU: best=0.9819  mean=0.9776  std=0.0043  runs=2
+    2 GPU: best=0.9824  mean=0.9814  std=0.0012  runs=3
+    4 GPU: best=0.9836  mean=0.9800  std=0.0036  runs=2
+
+─── SECCIÓN 3: COMPARACIÓN DE TIEMPOS ───
+
+  Dataset: CIFAR-10
+    1 GPU: mean=40:29  (2429s)  speedup=1.00× efficiency=100.0%
+    2 GPU: mean=40:58  (2459s)  speedup=0.99× efficiency=49.4%
+    4 GPU: mean=01:14:52  (4492s)  speedup=0.54× efficiency=13.5%
+
+  Dataset: CIFAR-100
+    1 GPU: mean=44:36  (2677s)  speedup=1.00× efficiency=100.0%
+    2 GPU: sin datos
+    4 GPU: sin datos
+
+  Dataset: Fashion-MNIST
+    1 GPU: mean=40:10  (2411s)  speedup=1.00× efficiency=100.0%
+    2 GPU: mean=38:43  (2324s)  speedup=1.04× efficiency=51.9%
+    4 GPU: sin datos
+
+  Dataset: MNIST
+    1 GPU: mean=30:25  (1825s)  speedup=1.00× efficiency=100.0%
+    2 GPU: mean=01:08:01  (4082s)  speedup=0.45× efficiency=22.4%
+    4 GPU: mean=01:04:17  (3858s)  speedup=0.47× efficiency=11.8%
+
+─── SECCIÓN 4: THROUGHPUT (MODELOS/HORA) ───
+
+  Dataset: CIFAR-10
+    1 GPU: 11.9 mod/h  (5.1 min/modelo)  total_modelos=16
+    2 GPU: 11.7 mod/h  (5.1 min/modelo)  total_modelos=16
+    4 GPU: 6.4 mod/h  (9.4 min/modelo)  total_modelos=8
+
+  Dataset: CIFAR-100
+    1 GPU: 10.8 mod/h  (5.6 min/modelo)  total_modelos=16
+    2 GPU: sin datos
+    4 GPU: sin datos
+
+  Dataset: Fashion-MNIST
+    1 GPU: 11.9 mod/h  (5.0 min/modelo)  total_modelos=16
+    2 GPU: 12.4 mod/h  (4.8 min/modelo)  total_modelos=16
+    4 GPU: sin datos
+
+  Dataset: MNIST
+    1 GPU: 9.9 mod/h  (6.1 min/modelo)  total_modelos=10
+    2 GPU: 8.5 mod/h  (7.0 min/modelo)  total_modelos=29
+    4 GPU: 7.5 mod/h  (8.0 min/modelo)  total_modelos=16
+
+─── SECCIÓN 5: HALLAZGOS CLAVE PARA LA TESIS ───
+
+  Mejor accuracy absoluta por dataset:
+    CIFAR-10: 0.9849 (4 GPU)
+    CIFAR-100: 0.9815 (1 GPU)
+    Fashion-MNIST: 0.9825 (2 GPU)
+    MNIST: 0.9836 (4 GPU)
+
+  Análisis de escalabilidad:
+    CIFAR-10 2 GPU: speedup=0.99× efficiency=49.4% (moderada)
+    CIFAR-10 4 GPU: speedup=0.54× efficiency=13.5% (baja)
+    Fashion-MNIST 2 GPU: speedup=1.04× efficiency=51.9% (moderada)
+    MNIST 2 GPU: speedup=0.45× efficiency=22.4% (baja)
+    MNIST 4 GPU: speedup=0.47× efficiency=11.8% (baja)
+
+  ¿Más GPUs = mejor accuracy?
+    CIFAR-10: 4 GPU(0.9849) > 2 GPU(0.9808) > 1 GPU(0.9772)
+    Fashion-MNIST: 2 GPU(0.9825) > 1 GPU(0.9791)
+    MNIST: 4 GPU(0.9836) > 2 GPU(0.9824) > 1 GPU(0.9819)
+
+  Observaciones importantes para tesis:
+    - NOTA: Los experimentos de 1 GPU (old format) son modelos individuales, NO corridas AutoML completas
+      Los de 2 y 4 GPU son corridas AutoML con exploración+deep training (8 modelos cada una)
+      Para comparar accuracy de forma justa, usar solo los runs con misma configuración AutoML
+    - La comparación de TIEMPO es más justa entre 2 GPU y 4 GPU (misma config AutoML)
+    - La accuracy NO necesariamente mejora con más GPUs (misma exploración, diferente paralelismo)
+    - El throughput (modelos/hora) es la métrica principal de escalabilidad
+    - El speedup sub-lineal es esperado por overhead de comunicación RabbitMQ
+    - El tiempo total se reduce, permitiendo explorar más arquitecturas en menos tiempo
+
+─── SECCIÓN 6: ANÁLISIS SUGERIDOS ───
+
+  1. Gráfico de scaling efficiency: qué tan cerca del speedup ideal (lineal)
+  2. Costo-beneficio: si se renta N GPUs en la nube, ¿cuánto se ahorra en tiempo?
+  3. Impacto en convergencia: ¿la paralelización afecta la calidad de la búsqueda NAS?
+  4. Overhead de comunicación: diferencia entre speedup ideal y real
+  5. Reproducibilidad: varianza entre runs con misma configuración

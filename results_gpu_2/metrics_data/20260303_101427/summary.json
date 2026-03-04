@@ -1,0 +1,95 @@
+{
+  "num_records": 8,
+  "avg_gpu_utilization": {
+    "0": 6.125
+  },
+  "avg_gpu_memory": {
+    "0": 26.259765624999996
+  },
+  "avg_cpu_utilization": 0.4375,
+  "avg_inference_latency_ms": 15.14614224433899,
+  "model_architecture": {
+    "layers": [
+      {
+        "name": "conv2d",
+        "type": "Conv2D",
+        "shape": "(None, 24, 24, 48)",
+        "params": 1248,
+        "filters": 48,
+        "kernel_size": [
+          5,
+          5
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "batch_normalization",
+        "type": "BatchNormalization",
+        "shape": "(None, 24, 24, 48)",
+        "params": 192
+      },
+      {
+        "name": "max_pooling2d",
+        "type": "MaxPooling2D",
+        "shape": "(None, 8, 8, 48)",
+        "params": 0
+      },
+      {
+        "name": "inception_v1_module_bn",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 160)",
+        "params": 40844
+      },
+      {
+        "name": "inception_v1_module_bn_1",
+        "type": "InceptionV1ModuleBN",
+        "shape": "(None, 8, 8, 160)",
+        "params": 49804
+      },
+      {
+        "name": "max_pooling2d_3",
+        "type": "MaxPooling2D",
+        "shape": "(None, 4, 4, 160)",
+        "params": 0
+      },
+      {
+        "name": "conv2d_13",
+        "type": "Conv2D",
+        "shape": "(None, 4, 4, 10)",
+        "params": 1610,
+        "filters": 10,
+        "kernel_size": [
+          1,
+          1
+        ],
+        "activation": "relu"
+      },
+      {
+        "name": "global_average_pooling2d",
+        "type": "GlobalAveragePooling2D",
+        "shape": "(None, 10)",
+        "params": 0
+      },
+      {
+        "name": "activation",
+        "type": "Activation",
+        "shape": "(None, 10)",
+        "params": 0,
+        "activation": "softmax"
+      }
+    ],
+    "total_params": 93698,
+    "trainable_params": "92850",
+    "non_trainable_params": "848",
+    "input_shape": "(None, 28, 28, 1)",
+    "output_shape": "(None, 10)"
+  },
+  "idle_time": {
+    "total_seconds": 459.6444818973541,
+    "average_seconds": 91.92889637947083,
+    "max_seconds": 153.8864586353302,
+    "idle_records_count": 5,
+    "idle_periods_detected": 5,
+    "time_unit": "seconds"
+  }
+}

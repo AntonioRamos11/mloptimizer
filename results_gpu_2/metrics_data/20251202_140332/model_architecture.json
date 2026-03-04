@@ -1,0 +1,82 @@
+{
+  "layers": [
+    {
+      "name": "conv2d",
+      "type": "Conv2D",
+      "shape": "(None, 22, 22, 64)",
+      "params": 3200,
+      "filters": 64,
+      "kernel_size": [
+        7,
+        7
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization",
+      "type": "BatchNormalization",
+      "shape": "(None, 22, 22, 64)",
+      "params": 256
+    },
+    {
+      "name": "max_pooling2d",
+      "type": "MaxPooling2D",
+      "shape": "(None, 7, 7, 64)",
+      "params": 0
+    },
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 7, 7, 124)",
+      "params": 23148
+    },
+    {
+      "name": "inception_v1_module_bn_1",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 7, 7, 124)",
+      "params": 27468
+    },
+    {
+      "name": "inception_v1_module_bn_2",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 7, 7, 124)",
+      "params": 27468
+    },
+    {
+      "name": "max_pooling2d_4",
+      "type": "MaxPooling2D",
+      "shape": "(None, 4, 4, 124)",
+      "params": 0
+    },
+    {
+      "name": "conv2d_19",
+      "type": "Conv2D",
+      "shape": "(None, 4, 4, 10)",
+      "params": 1250,
+      "filters": 10,
+      "kernel_size": [
+        1,
+        1
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "global_average_pooling2d",
+      "type": "GlobalAveragePooling2D",
+      "shape": "(None, 10)",
+      "params": 0
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 82790,
+  "trainable_params": "81918",
+  "non_trainable_params": "872",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\caption{Comparación con benchmarks publicados — Fashion-MNIST}
+\label{tab:benchmark_fashion_mnist}
+\begin{tabular}{llcc}
+\toprule
+\textbf{Método} & \textbf{Tipo} & \textbf{Accuracy} & \textbf{$\Delta$ vs Nuestro} \\
+\midrule
+  CNN simple (2 conv) & Manual & 0.9200 & +0.0637 \\
+  VGG-16 (adaptado) & Manual & 0.9350 & +0.0487 \\
+  ResNet-18 (adaptado) & Manual & 0.9460 & +0.0377 \\
+  Auto-Keras (Jin 2019) & AutoML & 0.9460 & +0.0377 \\
+  Google AutoML Tables & AutoML (Cloud) & 0.9500 & +0.0337 \\
+\midrule
+  \textbf{Nuestro AutoML} & \textbf{AutoML (Cloud)} & \textbf{0.9837} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

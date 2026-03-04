@@ -1,0 +1,74 @@
+{
+  "layers": [
+    {
+      "name": "conv2d",
+      "type": "Conv2D",
+      "shape": "(None, 28, 28, 16)",
+      "params": 160,
+      "filters": 16,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization",
+      "type": "BatchNormalization",
+      "shape": "(None, 28, 28, 16)",
+      "params": 64
+    },
+    {
+      "name": "max_pooling2d",
+      "type": "MaxPooling2D",
+      "shape": "(None, 14, 14, 16)",
+      "params": 0
+    },
+    {
+      "name": "dropout",
+      "type": "Dropout",
+      "shape": "(None, 14, 14, 16)",
+      "params": 0
+    },
+    {
+      "name": "flatten",
+      "type": "Flatten",
+      "shape": "(None, 3136)",
+      "params": 0
+    },
+    {
+      "name": "dense",
+      "type": "Dense",
+      "shape": "(None, 64)",
+      "params": 200768,
+      "units": 64,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout_1",
+      "type": "Dropout",
+      "shape": "(None, 64)",
+      "params": 0
+    },
+    {
+      "name": "dense_1",
+      "type": "Dense",
+      "shape": "(None, 10)",
+      "params": 650,
+      "units": 10,
+      "activation": "linear"
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 201642,
+  "trainable_params": "201610",
+  "non_trainable_params": "32",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

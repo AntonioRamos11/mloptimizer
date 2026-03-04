@@ -1,0 +1,94 @@
+{
+  "layers": [
+    {
+      "name": "conv2d",
+      "type": "Conv2D",
+      "shape": "(None, 26, 26, 120)",
+      "params": 1200,
+      "filters": 120,
+      "kernel_size": [
+        3,
+        3
+      ],
+      "activation": "relu"
+    },
+    {
+      "name": "batch_normalization",
+      "type": "BatchNormalization",
+      "shape": "(None, 26, 26, 120)",
+      "params": 480
+    },
+    {
+      "name": "max_pooling2d",
+      "type": "MaxPooling2D",
+      "shape": "(None, 8, 8, 120)",
+      "params": 0
+    },
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 8, 8, 128)",
+      "params": 36152
+    },
+    {
+      "name": "max_pooling2d_2",
+      "type": "MaxPooling2D",
+      "shape": "(None, 4, 4, 128)",
+      "params": 0
+    },
+    {
+      "name": "flatten",
+      "type": "Flatten",
+      "shape": "(None, 2048)",
+      "params": 0
+    },
+    {
+      "name": "dense",
+      "type": "Dense",
+      "shape": "(None, 240)",
+      "params": 491760,
+      "units": 240,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout",
+      "type": "Dropout",
+      "shape": "(None, 240)",
+      "params": 0
+    },
+    {
+      "name": "dense_1",
+      "type": "Dense",
+      "shape": "(None, 16)",
+      "params": 3856,
+      "units": 16,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout_1",
+      "type": "Dropout",
+      "shape": "(None, 16)",
+      "params": 0
+    },
+    {
+      "name": "dense_2",
+      "type": "Dense",
+      "shape": "(None, 10)",
+      "params": 170,
+      "units": 10,
+      "activation": "linear"
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 533618,
+  "trainable_params": "533074",
+  "non_trainable_params": "544",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

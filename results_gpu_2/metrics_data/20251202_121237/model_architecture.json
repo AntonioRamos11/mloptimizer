@@ -1,0 +1,56 @@
+{
+  "layers": [
+    {
+      "name": "inception_v1_module_bn",
+      "type": "InceptionV1ModuleBN",
+      "shape": "(None, 28, 28, 116)",
+      "params": 16420
+    },
+    {
+      "name": "max_pooling2d_1",
+      "type": "MaxPooling2D",
+      "shape": "(None, 14, 14, 116)",
+      "params": 0
+    },
+    {
+      "name": "flatten",
+      "type": "Flatten",
+      "shape": "(None, 22736)",
+      "params": 0
+    },
+    {
+      "name": "dense",
+      "type": "Dense",
+      "shape": "(None, 32)",
+      "params": 727584,
+      "units": 32,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout",
+      "type": "Dropout",
+      "shape": "(None, 32)",
+      "params": 0
+    },
+    {
+      "name": "dense_1",
+      "type": "Dense",
+      "shape": "(None, 10)",
+      "params": 330,
+      "units": 10,
+      "activation": "linear"
+    },
+    {
+      "name": "activation",
+      "type": "Activation",
+      "shape": "(None, 10)",
+      "params": 0,
+      "activation": "softmax"
+    }
+  ],
+  "total_params": 744334,
+  "trainable_params": "744070",
+  "non_trainable_params": "264",
+  "input_shape": "(None, 28, 28, 1)",
+  "output_shape": "(None, 10)"
+}

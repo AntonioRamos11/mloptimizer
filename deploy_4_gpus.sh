@@ -347,6 +347,7 @@ if [ "$MODE" = "cloud" ]; then
         echo_info "Starting Slave on GPU $i..."
         export CUDA_VISIBLE_DEVICES=$i
         export TF_DATA_DIR="/tmp/tensorflow_datasets_gpu${i}"
+        export TFDS_DATA_DIR="/tmp/tensorflow_datasets_gpu${i}"
         mkdir -p "$TF_DATA_DIR"
         python run.py --slave \
             --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
@@ -506,24 +507,55 @@ if [ "$MODE" = "cloud-slave" ]; then
     [ -n "$MGMT_URL" ] && export INSTANCE_MANAGMENT_URL="$MGMT_URL"
     [ -n "$DATASET" ] && export DATASET_NAME="$DATASET"
     
+    # ============================================================
+    # PRE-DESCARGAR dataset UNA SOLA VEZ para evitar race condition
+    # (FileExistsError cuando 4 procesos descargan simultáneamente)
+    # ============================================================
+    SHARED_TFDS_DIR="/tmp/tensorflow_datasets_shared"
+    mkdir -p "$SHARED_TFDS_DIR"
+    echo_info "Pre-descargando dataset '${DATASET:-mnist}' a $SHARED_TFDS_DIR ..."
+    export TFDS_DATA_DIR="$SHARED_TFDS_DIR"
+    export CUDA_VISIBLE_DEVICES=""
+    python -c "
+import os
+os.environ['TFDS_DATA_DIR'] = '$SHARED_TFDS_DIR'
+import tensorflow_datasets as tfds
+ds_name = '${DATASET:-mnist}'
+print(f'Descargando {ds_name} a {os.environ[\"TFDS_DATA_DIR\"]} ...')
+tfds.load(ds_name, split='train[:1%]', as_supervised=True)
+print(f'{ds_name} descargado y cacheado correctamente.')
+" 2>&1 | tee logs/dataset_predownload.log
+    echo_ok "Dataset pre-descargado exitosamente"
+    
     declare -a slave_pids
     
     for ((i=0; i<NUM_GPUS; i++)); do
         echo_info "Starting Slave on GPU $i..."
-        export CUDA_VISIBLE_DEVICES=$i
-        export TF_DATA_DIR="/tmp/tensorflow_datasets_gpu${i}"
-        mkdir -p "$TF_DATA_DIR"
+        
+        # Copiar cache del dataset a directorio aislado por GPU
+        GPU_TFDS_DIR="/tmp/tensorflow_datasets_gpu${i}"
+        mkdir -p "$GPU_TFDS_DIR"
+        # Sincronizar el dataset pre-descargado (evita re-descarga)
+        rsync -a --ignore-existing "$SHARED_TFDS_DIR/" "$GPU_TFDS_DIR/" 2>/dev/null || \
+            cp -rn "$SHARED_TFDS_DIR/"* "$GPU_TFDS_DIR/" 2>/dev/null || true
+        
+        # Cada proceso ve SU PROPIO directorio de datasets (aislamiento total)
+        CUDA_VISIBLE_DEVICES=$i \
+        TFDS_DATA_DIR="$GPU_TFDS_DIR" \
+        TF_DATA_DIR="$GPU_TFDS_DIR" \
         python run.py --slave \
             --host "$HOST" --port "$PORT" --mgmt-url "$MGMT_URL" \
             --dataset "$DATASET" --cloud-mode "$CLOUD_MODE" --gpu $i \
             > logs/slave_gpu${i}.log 2>&1 &
         slave_pids[$i]=$!
-        echo_ok "Slave $i started (PID: ${slave_pids[$i]}, GPU $i)"
+        echo_ok "Slave $i started (PID: ${slave_pids[$i]}, GPU $i, TFDS: $GPU_TFDS_DIR)"
     done
     
-    echo_ok "All slaves started"
-    echo_info "Logs: logs/slave_gpu_0.log, slave_gpu_1.log, ..."
+    echo_ok "All $NUM_GPUS slaves started"
+    echo_info "Logs: logs/slave_gpu0.log .. logs/slave_gpu3.log"
     
+    # Esperar a que se creen los archivos de log
+    sleep 2
     tail -n 20 -f logs/slave_gpu0.log logs/slave_gpu1.log logs/slave_gpu2.log logs/slave_gpu3.log &
     TAIL_PID=$!
     

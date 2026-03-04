@@ -106,11 +106,14 @@ class ImageClassificationBenchmarkDataset(Dataset):
 			val_split_percent = int(self.validation_split_float * 100)
 			train_split_percent = int(train_split_float * 100)
 			
+			# Use per-GPU isolated TFDS directory if set (avoids race condition)
+			data_dir = os.environ.get('TFDS_DATA_DIR', None)
+			
 			# Load raw datasets
-			self.train_original, self.info = tfds.load(self.dataset_name, with_info=True, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
+			self.train_original, self.info = tfds.load(self.dataset_name, data_dir=data_dir, with_info=True, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
 			self.train = self.train_original  # Same dataset, augmentation applied in build_pipeline
-			self.validation = tfds.load(self.dataset_name, as_supervised=True, split='train[-{}%:]'.format(val_split_percent))
-			self.test = tfds.load(self.dataset_name, as_supervised=True, split='test')
+			self.validation = tfds.load(self.dataset_name, data_dir=data_dir, as_supervised=True, split='train[-{}%:]'.format(val_split_percent))
+			self.test = tfds.load(self.dataset_name, data_dir=data_dir, as_supervised=True, split='test')
 			
 			# Store counts
 			self.train_split_count = self.info.splits['train'].num_examples * train_split_float
@@ -174,12 +177,13 @@ class RegressionBenchmarkDataset(Dataset):
 		train_split_float = float(1.0 - self.validation_split_float)
 		val_split_percent = int(self.validation_split_float * 100)
 		train_split_percent = int(train_split_float * 100)
+		data_dir = os.environ.get('TFDS_DATA_DIR', None)
 		try:
-			self.train_original, self.info = tfds.load(self.dataset_name, with_info=True, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
-			self.validation = tfds.load(self.dataset_name, as_supervised=True, split='train[-{}%:]').format(val_split_percent)
+			self.train_original, self.info = tfds.load(self.dataset_name, data_dir=data_dir, with_info=True, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
+			self.validation = tfds.load(self.dataset_name, data_dir=data_dir, as_supervised=True, split='train[-{}%:]').format(val_split_percent)
 			self.train_split_count = self.info.splits['train'].num_examples * train_split_float
 			self.validation_split_count = self.info.splits['train'].num_examples * self.validation_split_float
-			self.test = tfds.load(self.dataset_name, as_supervised=True, split='test')
+			self.test = tfds.load(self.dataset_name, data_dir=data_dir, as_supervised=True, split='test')
 		except:
 			try:
 				route = '../mloptimizermodelgenerator/Datasets/Regression/'+self.dataset_name
@@ -254,12 +258,13 @@ class TimeSeriesBenchmarkDataset(Dataset):
 		train_split_float = float(1.0 - self.validation_split_float)
 		val_split_percent = int(self.validation_split_float * 100)
 		train_split_percent = int(train_split_float * 100)
+		data_dir = os.environ.get('TFDS_DATA_DIR', None)
 		try:
-			self.train_original, self.info = tfds.load(self.dataset_name, with_info=True, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
-			self.validation = tfds.load(self.dataset_name, as_supervised=True, split='train[-{}%:]').format(val_split_percent)
+			self.train_original, self.info = tfds.load(self.dataset_name, data_dir=data_dir, with_info=True, as_supervised=True, split='train[:{}%]'.format(train_split_percent))
+			self.validation = tfds.load(self.dataset_name, data_dir=data_dir, as_supervised=True, split='train[-{}%:]').format(val_split_percent)
 			self.train_split_count = self.info.splits['train'].num_examples * train_split_float
 			self.validation_split_count = self.info.splits['train'].num_examples * self.validation_split_float
-			self.test = tfds.load(self.dataset_name, as_supervised=True, split='test')
+			self.test = tfds.load(self.dataset_name, data_dir=data_dir, as_supervised=True, split='test')
 		except:
 			try:
 				ruta="../regressionmloptimizer/Datasets/TimeSeries/"+self.dataset_name

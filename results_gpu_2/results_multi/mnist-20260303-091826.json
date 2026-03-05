@@ -1,0 +1,327 @@
+{
+  "experiment_id": "mnist-20260303-091826",
+  "timestamp": "2026-03-03 11:19:03",
+  "best_model": {
+    "model_training_request": {
+      "id": 8,
+      "training_type": 1,
+      "experiment_id": "mnist-20260303-091826",
+      "architecture": {
+        "base_architecture": "inception",
+        "cnn_blocks_n": 0,
+        "cnn_blocks_conv_layers_n": 0,
+        "cnn_block_conv_filters": [],
+        "cnn_block_conv_filter_sizes": [],
+        "cnn_block_max_pooling_sizes": [],
+        "cnn_block_dropout_values": [],
+        "inception_stem_blocks_n": 1,
+        "inception_stem_block_conv_filters": [
+          48
+        ],
+        "inception_stem_block_conv_filter_sizes": [
+          5
+        ],
+        "inception_stem_block_max_pooling_sizes": [
+          3
+        ],
+        "inception_blocks_n": 3,
+        "inception_modules_n": 2,
+        "inception_modules_conv1x1_filters": [
+          12,
+          12,
+          20
+        ],
+        "inception_modules_conv3x3_reduce_filters": [
+          24,
+          32,
+          32
+        ],
+        "inception_modules_conv3x3_filters": [
+          76,
+          80,
+          96
+        ],
+        "inception_modules_conv5x5_reduce_filters": [
+          8,
+          12,
+          12
+        ],
+        "inception_modules_conv5x5_filters": [
+          12,
+          24,
+          28
+        ],
+        "inception_modules_pooling_conv_filters": [
+          8,
+          16,
+          16
+        ],
+        "classifier_layer_type": "gap",
+        "classifier_layers_n": 0,
+        "classifier_dropouts": [],
+        "classifier_layers_units": [],
+        "learning_rate": 0.0
+      },
+      "epochs": 10,
+      "early_stopping_patience": 3,
+      "is_partial_training": true,
+      "search_space_type": "image",
+      "search_space_hash": -1710851370541997620,
+      "dataset_tag": "mnist"
+    },
+    "performance": 0.9797000288963318,
+    "performance_2": 0.9850000143051147,
+    "hardware_info": {
+      "cpu_model": "x86_64",
+      "cpu_cores": 20,
+      "python_version": "3.13.11",
+      "system": "Linux",
+      "ram_total": "31.13 GB",
+      "ram_available": "17.51 GB",
+      "gpu_count": 1,
+      "gpus": [
+        {
+          "model": "NVIDIA GeForce RTX 3080",
+          "memory": "10240 MiB",
+          "driver": "590.48.01"
+        }
+      ]
+    }
+  },
+  "architecture": {
+    "base_architecture": "inception",
+    "cnn_blocks_n": 0,
+    "cnn_blocks_conv_layers_n": 0,
+    "cnn_block_conv_filters": [],
+    "cnn_block_conv_filter_sizes": [],
+    "cnn_block_max_pooling_sizes": [],
+    "cnn_block_dropout_values": [],
+    "inception_stem_blocks_n": 1,
+    "inception_stem_block_conv_filters": [
+      48
+    ],
+    "inception_stem_block_conv_filter_sizes": [
+      5
+    ],
+    "inception_stem_block_max_pooling_sizes": [
+      3
+    ],
+    "inception_blocks_n": 3,
+    "inception_modules_n": 2,
+    "inception_modules_conv1x1_filters": [
+      12,
+      12,
+      20
+    ],
+    "inception_modules_conv3x3_reduce_filters": [
+      24,
+      32,
+      32
+    ],
+    "inception_modules_conv3x3_filters": [
+      76,
+      80,
+      96
+    ],
+    "inception_modules_conv5x5_reduce_filters": [
+      8,
+      12,
+      12
+    ],
+    "inception_modules_conv5x5_filters": [
+      12,
+      24,
+      28
+    ],
+    "inception_modules_pooling_conv_filters": [
+      8,
+      16,
+      16
+    ],
+    "classifier_layer_type": "gap",
+    "classifier_layers_n": 0,
+    "classifier_dropouts": [],
+    "classifier_layers_units": [],
+    "learning_rate": 0.0
+  },
+  "dataset": {
+    "name": "mnist",
+    "tag": "mnist",
+    "shape": [
+      28,
+      28,
+      1
+    ],
+    "classes": 10,
+    "batch_size": 4,
+    "validation_split": 0.2,
+    "ranges": ""
+  },
+  "training_config": {
+    "exploration_size": 10,
+    "hall_of_fame_size": 3,
+    "exploration_epochs": 10,
+    "deep_training_epochs": 150,
+    "hof_early_stopping_patience": 10,
+    "trials": 20
+  },
+  "performance_metrics": {
+    "elapsed_seconds": 7237.055143594742,
+    "elapsed_time": "02:00:37",
+    "best_exploration_accuracy": 0.9797000288963318,
+    "best_deep_training_accuracy": 0.9850000143051147
+  },
+  "hardware_info": {
+    "cpu_model": "x86_64",
+    "cpu_cores": 20,
+    "python_version": "3.13.11",
+    "system": "Linux",
+    "ram_total": "31.13 GB",
+    "ram_available": "17.51 GB",
+    "gpu_count": 1,
+    "gpus": [
+      {
+        "model": "NVIDIA GeForce RTX 3080",
+        "memory": "10240 MiB",
+        "driver": "590.48.01"
+      }
+    ]
+  },
+  "all_workers_hardware": [
+    {
+      "cpu_model": "x86_64",
+      "cpu_cores": 20,
+      "python_version": "3.13.11",
+      "system": "Linux",
+      "ram_total": "31.13 GB",
+      "ram_available": "21.32 GB",
+      "gpu_count": 1,
+      "gpus": [
+        {
+          "model": "NVIDIA GeForce RTX 3080",
+          "memory": "10240 MiB",
+          "driver": "590.48.01"
+        }
+      ]
+    },
+    {
+      "cpu_model": "x86_64",
+      "cpu_cores": 32,
+      "python_version": "3.10.19",
+      "system": "Linux",
+      "ram_total": "31.26 GB",
+      "ram_available": "27.32 GB",
+      "gpu_count": 1,
+      "gpus": [
+        {
+          "model": "NVIDIA GeForce RTX 3080",
+          "memory": "10240 MiB",
+          "driver": "580.126.09"
+        }
+      ]
+    }
+  ],
+  "optimization_stats": {
+    "models_generated": 13,
+    "models_processed": 13,
+    "exploration_models": 10,
+    "deep_training_models": 3,
+    "final_phase": "DEEP_TRAINING"
+  },
+  "leaderboard": [
+    {
+      "id": 8,
+      "phase": "deep_training",
+      "performance": 0.9797000288963318,
+      "performance_2": 0.9850000143051147,
+      "base_architecture": "inception",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 0,
+      "phase": "deep_training",
+      "performance": 0.9776999950408936,
+      "performance_2": 0.9814000129699707,
+      "base_architecture": "inception",
+      "classifier_type": "mlp"
+    },
+    {
+      "id": 8,
+      "phase": "exploration",
+      "performance": 0.9797000288963318,
+      "base_architecture": "inception",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 0,
+      "phase": "exploration",
+      "performance": 0.9776999950408936,
+      "base_architecture": "inception",
+      "classifier_type": "mlp"
+    },
+    {
+      "id": 4,
+      "phase": "exploration",
+      "performance": 0.9767000079154968,
+      "base_architecture": "inception",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 1,
+      "phase": "exploration",
+      "performance": 0.9764999747276306,
+      "base_architecture": "cnn",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 4,
+      "phase": "deep_training",
+      "performance": 0.9767000079154968,
+      "performance_2": 0.9758999943733215,
+      "base_architecture": "inception",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 3,
+      "phase": "exploration",
+      "performance": 0.9750999808311462,
+      "base_architecture": "cnn",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 5,
+      "phase": "exploration",
+      "performance": 0.972000002861023,
+      "base_architecture": "cnn",
+      "classifier_type": "mlp"
+    },
+    {
+      "id": 7,
+      "phase": "exploration",
+      "performance": 0.8924000263214111,
+      "base_architecture": "inception",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 2,
+      "phase": "exploration",
+      "performance": 0.883400022983551,
+      "base_architecture": "inception",
+      "classifier_type": "gap"
+    },
+    {
+      "id": 6,
+      "phase": "exploration",
+      "performance": 0.1136000007390976,
+      "base_architecture": "inception",
+      "classifier_type": "mlp"
+    },
+    {
+      "id": 9,
+      "phase": "exploration",
+      "performance": 0.11349999904632568,
+      "base_architecture": "cnn",
+      "classifier_type": "mlp"
+    }
+  ]
+}

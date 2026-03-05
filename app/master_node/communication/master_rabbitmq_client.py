@@ -1,0 +1,65 @@
+import aio_pika
+import asyncio
+import json
+
+from app.common.base_rabbitmq_client import BaseRabbitMQClient
+
+class MasterRabbitMQClient(BaseRabbitMQClient):
+	
+	def __init__(self, params, loop):
+		super().__init__(params, loop)
+		self._publisher_connection = None
+
+	async def _get_publisher_connection(self) -> aio_pika.RobustConnection:
+		"""Reuse a single persistent connection for all publishes."""
+		if self._publisher_connection is None or self._publisher_connection.is_closed:
+			self._publisher_connection = await self._create_connection()
+		return self._publisher_connection
+
+	async def publish_model_params(self, model_params: dict) -> aio_pika.Connection:
+		connection = await self._get_publisher_connection()
+		message_body_json = json.dumps(model_params).encode()
+		await self._run_publish(connection, self.model_parameter_queue, message_body_json)
+		return connection
+
+	async def listen_for_model_results(self, callback) -> aio_pika.Connection:
+		return await super().listen(self.model_performance_queue, callback, auto_close_connection=False)
+
+	async def purge_queues(self):
+		"""Purge all queues to clean stale messages from previous runs"""
+		print("[MasterRabbitMQClient] Purging RabbitMQ queues...")
+		try:
+			# Use plain connect (not connect_robust) — this is a one-shot operation
+			# and we don't want a zombie reconnection loop.
+			host = self.host_url
+			if '://' in host:
+				host = host.split('://', 1)[1]
+			if host.endswith('/'):
+				host = host[:-1]
+			if '?' in host:
+				host = host.split('?', 1)[0]
+			url = f"amqp://{self.user}:{self.password}@{host}:{self.port}/"
+			connection = await asyncio.wait_for(
+				aio_pika.connect(url),
+				timeout=10.0
+			)
+			channel = await connection.channel()
+			
+			# Purge queue CONTENTS only (don't delete the queue itself).
+			# queue_delete destroys the slave's consumer binding, forcing a
+			# full reconnect through ngrok (~30 s). queue.purge() just
+			# empties the messages while keeping consumers attached.
+			for queue_name in (self.model_parameter_queue, self.model_performance_queue):
+				try:
+					queue = await channel.declare_queue(queue_name, durable=True)
+					purged = await queue.purge()
+					print(f"[MasterRabbitMQClient] Purged {purged} msgs from: {queue_name}")
+				except Exception as e:
+					print(f"[MasterRabbitMQClient] Skip {queue_name}: {e}")
+			
+			await connection.close()
+			print("[MasterRabbitMQClient] Queue purge done")
+		except asyncio.TimeoutError:
+			print("[MasterRabbitMQClient] Queue purge TIMEOUT - continuing without purge")
+		except Exception as e:
+			print(f"[MasterRabbitMQClient] Queue purge ERROR: {e} - continuing without purge")

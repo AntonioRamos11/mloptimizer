@@ -1,0 +1,18 @@
+{
+	"name":"sgemm_product",
+	"version":4.0,
+	"description":"GPU Kernel Performance Dataset",
+	"homepage":"",
+	"features":{
+		"value":18,
+		"label":4
+	},
+	"total_num_examples":241600,
+	"splits":{
+		"test":48320,
+		"train":193280
+	},
+	"supervised_keys":["value", "label"],
+	"citation":"",
+	"redistribution_info":""
+}

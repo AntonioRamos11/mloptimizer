@@ -1,0 +1,18 @@
+{
+	"name":"Data_for_UCI_named",
+	"version":1.0,
+	"description":"Electrical Grid Stability Simulated Data Data Set",
+	"homepage":"http://archive.ics.uci.edu/ml/datasets/Electrical+Grid+Stability+Simulated+Data+",
+	"features":{
+		"value":12,
+		"label":2
+	},
+	"total_num_examples":10000,
+	"splits":{
+		"test":2000,
+		"train":8000
+	},
+	"supervised_keys":["value", "label"],
+	"citation":"",
+	"redistribution_info":""
+}

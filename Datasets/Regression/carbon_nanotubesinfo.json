@@ -1,0 +1,18 @@
+{
+	"name":"carbon_nanotubes",
+	"version":1.0,
+	"description":"Initial and calculated atomic coordinates of carbon nanotubes",
+	"homepage":"https://www.kaggle.com/inancigdem/carbon-nanotubes",
+	"features":{
+		"value":5,
+		"label":3
+	},
+	"total_num_examples":10721,
+	"splits":{
+		"test":2144,
+		"train":8577
+	},
+	"supervised_keys":["value", "label"],
+	"citation":"",
+	"redistribution_info":""
+}

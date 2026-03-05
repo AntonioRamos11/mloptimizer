@@ -1,0 +1,86 @@
+{
+  "model_info": {
+    "model_training_request": {
+      "id": 6,
+      "training_type": 1,
+      "experiment_id": "mnist-20251202-111227",
+      "architecture": {
+        "base_architecture": "cnn",
+        "cnn_blocks_n": 3,
+        "cnn_blocks_conv_layers_n": 1,
+        "cnn_block_conv_filters": [
+          64,
+          64,
+          128
+        ],
+        "cnn_block_conv_filter_sizes": [
+          3,
+          5,
+          3
+        ],
+        "cnn_block_max_pooling_sizes": [
+          2,
+          2,
+          2
+        ],
+        "cnn_block_dropout_values": [
+          0.3,
+          0.3,
+          0.5
+        ],
+        "inception_stem_blocks_n": 0,
+        "inception_stem_block_conv_filters": [],
+        "inception_stem_block_conv_filter_sizes": [],
+        "inception_stem_block_max_pooling_sizes": [],
+        "inception_blocks_n": 0,
+        "inception_modules_n": 0,
+        "inception_modules_conv1x1_filters": [],
+        "inception_modules_conv3x3_reduce_filters": [],
+        "inception_modules_conv3x3_filters": [],
+        "inception_modules_conv5x5_reduce_filters": [],
+        "inception_modules_conv5x5_filters": [],
+        "inception_modules_pooling_conv_filters": [],
+        "classifier_layer_type": "mlp",
+        "classifier_layers_n": 0,
+        "classifier_dropouts": [],
+        "classifier_layers_units": [],
+        "learning_rate": 0.0
+      },
+      "epochs": 30,
+      "early_stopping_patience": 5,
+      "is_partial_training": false,
+      "search_space_type": "image",
+      "search_space_hash": -1710851370541997620,
+      "dataset_tag": "mnist"
+    },
+    "performance": 0.9908999800682068,
+    "performance_2": -1.0
+  },
+  "dataset_ranges": null,
+  "performance_metrics": {
+    "elapsed_seconds": 5467.542709350586,
+    "elapsed_time": "01:31:07"
+  },
+  "hardware_info": {
+    "cpu_model": "",
+    "cpu_cores": 20,
+    "python_version": "3.11.2",
+    "system": "Linux",
+    "ram_total": "31.14 GB",
+    "ram_available": "21.01 GB",
+    "gpu_count": 1,
+    "gpus": [
+      {
+        "model": "NVIDIA GeForce RTX 3080",
+        "memory": "10240 MiB",
+        "driver": "580.76.05"
+      }
+    ]
+  },
+  "optimization_stats": {
+    "models_generated": 15,
+    "models_processed": 15,
+    "exploration_models": 10,
+    "deep_training_models": 5
+  }
+}

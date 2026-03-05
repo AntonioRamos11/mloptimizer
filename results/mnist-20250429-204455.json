@@ -1,0 +1,100 @@
+{
+  "model_info": {
+    "model_training_request": {
+      "id": 1,
+      "training_type": 1,
+      "experiment_id": "mnist-20250429-204455",
+      "architecture": {
+        "base_architecture": "inception",
+        "cnn_blocks_n": 0,
+        "cnn_blocks_conv_layers_n": 0,
+        "cnn_block_conv_filters": [],
+        "cnn_block_conv_filter_sizes": [],
+        "cnn_block_max_pooling_sizes": [],
+        "cnn_block_dropout_values": [],
+        "inception_stem_blocks_n": 1,
+        "inception_stem_block_conv_filters": [
+          64
+        ],
+        "inception_stem_block_conv_filter_sizes": [
+          5
+        ],
+        "inception_stem_block_max_pooling_sizes": [
+          2
+        ],
+        "inception_blocks_n": 3,
+        "inception_modules_n": 3,
+        "inception_modules_conv1x1_filters": [
+          44,
+          60,
+          64
+        ],
+        "inception_modules_conv3x3_reduce_filters": [
+          4,
+          12,
+          16
+        ],
+        "inception_modules_conv3x3_filters": [
+          52,
+          64,
+          88
+        ],
+        "inception_modules_conv5x5_reduce_filters": [
+          4,
+          8,
+          8
+        ],
+        "inception_modules_conv5x5_filters": [
+          28,
+          32,
+          32
+        ],
+        "inception_modules_pooling_conv_filters": [
+          16,
+          16,
+          16
+        ],
+        "classifier_layer_type": "gap",
+        "classifier_layers_n": 0,
+        "classifier_dropouts": [],
+        "classifier_layers_units": [],
+        "learning_rate": 0.0
+      },
+      "epochs": 150,
+      "early_stopping_patience": 10,
+      "is_partial_training": false,
+      "search_space_type": "image",
+      "search_space_hash": -1710851370541997620,
+      "dataset_tag": "mnist"
+    },
+    "performance": 0.989300012588501,
+    "performance_2": 0.9900000095367432
+  },
+  "dataset_ranges": "",
+  "performance_metrics": {
+    "elapsed_seconds": 6585.1826713085175,
+    "elapsed_time": "01:49:45"
+  },
+  "hardware_info": {
+    "cpu_model": "",
+    "cpu_cores": 20,
+    "python_version": "3.10.16",
+    "system": "Linux",
+    "ram_total": "31.14 GB",
+    "ram_available": "15.23 GB",
+    "gpu_count": 1,
+    "gpus": [
+      {
+        "model": "NVIDIA GeForce RTX 3080",
+        "memory": "10240 MiB",
+        "driver": "535.216.01"
+      }
+    ]
+  },
+  "optimization_stats": {
+    "models_generated": 15,
+    "models_processed": 18,
+    "exploration_models": 10,
+    "deep_training_models": 5
+  }
+}

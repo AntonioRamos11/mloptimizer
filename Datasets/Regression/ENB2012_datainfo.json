@@ -1,0 +1,18 @@
+{
+	"name":"ENB2012_data",
+	"version":1.0,
+	"description":"Energy efficiency Data Set",
+	"homepage":"http://archive.ics.uci.edu/ml/datasets/Energy+efficiency",
+	"features":{
+		"value":8,
+		"label":2
+	},
+	"total_num_examples":768,
+	"splits":{
+		"test":154,
+		"train":614
+	},
+	"supervised_keys":["value", "label"],
+	"citation":"",
+	"redistribution_info":""
+}

@@ -122,8 +122,8 @@ class SystemParameters:
 
 
     DATASET_SCHEDULE = [
-        ('mnist', 3),
-        ('cifar10', 3),
+        #('mnist', 3),
+        #('cifar10', 3),
         ('fashion_mnist', 3),
         ('cifar100', 3)   
     ]
